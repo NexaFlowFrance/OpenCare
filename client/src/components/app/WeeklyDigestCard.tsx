@@ -31,6 +31,21 @@ const parseDay = (iso: string): Date => {
     return new Date(y, m - 1, d);
 };
 
+/**
+ * Normalise le contenu d'un digest en remplissant les valeurs manquantes.
+ * Defensif: un digest mal forme (genere par une IA tierce, import...) ne doit
+ * jamais faire planter le rendu du tableau de bord.
+ */
+const safeContent = (content: Partial<DigestContent> | null | undefined): DigestContent => ({
+    summary: typeof content?.summary === 'string' ? content.summary : '',
+    stats: {
+        visits: Number(content?.stats?.visits) || 0,
+        journal_entries: Number(content?.stats?.journal_entries) || 0,
+    },
+    attention_points: Array.isArray(content?.attention_points) ? content.attention_points : [],
+    weak_signals: Array.isArray(content?.weak_signals) ? content.weak_signals : [],
+});
+
 const AI_CONFIG_ERRORS = ['AI_NOT_CONFIGURED', 'AI_DISABLED'];
 
 const WeeklyDigestCard: React.FC = () => {
@@ -121,24 +136,26 @@ const WeeklyDigestCard: React.FC = () => {
                 )}
             </div>
 
-            {latest ? (
+            {latest ? (() => {
+                const c = safeContent(latest.content);
+                return (
                 <div>
                     <p className="text-micro text-muted-foreground first-letter:uppercase">
                         {weekLabel(latest.week_start)}
                         <span className="mx-1.5" aria-hidden="true">·</span>
-                        {t('digests:stats.visits', { count: latest.content.stats.visits })}
+                        {t('digests:stats.visits', { count: c.stats.visits })}
                         <span className="mx-1.5" aria-hidden="true">·</span>
-                        {t('digests:stats.entries', { count: latest.content.stats.journal_entries })}
+                        {t('digests:stats.entries', { count: c.stats.journal_entries })}
                     </p>
-                    <p className="mt-2 text-body text-foreground">{latest.content.summary}</p>
+                    <p className="mt-2 text-body text-foreground">{c.summary}</p>
 
-                    {latest.content.attention_points.length > 0 && (
+                    {c.attention_points.length > 0 && (
                         <div className="mt-4">
                             <p className="mb-1 text-micro font-medium uppercase tracking-wide text-muted-foreground">
                                 {t('digests:attentionPoints')}
                             </p>
                             <ul className="space-y-1">
-                                {latest.content.attention_points.map((point, index) => (
+                                {c.attention_points.map((point, index) => (
                                     <li key={index} className="flex items-start gap-2 text-caption text-foreground">
                                         <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-warning" aria-hidden="true" />
                                         <span className="min-w-0">{point}</span>
@@ -148,13 +165,13 @@ const WeeklyDigestCard: React.FC = () => {
                         </div>
                     )}
 
-                    {latest.content.weak_signals.length > 0 && (
+                    {c.weak_signals.length > 0 && (
                         <div className="mt-4 rounded-input border border-border bg-primary-soft px-3.5 py-3">
                             <p className="mb-1 text-micro font-medium uppercase tracking-wide text-primary">
                                 {t('digests:weakSignals')}
                             </p>
                             <ul className="space-y-1">
-                                {latest.content.weak_signals.map((signal, index) => (
+                                {c.weak_signals.map((signal, index) => (
                                     <li key={index} className="text-caption text-foreground">
                                         {signal}
                                     </li>
@@ -163,7 +180,8 @@ const WeeklyDigestCard: React.FC = () => {
                         </div>
                     )}
                 </div>
-            ) : (
+                );
+            })() : (
                 <div className="space-y-3">
                     <p className="rounded-input border border-dashed border-border px-3 py-5 text-center text-caption text-muted-foreground">
                         {t('digests:empty')}
@@ -202,15 +220,17 @@ const WeeklyDigestCard: React.FC = () => {
                     <p className="text-caption text-muted-foreground">{t('digests:historyEmpty')}</p>
                 ) : (
                     <ul className="divide-y divide-border">
-                        {previous.map((digest) => (
+                        {previous.map((digest) => {
+                            const c = safeContent(digest.content);
+                            return (
                             <li key={digest.id} className="py-4 first:pt-0 last:pb-0">
                                 <p className="text-micro text-muted-foreground first-letter:uppercase">
                                     {weekLabel(digest.week_start)}
                                 </p>
-                                <p className="mt-1 text-caption text-foreground">{digest.content.summary}</p>
-                                {digest.content.attention_points.length > 0 && (
+                                <p className="mt-1 text-caption text-foreground">{c.summary}</p>
+                                {c.attention_points.length > 0 && (
                                     <ul className="mt-2 space-y-1">
-                                        {digest.content.attention_points.map((point, index) => (
+                                        {c.attention_points.map((point, index) => (
                                             <li key={index} className="flex items-start gap-2 text-caption text-muted-foreground">
                                                 <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-warning" aria-hidden="true" />
                                                 <span className="min-w-0">{point}</span>
@@ -218,9 +238,9 @@ const WeeklyDigestCard: React.FC = () => {
                                         ))}
                                     </ul>
                                 )}
-                                {digest.content.weak_signals.length > 0 && (
+                                {c.weak_signals.length > 0 && (
                                     <ul className="mt-2 space-y-1">
-                                        {digest.content.weak_signals.map((signal, index) => (
+                                        {c.weak_signals.map((signal, index) => (
                                             <li key={index} className="text-caption italic text-muted-foreground">
                                                 {signal}
                                             </li>
@@ -228,7 +248,8 @@ const WeeklyDigestCard: React.FC = () => {
                                     </ul>
                                 )}
                             </li>
-                        ))}
+                            );
+                        })}
                     </ul>
                 )}
             </Dialog>

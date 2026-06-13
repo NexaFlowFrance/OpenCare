@@ -1239,7 +1239,15 @@ async function route(method: string, path: string, q: Record<string, string>, bo
         const recipientName = c.recipient ? c.recipient.first_name : 'votre proche';
         const digest = {
             id: uid(), circle_id: c.id, week_start: weekStart,
-            content: `Synthèse de la semaine pour ${recipientName} (générée à la demande dans la démo).\n\nLe journal montre un rythme régulier : passages de l'auxiliaire le matin, visites de la famille en fin de journée. Le moral est stable et l'appétit correct.\n\nSanté : constantes dans les valeurs habituelles, observance des traitements satisfaisante en dehors d'un oubli.\n\nÀ surveiller : rien d'urgent. Pensez au prochain renouvellement d'ordonnance.`,
+            content: {
+                summary: `Synthèse de la semaine pour ${recipientName} (générée à la demande dans la démo). Rythme régulier : passages de l'auxiliaire le matin, visites de la famille en fin de journée. Moral stable et appétit correct.`,
+                stats: { visits: 9, journal_entries: 18 },
+                attention_points: [
+                    'Une prise de traitement oubliée dans la semaine.',
+                    'Pensez au prochain renouvellement d\'ordonnance.',
+                ],
+                weak_signals: [],
+            },
             created_at: naiveNow(),
         };
         const existing = c.digests.findIndex((dg) => dg.week_start === weekStart);

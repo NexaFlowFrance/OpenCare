@@ -523,7 +523,17 @@ export function createSeed(): DemoStore {
                 digests: [
                     {
                         id: 'dg-1', circle_id: 'c-jeanne', week_start: dstr(mondayOffset - 7),
-                        content: 'Semaine globalement sereine pour Jeanne. 6 passages de Nadia, 2 visites de Marie et 1 visite de Paul. Le moral est resté stable, avec un creux mardi (elle a beaucoup parlé de son mari).\n\nPoint de vigilance : une glissade dans la cuisine, sans chute ni blessure. Le tapis antidérapant a été remis et Paul installe une barre d\'appui ce week-end.\n\nSanté : tension stable autour de 13,8/8,2, poids constant à 58,2 kg. Une prise de Kardégic oubliée dans la semaine.\n\nÀ venir : rendez-vous cardiologue avec le Dr Lefèvre, taxi médical réservé par Paul.',
+                        content: {
+                            summary: 'Semaine globalement sereine pour Jeanne. 6 passages de Nadia, 2 visites de Marie et 1 de Paul. Le moral est resté stable, avec un léger creux mardi. Santé sans alerte : tension autour de 13,8/8,2 et poids constant.',
+                            stats: { visits: 9, journal_entries: 21 },
+                            attention_points: [
+                                'Glissade dans la cuisine mardi, sans chute ni blessure. Tapis antidérapant remis, barre d\'appui prévue ce week-end.',
+                                'Une prise de Kardégic oubliée jeudi.',
+                            ],
+                            weak_signals: [
+                                'Le moral baisse légèrement les jours sans visite : à surveiller.',
+                            ],
+                        },
                         created_at: at(mondayOffset, 8, 0),
                     },
                 ],

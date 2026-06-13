@@ -66,6 +66,9 @@
       text-decoration: none; transition: background 0.18s;
     }
     .btn-nav:hover { background: var(--primary-hover); color: #fff; }
+    /* La regle .nav-links a (plus specifique) ecrasait la couleur du bouton:
+       on force le texte blanc du bouton GitHub pour qu'il reste lisible. */
+    .nav-links a.btn-nav, .nav-links a.btn-nav:hover { color: #fff; }
 
     /* HERO */
     .hero {
@@ -120,13 +123,16 @@
     }
     .btn-secondary:hover { border-color: var(--border-strong); transform: translateY(-1px); }
     .hero-stats {
-      display: flex; gap: 3rem; flex-wrap: wrap; justify-content: center;
-      margin-top: 3.5rem; padding-top: 2.75rem;
-      border-top: 1px solid var(--border); width: 100%; max-width: 560px;
+      display: flex; gap: 0.85rem; flex-wrap: wrap; justify-content: center;
+      margin-top: 3.25rem; width: 100%; max-width: 700px;
     }
-    .stat { text-align: center; }
-    .stat strong { display: block; font-size: 1.5rem; font-weight: 600; font-family: 'Fraunces', serif; color: var(--text); }
-    .stat span { font-size: 0.74rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; }
+    .stat {
+      flex: 1 1 145px; max-width: 175px; text-align: center;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1rem 0.8rem; box-shadow: var(--shadow);
+    }
+    .stat strong { display: block; font-size: 1.3rem; font-weight: 600; font-family: 'Fraunces', serif; color: var(--text); }
+    .stat span { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
 
     /* SECTIONS */
     section { padding: 5rem 2rem; max-width: 1080px; margin: 0 auto; }
@@ -147,17 +153,19 @@
     }
 
     /* FEATURES GRID */
+    /* Flex centre: la derniere rangee se centre, jamais de case vide quand le
+       nombre de cartes n'est pas multiple du nombre de colonnes. */
     .features-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 1px; background: var(--border);
-      border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden;
+      display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center;
     }
     .feature-card {
-      background: var(--surface); padding: 1.6rem;
-      transition: background 0.18s;
+      flex: 1 1 280px; max-width: 340px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.6rem;
+      transition: border-color 0.18s, transform 0.14s, box-shadow 0.18s;
       display: flex; flex-direction: column; gap: 0.4rem;
     }
-    .feature-card:hover { background: var(--surface-2); }
+    .feature-card:hover { border-color: rgba(62,107,84,.3); transform: translateY(-2px); box-shadow: var(--shadow-hover); }
 
     /* SCREENSHOTS GRID + LIGHTBOX */
     .shot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
@@ -398,12 +406,12 @@
   <h2>Découvrez l'application</h2>
   <p class="section-desc">Une interface calme et lisible, ici remplie avec un cercle de démonstration. Essayez-la en ligne, rien n'est enregistré.</p>
   <div class="shot-grid">
-    <a class="shot-card" href="screenshots/dashboard.png" onclick="return openShot(event)"><img src="screenshots/dashboard.png" alt="Tableau de bord" loading="lazy" /></a>
-    <a class="shot-card" href="screenshots/calendar.png" onclick="return openShot(event)"><img src="screenshots/calendar.png" alt="Calendrier partagé" loading="lazy" /></a>
+    <a class="shot-card" href="screenshots/dashboard.png" onclick="return openShot(event)"><img src="screenshots/dashboard.png" alt="Tableau de bord : comment va le proche" loading="lazy" /></a>
+    <a class="shot-card" href="screenshots/journal.png" onclick="return openShot(event)"><img src="screenshots/journal.png" alt="Journal de liaison" loading="lazy" /></a>
     <a class="shot-card" href="screenshots/kiosk.png" onclick="return openShot(event)"><img src="screenshots/kiosk.png" alt="Kiosk pour la personne aidée" loading="lazy" /></a>
-    <a class="shot-card" href="screenshots/tasks.png" onclick="return openShot(event)"><img src="screenshots/tasks.png" alt="Tâches et courses" loading="lazy" /></a>
-    <a class="shot-card" href="screenshots/budget.png" onclick="return openShot(event)"><img src="screenshots/budget.png" alt="Frais partagés" loading="lazy" /></a>
-    <a class="shot-card" href="screenshots/family.png" onclick="return openShot(event)"><img src="screenshots/family.png" alt="Cercle de soin" loading="lazy" /></a>
+    <a class="shot-card" href="screenshots/calendar.png" onclick="return openShot(event)"><img src="screenshots/calendar.png" alt="Calendrier partagé" loading="lazy" /></a>
+    <a class="shot-card" href="screenshots/medications.png" onclick="return openShot(event)"><img src="screenshots/medications.png" alt="Médicaments" loading="lazy" /></a>
+    <a class="shot-card" href="screenshots/expenses.png" onclick="return openShot(event)"><img src="screenshots/expenses.png" alt="Frais partagés" loading="lazy" /></a>
   </div>
   <div style="text-align:center;margin-top:2rem;">
     <a class="btn-primary" href="demo/">
