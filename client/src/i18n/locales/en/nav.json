@@ -1,0 +1,65 @@
+{
+  "items": {
+    "today": "Today",
+    "journal": "Care journal",
+    "calendar": "Calendar",
+    "medications": "Medications",
+    "health": "Health",
+    "tasks": "Tasks",
+    "shopping": "Shopping",
+    "messages": "Messages",
+    "expenses": "Shared expenses",
+    "documents": "Documents",
+    "contacts": "Contacts",
+    "recipient": "Loved one",
+    "circle": "Care circle",
+    "integrations": "Integrations",
+    "settings": "Settings"
+  },
+  "sections": {
+    "organisation": "Organisation"
+  },
+  "mobile": {
+    "home": "Home",
+    "journal": "Journal",
+    "calendar": "Calendar",
+    "medications": "Meds",
+    "messages": "Messages"
+  },
+  "quickActions": {
+    "title": "Quick actions",
+    "addJournalEntry": "Write in the journal",
+    "addEvent": "Add an appointment",
+    "addTask": "Add a task",
+    "addShopping": "Add a shopping item",
+    "addExpense": "Add an expense"
+  },
+  "circle": {
+    "create": "Care for another person"
+  },
+  "roles": {
+    "admin": "Administrator",
+    "family": "Family",
+    "professional": "Professional",
+    "neighbor": "Neighbour / friend",
+    "viewer": "Read only"
+  },
+  "user": {
+    "profile": "Profile",
+    "toggleTheme": "Toggle theme",
+    "logout": "Sign out",
+    "openMenu": "Open menu"
+  },
+  "offline": "Offline mode. Data shown comes from the cache. Changes will be possible once the connection is back.",
+  "offlineQueue": {
+    "pending_one": "{{count}} change will be sent when the network is back.",
+    "pending_other": "{{count}} changes will be sent when the network is back.",
+    "syncing": "Syncing pending changes...",
+    "errors": {
+      "authNotQueueable": "Sign-in is not available offline. Try again once the connection is back.",
+      "queueFull": "Too many changes pending offline. Try again once the connection is back.",
+      "photoTooLarge": "Photo too large to be saved offline. Try again once the connection is back."
+    }
+  },
+  "pageTitleFallback": "Dashboard"
+}

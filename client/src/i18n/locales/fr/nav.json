@@ -1,0 +1,65 @@
+{
+  "items": {
+    "today": "Aujourd'hui",
+    "journal": "Journal",
+    "calendar": "Agenda",
+    "medications": "Médicaments",
+    "health": "Santé",
+    "tasks": "Tâches",
+    "shopping": "Courses",
+    "messages": "Messages",
+    "expenses": "Frais partagés",
+    "documents": "Documents",
+    "contacts": "Contacts",
+    "recipient": "Le proche",
+    "circle": "Cercle de soin",
+    "integrations": "Intégrations",
+    "settings": "Paramètres"
+  },
+  "sections": {
+    "organisation": "Organisation"
+  },
+  "mobile": {
+    "home": "Accueil",
+    "journal": "Journal",
+    "calendar": "Agenda",
+    "medications": "Médic.",
+    "messages": "Messages"
+  },
+  "quickActions": {
+    "title": "Actions rapides",
+    "addJournalEntry": "Écrire au journal",
+    "addEvent": "Ajouter un rendez-vous",
+    "addTask": "Ajouter une tâche",
+    "addShopping": "Ajouter une course",
+    "addExpense": "Ajouter un frais"
+  },
+  "circle": {
+    "create": "Suivre un autre proche"
+  },
+  "roles": {
+    "admin": "Administrateur",
+    "family": "Famille",
+    "professional": "Professionnel",
+    "neighbor": "Voisin / proche",
+    "viewer": "Lecture seule"
+  },
+  "user": {
+    "profile": "Profil",
+    "toggleTheme": "Changer le thème",
+    "logout": "Se déconnecter",
+    "openMenu": "Ouvrir le menu"
+  },
+  "offline": "Mode hors ligne. Les données affichées proviennent du cache. Les modifications seront possibles au retour de la connexion.",
+  "offlineQueue": {
+    "pending_one": "{{count}} modification sera envoyée au retour du réseau.",
+    "pending_other": "{{count}} modifications seront envoyées au retour du réseau.",
+    "syncing": "Synchronisation des modifications en attente...",
+    "errors": {
+      "authNotQueueable": "Connexion impossible hors ligne. Réessayez au retour du réseau.",
+      "queueFull": "Trop de modifications en attente hors ligne. Réessayez au retour du réseau.",
+      "photoTooLarge": "Photo trop volumineuse pour être enregistrée hors ligne. Réessayez au retour du réseau."
+    }
+  },
+  "pageTitleFallback": "Tableau de bord"
+}

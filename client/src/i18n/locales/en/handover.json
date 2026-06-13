@@ -1,0 +1,81 @@
+{
+  "card": {
+    "title": "Relay mode",
+    "description": "Going away? Generate a handover pack: instructions, medications, schedule for the period, contacts and the \"Who I am\" page, shared with the relief caregiver through a simple link.",
+    "empty": "No relay pack yet.",
+    "period": "From {{start}} to {{end}}",
+    "copyLink": "Copy link",
+    "copied": "Link copied",
+    "deleteConfirm": "Delete this pack? Its link will stop working.",
+    "deleted": "Pack deleted",
+    "new": "Create a relay pack",
+    "startsOn": "Relay starts",
+    "endsOn": "Relay ends",
+    "instructions": "Instructions for the relief caregiver",
+    "instructionsPlaceholder": "The keys are at the neighbour's, the physio comes on Tuesdays, call Sophie if in doubt...",
+    "create": "Generate the pack",
+    "creating": "Generating...",
+    "created": "Pack created. Send the link below to the relief caregiver.",
+    "linkLabel": "Link to share",
+    "expiryNote": "The content is frozen at creation time. The link stays readable up to 7 days after the relay ends.",
+    "datesRequired": "Please set the start and end dates.",
+    "datesOrder": "The end must be after the start.",
+    "errors": {
+      "load": "Could not load the relay packs.",
+      "create": "Creating the pack failed.",
+      "delete": "Deleting failed."
+    }
+  },
+  "page": {
+    "title": "Relay from {{start}} to {{end}}",
+    "forName": "for {{name}}",
+    "generatedAt": "Pack generated on {{date}}",
+    "print": "Print",
+    "sections": {
+      "recipient": "The loved one",
+      "instructions": "Instructions",
+      "medications": "Current medications",
+      "schedule": "Schedule for the period",
+      "contacts": "Contacts",
+      "story": "Who I am"
+    },
+    "recipient": {
+      "birthDate": "Birth date",
+      "phone": "Phone",
+      "address": "Address",
+      "allergies": "Allergies",
+      "gp": "Family doctor"
+    },
+    "noMedications": "No active medication.",
+    "noEvents": "Nothing planned over the period.",
+    "noContacts": "No contact recorded.",
+    "hasKey": "has the key",
+    "eventCategories": {
+      "visit": "Visit",
+      "medical": "Medical",
+      "nurse": "Nurse",
+      "aide": "Care aide",
+      "other": "Other"
+    },
+    "contactCategories": {
+      "doctor": "Doctor",
+      "nurse": "Nurse",
+      "aide": "Care aide",
+      "physio": "Physiotherapist",
+      "pharmacy": "Pharmacy",
+      "family": "Family",
+      "neighbor": "Neighbour",
+      "other": "Other"
+    },
+    "expired": {
+      "title": "Link expired",
+      "text": "This relay pack is no longer available. Ask the family for a new link."
+    },
+    "errors": {
+      "title": "Pack unavailable",
+      "notFound": "This link is not valid. Check it or ask the family for a new one.",
+      "network": "Could not connect. Check the network and try again."
+    },
+    "footer": "This link is meant for the person taking over during the indicated period."
+  }
+}

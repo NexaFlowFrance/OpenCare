@@ -1,0 +1,37 @@
+{
+  "title": "Emergency sheet",
+  "updatedAt": "Automatically updated on {{date}}",
+  "fields": {
+    "birthDate": "Born on",
+    "age": "{{age}} years old",
+    "bloodType": "Blood type",
+    "address": "Address",
+    "insurance": "Insurance",
+    "gp": "family doctor"
+  },
+  "sections": {
+    "allergies": "Allergies",
+    "medications": "Current medications",
+    "noMedications": "No medication recorded.",
+    "history": "Medical history",
+    "directives": "Advance directives",
+    "notes": "Additional information",
+    "contacts": "Contacts"
+  },
+  "categories": {
+    "doctor": "doctor",
+    "nurse": "nurse",
+    "aide": "home aide",
+    "physio": "physiotherapist",
+    "pharmacy": "pharmacy",
+    "family": "family",
+    "neighbor": "neighbour",
+    "other": "other"
+  },
+  "errors": {
+    "title": "Sheet unavailable",
+    "notFound": "This sheet does not exist or has been disabled.",
+    "network": "Could not connect. Check the network and try again."
+  },
+  "footer": "Sheet generated automatically by OpenCare from the information kept up to date by the family."
+}

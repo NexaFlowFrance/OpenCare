@@ -1,0 +1,137 @@
+{
+  "loading": "Loading medications…",
+  "title": "Medications",
+  "subtitle": "Today's intakes, treatments and prescriptions",
+  "tabs": {
+    "today": "Today",
+    "treatments": "Treatments",
+    "prescriptions": "Prescriptions"
+  },
+  "moments": {
+    "morning": "Morning",
+    "noon": "Midday",
+    "evening": "Evening",
+    "night": "Night"
+  },
+  "dayLetters": [
+    "M",
+    "T",
+    "W",
+    "T",
+    "F",
+    "S",
+    "S"
+  ],
+  "today": {
+    "empty": "No intake scheduled today.",
+    "emptyHint": "Add a treatment with its schedule to track intakes here.",
+    "status": {
+      "pending": "To take",
+      "taken": "Taken",
+      "takenAt": "Taken at {{time}}",
+      "skipped": "Skipped",
+      "missed": "Missed"
+    },
+    "markTaken": "Taken",
+    "markSkipped": "Skip",
+    "undo": "Undo"
+  },
+  "treatments": {
+    "add": "Add a treatment",
+    "empty": "No active treatment.",
+    "emptyHint": "Add your loved one's medications to generate the daily follow-up.",
+    "showArchived": "Show archived treatments",
+    "archived": "Archived",
+    "archive": "Archive",
+    "unarchive": "Reactivate",
+    "edit": "Edit",
+    "everyDay": "every day",
+    "prescribedBy": "Prescribed by {{name}}",
+    "fromDate": "from {{date}}",
+    "untilDate": "until {{date}}",
+    "photoAlt": "Photo of {{name}}",
+    "noSchedule": "No intake schedule defined"
+  },
+  "forms": {
+    "tablet": "Tablet",
+    "capsule": "Capsule",
+    "syrup": "Syrup",
+    "drops": "Drops",
+    "patch": "Patch",
+    "injection": "Injection",
+    "other": "Other"
+  },
+  "form": {
+    "createTitle": "New treatment",
+    "editTitle": "Edit treatment",
+    "description": "Fill in the medication and its intake schedule.",
+    "name": "Medication name",
+    "namePlaceholder": "E.g. Paracetamol",
+    "dosage": "Dosage",
+    "dosagePlaceholder": "E.g. 500 mg",
+    "form": "Form",
+    "formPlaceholder": "Choose a form",
+    "instructions": "Instructions",
+    "instructionsPlaceholder": "E.g. take with food",
+    "prescriber": "Prescriber",
+    "prescriberPlaceholder": "E.g. Dr Smith",
+    "startDate": "Start date",
+    "endDate": "End date",
+    "photo": "Medication photo",
+    "photoAdd": "Add a photo",
+    "photoChange": "Change photo",
+    "photoRemove": "Remove photo",
+    "photoProcessing": "Compressing photo…",
+    "schedules": "Intake schedule",
+    "schedulesHint": "Each line generates an intake to confirm on the selected days.",
+    "addSchedule": "Add a time",
+    "removeSchedule": "Remove this time",
+    "time": "Time",
+    "label": "Label (optional)",
+    "labelPlaceholder": "E.g. before the meal",
+    "noSchedules": "No schedule yet. Add a line to track daily intakes.",
+    "scheduleTimeError": "Set a time for every intake line.",
+    "scheduleDaysError": "Select at least one day for every intake line."
+  },
+  "prescriptions": {
+    "add": "Add a prescription",
+    "empty": "No prescription recorded.",
+    "emptyHint": "Track renewal dates here to plan the pharmacy run ahead of time.",
+    "renewalOn": "Renewal on {{date}}",
+    "noRenewal": "No renewal date",
+    "issuedOn": "Issued on {{date}}",
+    "overdue": "Renewal overdue",
+    "dueSoon": "Renewal due soon",
+    "confirmDelete": "Delete this prescription?",
+    "form": {
+      "createTitle": "New prescription",
+      "editTitle": "Edit prescription",
+      "description": "Track the renewal date so you are never caught short.",
+      "title": "Title",
+      "titlePlaceholder": "E.g. Long-term treatment prescription",
+      "prescriber": "Prescriber",
+      "prescriberPlaceholder": "E.g. Dr Smith",
+      "issuedDate": "Issue date",
+      "renewalDate": "Renewal date",
+      "reminderDays": "Alert (days before due date)",
+      "notes": "Notes",
+      "notesPlaceholder": "E.g. drop off at the main pharmacy"
+    }
+  },
+  "errors": {
+    "load": "Unable to load medications.",
+    "loadIntakes": "Unable to load today's intakes.",
+    "loadPrescriptions": "Unable to load prescriptions.",
+    "save": "Unable to save the treatment.",
+    "saveIntake": "Unable to update the intake.",
+    "savePrescription": "Unable to save the prescription.",
+    "deletePrescription": "Unable to delete the prescription.",
+    "archive": "Unable to update the treatment.",
+    "photo": "Unable to process the photo.",
+    "photoTooLarge": "The photo is still too large after compression (1.5 MB max)."
+  },
+  "restricted": {
+    "title": "Restricted access",
+    "description": "Medications are visible to the family and professionals of the circle."
+  }
+}

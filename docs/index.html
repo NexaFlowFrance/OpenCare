@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OpenCare - Self-hosted care coordination for family caregivers</title>
+  <meta name="description" content="OpenCare is an open-source, self-hosted care coordination app for family caregivers. Care journal, medications, shared expenses, magic links, kiosk: the circle around an elderly loved one, on your server." />
+  <meta property="og:title" content="OpenCare - Self-hosted care coordination for family caregivers" />
+  <meta property="og:description" content="Coordinate the circle around an elderly loved one. The health data of a vulnerable person stays on your server." />
+  <meta property="og:image" content="https://nexaflowfrance.github.io/OpenCare/opencare-og.png" />
+  <link rel="icon" href="https://raw.githubusercontent.com/NexaFlowFrance/OpenCare/main/client/public/OpenCare.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:            #FAF9F7;
+      --surface:       #FFFFFF;
+      --surface-2:     #F1EFEA;
+      --border:        #E5E1D8;
+      --border-strong: #D1CCC0;
+      --text:          #26231F;
+      --muted:         #6B665C;
+      --primary:       #3E6B54;
+      --primary-hover: #335946;
+      --primary-soft:  #E9EFEB;
+      --radius:        8px;
+      --shadow:        0 1px 2px rgba(38,35,31,.04);
+      --shadow-hover:  0 2px 10px rgba(38,35,31,.08);
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    h1, h2, h3 { font-family: 'Fraunces', Georgia, serif; }
+
+    /* NAV */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2rem; height: 60px;
+      background: rgba(250,249,247,0.9);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-brand {
+      display: flex; align-items: center; gap: 10px;
+      text-decoration: none; color: var(--text);
+      font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.05rem;
+    }
+    .nav-brand img { width: 28px; height: 28px; }
+    .nav-links { display: flex; align-items: center; gap: 1.75rem; }
+    .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.875rem; font-weight: 500; transition: color 0.18s; }
+    .nav-links a:hover { color: var(--text); }
+    .btn-nav {
+      background: var(--primary); color: #fff;
+      padding: 0.42rem 1.05rem; border-radius: var(--radius);
+      font-size: 0.835rem; font-weight: 600;
+      text-decoration: none; transition: background 0.18s;
+    }
+    .btn-nav:hover { background: var(--primary-hover); color: #fff; }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; padding: 7rem 2rem 5rem;
+      position: relative;
+    }
+    .hero::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse 55% 45% at 50% 0%, rgba(62,107,84,.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--primary-soft); border: 1px solid rgba(62,107,84,.25);
+      color: var(--primary); padding: 0.28rem 0.9rem; border-radius: 999px;
+      font-size: 0.78rem; font-weight: 600; margin-bottom: 2rem;
+      text-decoration: none; transition: background 0.18s;
+    }
+    .hero-badge:hover { background: #DCE7DF; }
+    .hero img.logo {
+      width: 88px; height: 88px; margin-bottom: 1.75rem;
+      filter: drop-shadow(0 4px 20px rgba(62,107,84,.22));
+    }
+    .hero h1 {
+      font-size: clamp(2.4rem, 6vw, 3.75rem);
+      font-weight: 600; line-height: 1.1; letter-spacing: -0.02em;
+      margin-bottom: 1.25rem; color: var(--text);
+    }
+    .hero h1 em { font-style: italic; color: var(--primary); }
+    .hero > p {
+      font-size: clamp(1rem, 2vw, 1.15rem); color: var(--muted);
+      max-width: 580px; margin: 0 auto 2.5rem;
+    }
+    .hero-actions { display: flex; gap: 0.85rem; flex-wrap: wrap; justify-content: center; }
+    .btn-primary {
+      background: var(--primary); color: #fff;
+      padding: 0.75rem 1.6rem; border-radius: var(--radius);
+      font-size: 0.95rem; font-weight: 600;
+      text-decoration: none; transition: background 0.18s, transform 0.14s;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); }
+    .btn-secondary {
+      background: var(--surface); color: var(--text);
+      padding: 0.75rem 1.6rem; border-radius: var(--radius);
+      font-size: 0.95rem; font-weight: 500;
+      text-decoration: none; border: 1px solid var(--border);
+      transition: border-color 0.18s, transform 0.14s;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-secondary:hover { border-color: var(--border-strong); transform: translateY(-1px); }
+    .hero-stats {
+      display: flex; gap: 3rem; flex-wrap: wrap; justify-content: center;
+      margin-top: 3.5rem; padding-top: 2.75rem;
+      border-top: 1px solid var(--border); width: 100%; max-width: 560px;
+    }
+    .stat { text-align: center; }
+    .stat strong { display: block; font-size: 1.5rem; font-weight: 600; font-family: 'Fraunces', serif; color: var(--text); }
+    .stat span { font-size: 0.74rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; }
+
+    /* SECTIONS */
+    section { padding: 5rem 2rem; max-width: 1080px; margin: 0 auto; }
+    .section-label {
+      color: var(--primary); font-size: 0.74rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.12em;
+      margin-bottom: 0.5rem; text-align: center;
+    }
+    h2 {
+      font-size: clamp(1.7rem, 4vw, 2.35rem); font-weight: 600;
+      letter-spacing: -0.02em; margin-bottom: 0.65rem; text-align: center; color: var(--text);
+    }
+    .section-desc { color: var(--muted); font-size: 1rem; max-width: 540px; margin: 0 auto 3rem; text-align: center; }
+    .grid-title {
+      font-size: 1.05rem; font-weight: 600; color: var(--text);
+      margin: 2.5rem 0 1rem; text-align: left;
+      font-family: 'Instrument Sans', sans-serif;
+    }
+
+    /* FEATURES GRID */
+    .features-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1px; background: var(--border);
+      border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden;
+    }
+    .feature-card {
+      background: var(--surface); padding: 1.6rem;
+      transition: background 0.18s;
+      display: flex; flex-direction: column; gap: 0.4rem;
+    }
+    .feature-card:hover { background: var(--surface-2); }
+
+    /* SCREENSHOTS GRID + LIGHTBOX */
+    .shot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+    .shot-card {
+      display: block; padding: 0; overflow: hidden; cursor: zoom-in;
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+    .shot-card img { width: 100%; display: block; transition: transform 0.3s ease; }
+    .shot-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); border-color: rgba(62,107,84,.35); }
+    .shot-card:hover img { transform: scale(1.04); }
+    .lightbox {
+      position: fixed; inset: 0; z-index: 200; display: none;
+      align-items: center; justify-content: center; padding: 2rem;
+      background: rgba(24,22,19,.82); backdrop-filter: blur(4px); cursor: zoom-out;
+    }
+    .lightbox.open { display: flex; }
+    .lightbox img { max-width: 96vw; max-height: 92vh; border-radius: 10px; box-shadow: 0 12px 50px rgba(0,0,0,.5); }
+    .lightbox-close {
+      position: absolute; top: 1rem; right: 1.25rem; color: #fff; font-size: 2rem;
+      line-height: 1; background: none; border: none; cursor: pointer; opacity: .85;
+    }
+    .lightbox-close:hover { opacity: 1; }
+    .feature-icon { width: 34px; height: 34px; color: var(--primary); margin-bottom: 0.3rem; flex-shrink: 0; }
+    .feature-card h3 { font-size: 0.93rem; font-weight: 600; color: var(--text); font-family: 'Instrument Sans', sans-serif; }
+    .feature-card p { font-size: 0.84rem; color: var(--muted); line-height: 1.55; }
+    .feature-tag {
+      display: inline-block; margin-top: 0.2rem;
+      background: var(--primary-soft); color: var(--primary);
+      font-size: 0.67rem; font-weight: 600; padding: 2px 8px; border-radius: 4px;
+      text-transform: uppercase; letter-spacing: 0.05em; align-self: flex-start;
+    }
+
+    /* DIVIDER */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 0; }
+
+    /* INTEGRATIONS */
+    .integrations-top {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;
+    }
+    .integrations-bottom {
+      display: flex; justify-content: center; gap: 1rem; margin-top: 1rem;
+    }
+    .integrations-bottom .integration-card {
+      width: calc((100% - 2rem) / 3);
+      max-width: 340px;
+    }
+    .integration-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.5rem 1.25rem;
+      display: flex; flex-direction: column; align-items: center; gap: 0.55rem;
+      text-align: center;
+      transition: border-color 0.18s, transform 0.14s, box-shadow 0.18s;
+    }
+    .integration-card:hover { border-color: rgba(62,107,84,.3); transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+    .integration-icon { width: 40px; height: 40px; color: var(--primary); margin-bottom: 0.2rem; }
+    .integration-card h3 { font-size: 0.93rem; font-weight: 600; color: var(--text); font-family: 'Instrument Sans', sans-serif; }
+    .integration-card p { font-size: 0.8rem; color: var(--muted); margin: 0; line-height: 1.5; }
+    .integration-tag {
+      margin-top: 0.3rem; display: inline-block;
+      background: var(--primary-soft); color: var(--primary);
+      font-size: 0.67rem; font-weight: 600; padding: 2px 8px; border-radius: 4px;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+
+    /* INSTALL */
+    .install-steps { display: grid; gap: 1rem; }
+    .step {
+      display: flex; gap: 1.2rem; align-items: flex-start;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.4rem;
+    }
+    .step-num {
+      flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%;
+      background: var(--primary-soft); border: 1px solid rgba(62,107,84,.25);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--primary); font-size: 0.82rem; font-weight: 700;
+    }
+    .step-content h4 { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.45rem; color: var(--text); font-family: 'Instrument Sans', sans-serif; }
+    .step-content p { font-size: 0.835rem; color: var(--muted); margin-bottom: 0.7rem; }
+    pre {
+      background: #26231F; border: 1px solid rgba(255,255,255,.06); border-radius: 6px;
+      padding: 0.85rem 1rem; font-size: 0.78rem;
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      color: #CFE0D5; overflow-x: auto; line-height: 1.6;
+    }
+    .windows-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.75rem 2rem;
+      margin-bottom: 2rem; text-align: center; box-shadow: var(--shadow);
+    }
+    .windows-card h3 { font-size: 1.05rem; font-weight: 600; margin-bottom: 0.6rem; font-family: 'Instrument Sans', sans-serif; }
+    .windows-card p { font-size: 0.86rem; color: var(--muted); margin-bottom: 1.2rem; max-width: 520px; margin-left: auto; margin-right: auto; }
+
+    /* TECH */
+    .tech-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; }
+    .tech-chip {
+      background: var(--surface); border: 1px solid var(--border);
+      padding: 0.34rem 0.82rem; border-radius: 999px; font-size: 0.79rem;
+      color: var(--muted); transition: border-color 0.18s, color 0.18s;
+    }
+    .tech-chip:hover { border-color: var(--primary); color: var(--text); }
+
+    /* CTA */
+    .cta-section {
+      max-width: 100%; margin: 0; padding: 5rem 2rem;
+      background: var(--primary-soft);
+      border-top: 1px solid rgba(62,107,84,.12);
+      border-bottom: 1px solid rgba(62,107,84,.12);
+      text-align: center;
+    }
+    .cta-section h2 { margin-bottom: 0.85rem; }
+    .cta-section p { color: var(--muted); max-width: 460px; margin: 0 auto 2rem; }
+
+    /* CONTRIBUTORS */
+    .contributors-grid { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; margin-top: 2.5rem; }
+    .contributor-card {
+      display: flex; flex-direction: column; align-items: center; gap: 0.55rem;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.35rem 1.55rem;
+      text-decoration: none; color: var(--text);
+      transition: border-color 0.18s, transform 0.14s, box-shadow 0.18s;
+      min-width: 128px;
+    }
+    .contributor-card:hover { border-color: rgba(62,107,84,.3); transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+    .contributor-card img {
+      width: 62px; height: 62px; border-radius: 50%;
+      border: 2px solid var(--border); transition: border-color 0.18s;
+    }
+    .contributor-card:hover img { border-color: rgba(62,107,84,.4); }
+    .c-name { font-weight: 600; font-size: 0.87rem; }
+    .heritage-note {
+      display: flex; align-items: flex-start; gap: 1rem;
+      background: var(--surface); border: 1px solid rgba(62,107,84,.18);
+      border-radius: var(--radius); padding: 1.1rem 1.4rem;
+      margin-top: 2.25rem; text-align: left;
+    }
+    .heritage-note svg { width: 20px; height: 20px; color: var(--primary); flex-shrink: 0; margin-top: 2px; }
+    .heritage-note p { font-size: 0.835rem; color: var(--muted); }
+    .heritage-note a { color: var(--primary); text-decoration: none; }
+    .heritage-note a:hover { text-decoration: underline; }
+
+    /* FOOTER */
+    footer {
+      text-align: center; padding: 2.25rem; font-size: 0.79rem; color: var(--muted);
+      border-top: 1px solid var(--border);
+    }
+    footer a { color: var(--primary); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      .integrations-top { grid-template-columns: repeat(2, 1fr); }
+      .integrations-bottom { flex-wrap: wrap; }
+      .integrations-bottom .integration-card { width: calc(50% - 0.5rem); max-width: none; }
+    }
+    @media (max-width: 768px) {
+      .features-grid { grid-template-columns: 1fr; }
+      .hero-stats { gap: 1.75rem; }
+    }
+    @media (max-width: 640px) {
+      nav { padding: 0 1rem; height: 54px; }
+      .nav-links { gap: 0.7rem; }
+      .nav-links a:not(.btn-nav) { display: none; }
+      .hero { padding: 5.5rem 1.25rem 3.5rem; min-height: auto; }
+      .hero h1 { font-size: clamp(1.8rem, 9vw, 2.5rem); }
+      .hero img.logo { width: 68px; height: 68px; }
+      .hero-actions { flex-direction: column; align-items: stretch; width: 100%; max-width: 300px; }
+      .btn-primary, .btn-secondary { justify-content: center; }
+      .hero-stats { gap: 1.25rem; padding-top: 2rem; margin-top: 2.25rem; }
+      section { padding: 3.25rem 1.1rem; }
+      h2 { font-size: clamp(1.5rem, 6vw, 1.9rem); }
+      .integrations-top { grid-template-columns: 1fr; }
+      .integrations-bottom { flex-direction: column; align-items: stretch; }
+      .integrations-bottom .integration-card { width: 100%; max-width: none; }
+      .step { flex-direction: column; gap: 0.5rem; }
+      .heritage-note { flex-direction: column; }
+    }
+    @media (max-width: 380px) {
+      .hero h1 { font-size: 1.65rem; }
+      .hero-stats { flex-direction: column; align-items: center; gap: 0.9rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-brand" href="#">
+    <img src="https://raw.githubusercontent.com/NexaFlowFrance/OpenCare/main/client/public/OpenCare.png" alt="OpenCare" />
+    OpenCare
+  </a>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#integrations">Integrations</a>
+    <a href="#install">Install</a>
+    <a href="#tech">Tech</a>
+    <a href="#contributors">Credits</a>
+    <a href="index.fr.html" title="Français" aria-label="Français" style="display:inline-flex;align-items:center;"><img src="https://flagcdn.com/fr.svg" alt="Français" width="22" height="16" style="border-radius:3px;display:block;box-shadow:0 0 0 1px rgba(0,0,0,.08);" loading="lazy" /></a>
+    <a href="demo/">Live demo</a>
+    <a class="btn-nav" href="https://github.com/NexaFlowFrance/OpenCare" target="_blank" rel="noopener">GitHub</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <a class="hero-badge" href="https://github.com/NexaFlowFrance/OpenCare/releases/latest" target="_blank" rel="noopener">
+    v1.0: care journal, magic links, kiosk &amp; passive monitoring
+  </a>
+  <img class="logo" src="https://raw.githubusercontent.com/NexaFlowFrance/OpenCare/main/client/public/OpenCare.png" alt="OpenCare" />
+  <h1>Caring together,<br><em>on your own server.</em></h1>
+  <p>OpenCare coordinates the circle around an elderly loved one: a real-time care journal, medications, shared calendar and expenses, a kiosk for the cared-for person. Open source, self-hosted: the health data of a vulnerable person should not live on someone else's cloud.</p>
+  <div class="hero-actions">
+    <a class="btn-primary" href="demo/">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      Try the live demo
+    </a>
+    <a class="btn-secondary" href="https://github.com/NexaFlowFrance/OpenCare/releases/latest/download/OpenCare-Setup.exe">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Download for Windows
+    </a>
+    <a class="btn-secondary" href="https://github.com/NexaFlowFrance/OpenCare" target="_blank" rel="noopener">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.2 11.38.6.11.82-.26.82-.58v-2.03c-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.74.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.8 1.3 3.49 1 .11-.78.42-1.31.76-1.61-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 3-.4c1.02 0 2.04.13 3 .4 2.28-1.55 3.29-1.23 3.29-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.63-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.21.7.82.58C20.56 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      GitHub
+    </a>
+  </div>
+  <div class="hero-stats">
+    <div class="stat"><strong>1 circle</strong><span>per loved one</span></div>
+    <div class="stat"><strong>PWA</strong><span>offline-friendly</span></div>
+    <div class="stat"><strong>AGPL-3</strong><span>open source</span></div>
+    <div class="stat"><strong>Self-hosted</strong><span>your data</span></div>
+  </div>
+</div>
+
+<!-- SCREENSHOTS -->
+<section id="screenshots">
+  <div class="section-label">Screenshots</div>
+  <h2>See it in action</h2>
+  <p class="section-desc">A calm, legible interface, here filled with a demo circle. Try it live, nothing is saved.</p>
+  <div class="shot-grid">
+    <a class="shot-card" href="screenshots/dashboard.png" onclick="return openShot(event)"><img src="screenshots/dashboard.png" alt="Dashboard" loading="lazy" /></a>
+    <a class="shot-card" href="screenshots/calendar.png" onclick="return openShot(event)"><img src="screenshots/calendar.png" alt="Shared calendar" loading="lazy" /></a>
+    <a class="shot-card" href="screenshots/kiosk.png" onclick="return openShot(event)"><img src="screenshots/kiosk.png" alt="Kiosk for the cared-for person" loading="lazy" /></a>
+    <a class="shot-card" href="screenshots/tasks.png" onclick="return openShot(event)"><img src="screenshots/tasks.png" alt="Tasks and shopping" loading="lazy" /></a>
+    <a class="shot-card" href="screenshots/budget.png" onclick="return openShot(event)"><img src="screenshots/budget.png" alt="Shared expenses" loading="lazy" /></a>
+    <a class="shot-card" href="screenshots/family.png" onclick="return openShot(event)"><img src="screenshots/family.png" alt="Care circle" loading="lazy" /></a>
+  </div>
+  <div style="text-align:center;margin-top:2rem;">
+    <a class="btn-primary" href="demo/">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      Open the live demo
+    </a>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="section-label">Features</div>
+  <h2>Everything a care circle needs</h2>
+  <p class="section-desc">The essentials of caregiver coordination, plus tools nobody else offers. All in real time on every device.</p>
+
+  <h3 class="grid-title">The foundation</h3>
+  <div class="features-grid">
+
+    <div class="feature-card">
+      <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <h3>Care circle</h3>
+      <p>One circle per cared-for person, invitations by link, fine-grained roles (family, professional, neighbour, read-only). Follow both parents with one account.</p>
+    </div>
+
+    <div class="feature-card">
+      <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      <h3>Care journal</h3>
+      <p>The digital liaison book: timestamped entries with photos, visible in real time on every device. The heart of the app.</p>
+      <span class="feature-tag">The heart</span>
+    </div>
+
+    <div class="feature-card">
+      <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 20.5 3.5 13.5a4.95 4.95 0 1 1 7-7l7 7a4.95 4.95 0 1 1-7 7z"/><line x1="7" y1="10" x2="14" y2="17"/></svg>
+      <h3>Medications</h3>
+      <p>Treatments and schedules, intake confirmation written to the journal, prescription renewal alerts.</p>
+    </div>
+
+    <div class="feature-card">
+      <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <h3>Shared calendar</h3>
+      <p>Visits, medical appointments, nurse rounds, recurrences, reminders, iCal export (.ics / webcal).</p>
+    </div>
+
+    <div class="feature-card">
+      <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      <h3>Health tracking</h3>
+      <p>Hand-entered vitals (weight, blood pressure, pain, mood, temperature, glucose) with curves over time.</p>
+    </div>
+
+    <div class="feature-card">
+      <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      <h3>Tasks and shopping</h3>
+      <p>Who does what this week, plus a shared shopping list the home aide can use too.</p>
+    </div>
+
+    <div class="feature-card">
+      <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <h3>Messages</h3>
+      <p>Circle thread and direct messages between members, with attachments.</p>
+    </div>
+
+    <div class="feature-card">
+      <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <h3>Documents and contacts</h3>
+      <p>Prescriptions, reports, insurance, legal papers, and the circle address book (GP, nurse, the neighbour who has the key).</p>
+    </div>
+
+  </div>
+
+  <h3 class="grid-title">Beyond the paid apps</h3>
+  <div class="features-grid">
+
+    <div class="feature-card">
+      <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      <h3>Shared expenses</h3>
+      <p>A built-in Tricount: who advanced what, balances, suggested settlements, and tracking of French aids (APA, CESU, tax credit).</p>
+      <span class="feature-tag">Exclusive</span>
+    </div>
+
+    <div class="feature-card">
+      <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <h3>Care-load fairness</h3>
+      <p>"Marie covered 78% of the visits this month": objective stats to prevent burnout of the primary caregiver.</p>
+      <span class="feature-tag">Exclusive</span>
+    </div>
+
+    <div class="feature-card">
+      <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      <h3>Magic links</h3>
+      <p>The home aide or the nurse writes in the journal from a simple link (SMS/QR), no account, no app to install.</p>
+      <span class="feature-tag">Exclusive</span>
+    </div>
+
+    <div class="feature-card">
+      <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <h3>Emergency QR sheet</h3>
+      <p>A printed QR on the fridge: paramedics scan it and see the vital sheet (treatments, allergies, directives, contacts), always up to date.</p>
+      <span class="feature-tag">Exclusive</span>
+    </div>
+
+    <div class="feature-card">
+      <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      <h3>Kiosk</h3>
+      <p>A wall tablet at your loved one's home: who is coming today (with photos), big medication reminders, family photos, weather, and two huge buttons: "All is well" / "I need help".</p>
+      <span class="feature-tag">Exclusive</span>
+    </div>
+
+    <div class="feature-card">
+      <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <h3>"Who I am"</h3>
+      <p>A life-story page (career, pride, habits, what soothes them) shown to every new caregiver.</p>
+    </div>
+
+    <div class="feature-card">
+      <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="6" width="22" height="14" rx="2"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      <h3>Respite handover</h3>
+      <p>The primary caregiver leaves for a week: an auto-generated handover pack (schedule, medications, instructions, contacts) shared by link.</p>
+    </div>
+
+    <div class="feature-card">
+      <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <h3>Passive monitoring</h3>
+      <p>Home Assistant webhooks (door sensor, coffee-maker plug, motion): "normal activity this morning" on the dashboard, alert cascade if no sign of life. No camera, no wristband.</p>
+      <span class="feature-tag">Exclusive</span>
+    </div>
+
+    <div class="feature-card">
+      <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+      <h3>Voice journal</h3>
+      <p>Dictate on your way out: your self-hosted Whisper transcribes, the AI files the journal entry and the shopping item.</p>
+    </div>
+
+    <div class="feature-card">
+      <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.8a2 2 0 0 0 1.3 1.3L21 12l-5.8 1.9a2 2 0 0 0-1.3 1.3L12 21l-1.9-5.8a2 2 0 0 0-1.3-1.3L3 12l5.8-1.9a2 2 0 0 0 1.3-1.3z"/></svg>
+      <h3>Weekly AI digest</h3>
+      <p>Every Sunday: a calm summary of the week with slow-trend detection (recurring low mood, gradual weight loss). Local AI first.</p>
+    </div>
+
+    <div class="feature-card">
+      <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      <h3>Consultation prep</h3>
+      <p>One click: a printable summary for the doctor (key events, vitals trends, current treatments, the family's questions).</p>
+    </div>
+
+    <div class="feature-card">
+      <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+      <h3>Offline-friendly PWA</h3>
+      <p>Install on iOS, Android or desktop. Writes are queued offline and synced back: it works in a nursing-home room with poor signal.</p>
+    </div>
+
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- INTEGRATIONS -->
+<section id="integrations">
+  <div class="section-label">Integrations</div>
+  <h2>Connected to your self-hosted ecosystem</h2>
+  <p class="section-desc">Configured per circle, from the interface. Credentials are encrypted at rest and never reach the browser.</p>
+
+  <div class="integrations-top">
+
+    <div class="integration-card">
+      <svg class="integration-icon" viewBox="0 0 24 24" fill="#18BCF2" aria-hidden="true"><path d="M22.939 10.627 13.061.749a1.505 1.505 0 0 0-2.121 0l-9.879 9.878C.478 11.21 0 12.363 0 13.187v9c0 .826.675 1.5 1.5 1.5h9.227l-4.063-4.062a2.034 2.034 0 0 1-.664.113c-1.13 0-2.05-.92-2.05-2.05s.92-2.05 2.05-2.05 2.05.92 2.05 2.05c0 .233-.041.456-.113.665l3.163 3.163V9.928a2.05 2.05 0 0 1-1.15-1.84c0-1.13.92-2.05 2.05-2.05s2.05.92 2.05 2.05a2.05 2.05 0 0 1-1.15 1.84v8.127l3.146-3.146A2.051 2.051 0 0 1 18 12.239c1.13 0 2.05.92 2.05 2.05s-.92 2.05-2.05 2.05c-.25 0-.488-.047-.709-.13L12.9 20.602v3.088h9.6c.825 0 1.5-.675 1.5-1.5v-9c0-.825-.477-1.977-1.061-2.561z"/></svg>
+      <h3>Home Assistant</h3>
+      <p>Passive monitoring webhooks (door sensor, coffee-maker plug, motion) and shopping-list sync.</p>
+      <span class="integration-tag">Monitoring &amp; shopping</span>
+    </div>
+
+    <div class="integration-card">
+      <svg class="integration-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+      <h3>Whisper</h3>
+      <p>Self-hosted transcription for the voice journal (speaches, faster-whisper-server or any OpenAI-compatible server).</p>
+      <span class="integration-tag">Voice journal</span>
+    </div>
+
+    <div class="integration-card">
+      <svg class="integration-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      <h3>Immich</h3>
+      <p>Family photos on the kiosk, served from your own photo library. The API key never leaves the server.</p>
+      <span class="integration-tag">Kiosk photos</span>
+    </div>
+
+  </div>
+
+  <div class="integrations-bottom">
+
+    <div class="integration-card">
+      <svg class="integration-icon" viewBox="0 0 24 24" fill="#0082C9" aria-hidden="true"><path d="M12.018 6.537c-2.5 0-4.6 1.712-5.241 4.015-.56-1.232-1.793-2.105-3.225-2.105A3.569 3.569 0 0 0 0 12a3.569 3.569 0 0 0 3.552 3.553c1.432 0 2.664-.874 3.224-2.106.641 2.304 2.742 4.016 5.242 4.016 2.487 0 4.576-1.693 5.231-3.977.569 1.21 1.783 2.067 3.198 2.067A3.568 3.568 0 0 0 24 12a3.569 3.569 0 0 0-3.553-3.553c-1.416 0-2.63.858-3.199 2.067-.654-2.284-2.743-3.978-5.23-3.977zm0 2.085c1.878 0 3.378 1.5 3.378 3.378 0 1.878-1.5 3.378-3.378 3.378A3.362 3.362 0 0 1 8.641 12c0-1.878 1.5-3.378 3.377-3.378zm-8.466 1.91c.822 0 1.467.645 1.467 1.468s-.644 1.467-1.467 1.468A1.452 1.452 0 0 1 2.085 12c0-.823.644-1.467 1.467-1.467zm16.895 0c.823 0 1.468.645 1.468 1.468s-.645 1.468-1.468 1.468A1.452 1.452 0 0 1 18.98 12c0-.823.644-1.467 1.467-1.467z"/></svg>
+      <h3>Nextcloud</h3>
+      <p>CalDAV import with automatic calendar discovery into the circle calendar.</p>
+      <span class="integration-tag">Calendar</span>
+    </div>
+
+    <div class="integration-card">
+      <svg class="integration-icon" viewBox="0 0 24 24" fill="#337AB7" aria-hidden="true"><path d="M12.621.068C7.527.786 3.608 4.618 2.345 10.082c-.316 1.35-.392 3.896-.163 5.203.62 3.57 2.96 6.574 6.15 7.913 1.36.577 2.1.73 3.842.784 1.22.043 1.862.01 2.722-.13 2.688-.447 5.399-1.699 6.65-3.092l.403-.447-.054-1.872a481.92 481.92 0 0 1-.12-5.344l-.065-3.473-2.907.087c-1.589.033-3.722.098-4.746.142l-1.85.065-.087 2.319c-.055 1.284-.076 2.34-.055 2.362.022.022.882.076 1.916.12l1.872.076v.294c0 .707-.13.98-.555 1.208-.653.326-1.872.479-2.623.326-2.71-.566-3.777-4.55-1.96-7.369C11.86 7.48 13.873 6.62 16.562 6.74c.74.043 1.665.163 2.123.272.446.12.838.174.87.12.098-.142.468-5.726.403-5.9-.087-.24-1.35-.697-2.569-.947-1.252-.25-3.722-.37-4.767-.218z"/></svg>
+      <h3>Grocy</h3>
+      <p>Shopping list and stock synchronization with your Grocy instance.</p>
+      <span class="integration-tag">Shopping &amp; stock</span>
+    </div>
+
+    <div class="integration-card">
+      <svg class="integration-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.8a2 2 0 0 0 1.3 1.3L21 12l-5.8 1.9a2 2 0 0 0-1.3 1.3L12 21l-1.9-5.8a2 2 0 0 0-1.3-1.3L3 12l5.8-1.9a2 2 0 0 0 1.3-1.3z"/></svg>
+      <h3>Ollama / Anthropic / OpenAI</h3>
+      <p>Local AI first (Ollama on your machine), or your own API key, encrypted at rest. Powers the weekly digest and voice journal filing.</p>
+      <span class="integration-tag">AI</span>
+    </div>
+
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- INSTALL -->
+<section id="install">
+  <div class="section-label">Install</div>
+  <h2>Ready in 5 minutes</h2>
+  <p class="section-desc">On Windows, a single double-click is enough. Otherwise, the only prerequisite is Docker. The database schema installs itself on first start.</p>
+
+  <div class="windows-card">
+    <h3>Windows: the all-in-one installer</h3>
+    <p>Download <strong>OpenCare-Setup.exe</strong> and follow the guide. Node.js and PostgreSQL are bundled: no Docker, no configuration. A window opens with three buttons (Start, Stop, Open) and shows the local address so the rest of the family can connect from their phones.</p>
+    <a class="btn-primary" href="https://github.com/NexaFlowFrance/OpenCare/releases/latest/download/OpenCare-Setup.exe">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Download the latest version (Windows)
+    </a>
+  </div>
+
+  <div class="install-steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h4>Clone the project and configure the environment</h4>
+        <p>Copy the environment file and set at least a database password and a JWT secret.</p>
+        <pre>git clone https://github.com/NexaFlowFrance/OpenCare.git
+cd OpenCare
+cp .env.example .env
+# set POSTGRES_PASSWORD and JWT_SECRET</pre>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h4>Start with Docker Compose</h4>
+        <p>Launches the 3 services: PostgreSQL, the Express server and the Nginx frontend. The schema is applied automatically on first start.</p>
+        <pre>docker-compose up -d --build</pre>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h4>Open the app</h4>
+        <p>The app is available on your local network (or your domain in production).</p>
+        <pre>Frontend: http://localhost:3000
+API:      http://localhost:3001/health</pre>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <h4>Create the first circle</h4>
+        <p>Register, create the circle for your loved one, then invite the family, the professionals and the neighbour by link.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- TECH -->
+<section id="tech">
+  <div class="section-label">Tech</div>
+  <h2>A sober, proven stack</h2>
+  <p class="section-desc">Every building block chosen for reliability, security and maintainability.</p>
+  <div class="tech-grid">
+    <span class="tech-chip">React 19</span>
+    <span class="tech-chip">TypeScript</span>
+    <span class="tech-chip">Vite 7</span>
+    <span class="tech-chip">TailwindCSS</span>
+    <span class="tech-chip">Radix UI</span>
+    <span class="tech-chip">i18next (FR + EN)</span>
+    <span class="tech-chip">Node.js 20</span>
+    <span class="tech-chip">Express</span>
+    <span class="tech-chip">PostgreSQL 14+</span>
+    <span class="tech-chip">WebSocket (ws)</span>
+    <span class="tech-chip">Web Push VAPID</span>
+    <span class="tech-chip">JWT + bcrypt 12</span>
+    <span class="tech-chip">Helmet</span>
+    <span class="tech-chip">AES-256-GCM secrets</span>
+    <span class="tech-chip">Docker</span>
+    <span class="tech-chip">GitHub Actions</span>
+    <span class="tech-chip">PWA / Service Worker</span>
+    <span class="tech-chip">Inno Setup installer</span>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta-section">
+  <div style="max-width:600px; margin:0 auto;">
+    <h2>Open source, self-hosted, yours.</h2>
+    <p>The health data of a vulnerable person stays with the family. Deploy your own instance, or contribute to the project.</p>
+    <div style="display:flex; gap:0.85rem; flex-wrap:wrap; justify-content:center;">
+      <a class="btn-primary" href="https://github.com/NexaFlowFrance/OpenCare/releases/latest/download/OpenCare-Setup.exe">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download for Windows
+      </a>
+      <a class="btn-secondary" href="https://github.com/NexaFlowFrance/OpenCare/issues" target="_blank" rel="noopener">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Open an issue
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- CREDITS -->
+<section id="contributors" style="text-align: center;">
+  <div class="section-label">Credits</div>
+  <h2>Acknowledgements</h2>
+  <p class="section-desc">Built and maintained by NexaFlow France, and offered to every family that takes care of someone.</p>
+  <div class="contributors-grid">
+    <a class="contributor-card" href="https://github.com/NexaFlowFrance" target="_blank" rel="noopener">
+      <img src="https://avatars.githubusercontent.com/u/251752333?v=4" alt="NexaFlowFrance" />
+      <span class="c-name">NexaFlowFrance</span>
+    </a>
+  </div>
+
+  <div class="heritage-note" style="max-width: 560px; margin: 2.25rem auto 0;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+    <p>OpenCare is built on the open-source foundation of <strong>OpenFamily</strong>, by NexaFlow. Thanks to everyone who contributed to that base.</p>
+  </div>
+
+  <p style="margin-top: 1.5rem; font-size: 0.82rem; color: var(--muted);">
+    Want to contribute?
+    <a href="https://github.com/NexaFlowFrance/OpenCare/blob/main/DOCUMENTATION.md" target="_blank" rel="noopener" style="color: var(--primary); text-decoration: none; font-weight: 500;">Read the documentation →</a>
+  </p>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>
+    Built by <a href="https://nexaflow.fr" target="_blank" rel="noopener">NexaFlow France</a>
+    &nbsp;·&nbsp;
+    Licensed <a href="https://github.com/NexaFlowFrance/OpenCare/blob/main/licence.md" target="_blank" rel="noopener">AGPL-3.0</a>
+    &nbsp;·&nbsp;
+    <a href="https://github.com/NexaFlowFrance/OpenCare" target="_blank" rel="noopener">GitHub</a>
+  </p>
+</footer>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeShot()">
+  <button class="lightbox-close" aria-label="Close" onclick="closeShot()">&times;</button>
+  <img id="lightbox-img" src="" alt="" />
+</div>
+<script>
+  function openShot(e) {
+    e.preventDefault();
+    var href = e.currentTarget.getAttribute('href');
+    document.getElementById('lightbox-img').src = href;
+    document.getElementById('lightbox').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    return false;
+  }
+  function closeShot() {
+    document.getElementById('lightbox').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') closeShot(); });
+</script>
+
+</body>
+</html>

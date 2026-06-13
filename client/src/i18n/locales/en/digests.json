@@ -1,0 +1,22 @@
+{
+  "title": "The week",
+  "weekOf": "Week of {{date}}",
+  "stats": {
+    "visits_one": "{{count}} visit",
+    "visits_other": "{{count}} visits",
+    "entries_one": "{{count}} journal entry",
+    "entries_other": "{{count}} journal entries"
+  },
+  "attentionPoints": "Points of attention",
+  "weakSignals": "Weak signals",
+  "empty": "No summary yet. It is prepared every Sunday at 6pm from the journal, vitals and medications.",
+  "generateNow": "Generate now",
+  "generating": "Generating...",
+  "history": "Previous weeks",
+  "historyTitle": "Previous weeks",
+  "historyEmpty": "No previous summaries yet.",
+  "errors": {
+    "notConfigured": "The circle's AI is not configured or is disabled. Go to Settings to enable it.",
+    "generate": "The summary could not be generated. Check the AI provider and try again."
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "title": "Paramètres",
+  "subtitle": "Votre compte, vos préférences et les données du cercle.",
+  "profile": {
+    "title": "Profil du compte",
+    "subtitle": "Votre nom et votre photo, visibles par les membres de vos cercles.",
+    "name": "Nom affiché",
+    "namePlaceholder": "Ex : Jean Dupont",
+    "save": "Enregistrer",
+    "saved": "Profil enregistré.",
+    "change": "Changer la photo",
+    "choose": "Choisir une photo",
+    "remove": "Retirer"
+  },
+  "language": {
+    "title": "Langue",
+    "subtitle": "Choisissez la langue de l'interface de l'application."
+  },
+  "theme": {
+    "title": "Thème",
+    "subtitle": "Clair, sombre, ou réglé automatiquement selon votre appareil.",
+    "light": "Clair",
+    "dark": "Sombre",
+    "system": "Système"
+  },
+  "notif": {
+    "title": "Notifications push",
+    "subtitle": "Recevez les rappels et alertes du cercle directement sur cet appareil, même quand l'application est fermée.",
+    "unsupported": "Notifications non supportées sur ce navigateur.",
+    "denied": "Permission refusée. Autorisez les notifications dans les paramètres de votre navigateur.",
+    "enable": "Activer les notifications",
+    "disable": "Désactiver les notifications",
+    "inProgress": "En cours…",
+    "active": "Notifications activées sur cet appareil."
+  },
+  "export": {
+    "title": "Exporter les données du cercle",
+    "subtitle": "Télécharge toutes les données du cercle actif (journal, santé, médicaments, agenda, tâches, frais, documents…) dans un fichier JSON. Vos données restent chez vous.",
+    "button": "Exporter",
+    "inProgress": "Export en cours…"
+  },
+  "import": {
+    "title": "Importer des données",
+    "subtitle": "Restaure les données d'un fichier d'export OpenCare dans le cercle actif. Les éléments importés s'ajoutent aux données existantes.",
+    "success": "Import réussi",
+    "itemsImported_one": "élément importé",
+    "itemsImported_other": "éléments importés",
+    "chooseFile": "Choisir un fichier…",
+    "button": "Importer",
+    "inProgress": "Import en cours…",
+    "invalidJson": "Fichier JSON invalide."
+  },
+  "entities": {
+    "care_recipients": "Profil du proche",
+    "recipient_stories": "Page « Qui je suis »",
+    "journal_entries": "Entrées de journal",
+    "journal_photos": "Photos du journal",
+    "vitals": "Constantes",
+    "medications": "Médicaments",
+    "medication_schedules": "Horaires de prise",
+    "medication_intakes": "Prises de médicaments",
+    "prescriptions": "Ordonnances",
+    "events": "Rendez-vous",
+    "tasks": "Tâches",
+    "shopping_items": "Articles de courses",
+    "circle_notes": "Notes",
+    "messages": "Messages",
+    "documents": "Documents",
+    "contacts": "Contacts",
+    "expenses": "Frais",
+    "expense_settlements": "Remboursements",
+    "aid_records": "Aides perçues"
+  },
+  "errors": {
+    "notif": "Erreur lors de la configuration des notifications.",
+    "profile": "Erreur lors de la mise à jour du profil.",
+    "avatarImage": "Veuillez choisir une image.",
+    "avatarRead": "Lecture du fichier impossible.",
+    "avatarInvalid": "Image invalide.",
+    "avatarCanvas": "Canvas indisponible.",
+    "avatarUpdate": "Erreur lors de la mise à jour de la photo.",
+    "avatarRemove": "Erreur lors de la suppression de la photo.",
+    "export": "Erreur lors de l'export.",
+    "import": "Erreur lors de l'import."
+  }
+}

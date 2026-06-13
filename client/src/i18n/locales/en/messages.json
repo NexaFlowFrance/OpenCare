@@ -1,0 +1,50 @@
+{
+  "loading": "Loading messages…",
+  "title": "Messages",
+  "viewLabel": "Choose the feed",
+  "views": {
+    "feed": "Circle feed",
+    "dm": "Direct messages"
+  },
+  "feed": {
+    "empty": "No messages in the circle feed yet."
+  },
+  "dm": {
+    "empty": "No direct conversations yet.",
+    "emptyHint": "Pick a circle member to start a conversation.",
+    "emptyThread": "No messages in this conversation yet.",
+    "newConversation": "New conversation",
+    "pickMember": "Pick a member…",
+    "youPrefix": "You: {{message}}"
+  },
+  "composer": {
+    "label": "Write a message",
+    "placeholder": "Write to the circle…",
+    "placeholderDm": "Write to {{name}}…",
+    "attach": "Attach an image or a PDF"
+  },
+  "attachments": {
+    "viewImage": "View image {{name}}",
+    "remove": "Remove attachment {{name}}"
+  },
+  "menu": {
+    "label": "Message actions"
+  },
+  "edited": "(edited)",
+  "readOnly": "You can read messages but your role does not allow writing.",
+  "confirmDelete": "Delete this message?",
+  "editDialog": {
+    "title": "Edit message",
+    "description": "The message will be marked as edited for everyone."
+  },
+  "errors": {
+    "load": "Unable to load messages.",
+    "send": "Unable to send this message.",
+    "edit": "Unable to edit this message.",
+    "delete": "Unable to delete this message.",
+    "tooManyAttachments": "At most {{max}} attachments per message.",
+    "attachmentTooLarge": "{{name}} is over 1.5 MB even after compression.",
+    "unsupportedFile": "{{name}} is neither an image nor a PDF.",
+    "attachmentFailed": "Unable to prepare attachment {{name}}."
+  }
+}

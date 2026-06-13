@@ -1,0 +1,50 @@
+{
+  "greeting": "How is {{name}} doing?",
+  "greetingFallback": "Hello",
+  "seeAll": "See all",
+  "unreadMessages_one": "{{count}} unread message",
+  "unreadMessages_other": "{{count}} unread messages",
+  "today": {
+    "title": "Today",
+    "empty": "Nothing planned today. A quiet day."
+  },
+  "categories": {
+    "visit": "Visit",
+    "medical": "Medical",
+    "nurse": "Nurse",
+    "aide": "Care aide",
+    "other": "Other"
+  },
+  "medications": {
+    "title": "Today's medications",
+    "takenCount": "{{taken}}/{{total}} doses confirmed",
+    "next": "Next doses",
+    "allDone": "All of today's doses are behind us.",
+    "empty": "No doses scheduled today."
+  },
+  "journal": {
+    "title": "Latest news",
+    "empty": "No news yet. Visits and notes from the circle will appear here."
+  },
+  "tasks": {
+    "title": "Pending tasks",
+    "count_one": "{{count}} pending task",
+    "count_other": "{{count}} pending tasks",
+    "empty": "All done. Nothing pending."
+  },
+  "vitals": {
+    "title": "Vitals",
+    "empty": "No measurements yet.",
+    "types": {
+      "weight": "Weight",
+      "bp": "Blood pressure",
+      "temperature": "Temperature",
+      "glucose": "Glucose",
+      "pain": "Pain",
+      "mood": "Mood"
+    }
+  },
+  "errors": {
+    "load": "Unable to load the dashboard."
+  }
+}

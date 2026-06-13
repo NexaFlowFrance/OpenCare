@@ -1,0 +1,81 @@
+{
+  "card": {
+    "title": "Mode relais",
+    "description": "Vous vous absentez ? Générez un pack de passation : consignes, médicaments, planning de la période, contacts et page « Qui je suis », partagés au remplaçant par un simple lien.",
+    "empty": "Aucun pack de relais pour le moment.",
+    "period": "Du {{start}} au {{end}}",
+    "copyLink": "Copier le lien",
+    "copied": "Lien copié",
+    "deleteConfirm": "Supprimer ce pack ? Son lien cessera de fonctionner.",
+    "deleted": "Pack supprimé",
+    "new": "Créer un pack de relais",
+    "startsOn": "Début du relais",
+    "endsOn": "Fin du relais",
+    "instructions": "Consignes pour le remplaçant",
+    "instructionsPlaceholder": "Les clés sont chez la voisine, la kiné passe le mardi, appeler Sophie en cas de doute...",
+    "create": "Générer le pack",
+    "creating": "Génération...",
+    "created": "Pack créé. Transmettez le lien ci-dessous au remplaçant.",
+    "linkLabel": "Lien à transmettre",
+    "expiryNote": "Le contenu est figé au moment de la création. Le lien reste lisible jusqu'à 7 jours après la fin du relais.",
+    "datesRequired": "Indiquez les dates de début et de fin.",
+    "datesOrder": "La fin doit être après le début.",
+    "errors": {
+      "load": "Impossible de charger les packs de relais.",
+      "create": "La création du pack a échoué.",
+      "delete": "La suppression a échoué."
+    }
+  },
+  "page": {
+    "title": "Relais du {{start}} au {{end}}",
+    "forName": "pour {{name}}",
+    "generatedAt": "Pack généré le {{date}}",
+    "print": "Imprimer",
+    "sections": {
+      "recipient": "Le proche",
+      "instructions": "Consignes",
+      "medications": "Médicaments en cours",
+      "schedule": "Planning de la période",
+      "contacts": "Contacts",
+      "story": "Qui je suis"
+    },
+    "recipient": {
+      "birthDate": "Date de naissance",
+      "phone": "Téléphone",
+      "address": "Adresse",
+      "allergies": "Allergies",
+      "gp": "Médecin traitant"
+    },
+    "noMedications": "Aucun médicament actif.",
+    "noEvents": "Rien de prévu sur la période.",
+    "noContacts": "Aucun contact enregistré.",
+    "hasKey": "a la clé",
+    "eventCategories": {
+      "visit": "Visite",
+      "medical": "Médical",
+      "nurse": "Infirmière",
+      "aide": "Auxiliaire",
+      "other": "Autre"
+    },
+    "contactCategories": {
+      "doctor": "Médecin",
+      "nurse": "Infirmière",
+      "aide": "Auxiliaire",
+      "physio": "Kiné",
+      "pharmacy": "Pharmacie",
+      "family": "Famille",
+      "neighbor": "Voisin",
+      "other": "Autre"
+    },
+    "expired": {
+      "title": "Lien expiré",
+      "text": "Ce pack de relais n'est plus disponible. Demandez un nouveau lien à la famille."
+    },
+    "errors": {
+      "title": "Pack indisponible",
+      "notFound": "Ce lien n'est pas valide. Vérifiez-le ou demandez un nouveau lien à la famille.",
+      "network": "Connexion impossible. Vérifiez le réseau et réessayez."
+    },
+    "footer": "Ce lien est destiné à la personne qui prend le relais pendant la période indiquée."
+  }
+}

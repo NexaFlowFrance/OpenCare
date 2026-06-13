@@ -1,0 +1,68 @@
+{
+  "title": "Appointment preparation",
+  "subtitle": "In one click, a printable document for the doctor: notable events, vitals evolution, current treatments and the family's questions.",
+  "noCircle": "Select a circle to prepare an appointment.",
+  "error": "Could not prepare the document.",
+  "controls": {
+    "since": "Events since",
+    "sinceHint": "Default: the last 90 days.",
+    "questions": "Family questions",
+    "questionsPlaceholder": "One question per line. For example: should the pain treatment be adjusted?",
+    "print": "Print / PDF",
+    "preview": "Document preview"
+  },
+  "doc": {
+    "title": "Appointment preparation",
+    "patient": "Patient",
+    "birthDate": "Date of birth: {{date}}",
+    "generatedOn": "Document prepared on {{date}}",
+    "period": "Period covered: from {{from}} to {{to}}",
+    "gp": "General practitioner: {{name}}",
+    "bloodType": "Blood type: {{value}}",
+    "allergies": "Allergies: {{value}}",
+    "history": "Medical history: {{value}}",
+    "medications": "Current treatments",
+    "medsName": "Medication",
+    "medsDosage": "Dosage",
+    "medsSchedule": "Times",
+    "medsInstructions": "Instructions",
+    "noMedications": "No active treatment.",
+    "intakes": "Adherence over the period",
+    "intakesSummary": "{{taken}} doses confirmed out of {{scheduled}} scheduled ({{percent}}%), {{skipped}} skipped, {{missed}} missed.",
+    "noIntakes": "No dose scheduled over the period.",
+    "missed": "Missed doses",
+    "vitals": "Vitals",
+    "vitalsType": "Vital",
+    "vitalsFirst": "Start of period",
+    "vitalsLast": "Latest reading",
+    "vitalsTrend": "Trend",
+    "vitalsCount_one": "{{count}} reading",
+    "vitalsCount_other": "{{count}} readings",
+    "trend": {
+      "up": "rising",
+      "down": "falling",
+      "stable": "stable"
+    },
+    "noVitals": "No vital recorded over the period.",
+    "highlights": "Notable events",
+    "noHighlights": "No notable event over the period.",
+    "entryTypes": {
+      "visit": "Visit",
+      "incident": "Incident",
+      "mood": "Mood"
+    },
+    "prescriptions": "Prescriptions",
+    "renewalOn": "To renew on {{date}}",
+    "noRenewal": "No renewal date",
+    "questions": "Family questions",
+    "noQuestions": "No question noted."
+  },
+  "vitalTypes": {
+    "weight": "Weight",
+    "bp": "Blood pressure",
+    "pain": "Pain",
+    "mood": "Mood",
+    "temperature": "Temperature",
+    "glucose": "Blood glucose"
+  }
+}

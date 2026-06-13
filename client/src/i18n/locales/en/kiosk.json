@@ -1,0 +1,61 @@
+{
+  "greeting": "Hello {{name}}",
+  "greetingEvening": "Good evening {{name}}",
+  "exit": "Exit",
+  "fullscreen": "Fullscreen",
+  "exitFullscreen": "Exit fullscreen",
+  "and": "and",
+  "today": {
+    "title": "Today",
+    "empty": "No visit planned today."
+  },
+  "visit": {
+    "one": "{{name}} is coming to see you at {{time}}",
+    "many": "{{names}} are coming to see you at {{time}}",
+    "nurse": "The nurse comes at {{time}}",
+    "aide": "The home helper comes at {{time}}",
+    "medical": "Appointment at {{time}}: {{title}}",
+    "other": "{{title}} at {{time}}"
+  },
+  "meds": {
+    "title": "Your medicines",
+    "empty": "No medicine today.",
+    "at": "at {{time}}",
+    "taken": "Taken, well done"
+  },
+  "status": {
+    "ok": "All is well",
+    "help": "I need help",
+    "sentTitle": "It has been sent.",
+    "sentDetail": "Your family knows.",
+    "errorTitle": "It did not work.",
+    "errorDetail": "Please press the button again."
+  },
+  "weather": {
+    "clear": "It is sunny",
+    "partlyCloudy": "A few clouds",
+    "cloudy": "The sky is grey",
+    "fog": "It is foggy",
+    "drizzle": "A little rain",
+    "rain": "It is raining",
+    "snow": "It is snowing",
+    "storm": "There is a storm"
+  },
+  "displaySettings": {
+    "open": "Display settings",
+    "title": "Display settings",
+    "close": "Close",
+    "location": "Weather location",
+    "searchPlaceholder": "Search for a city…",
+    "noResults": "No results",
+    "noLocation": "Pick a location to show the weather on this display.",
+    "change": "Change",
+    "photoBackground": "Photo background",
+    "photoBackgroundHint": "Shows family photos as the background. Requires a connected Immich integration."
+  },
+  "settings": {
+    "title": "Kiosk display",
+    "subtitle": "The wall tablet screen at your loved one's home: today's visits, medication reminders, weather, photos and the \"All is well\" / \"I need help\" buttons.",
+    "open": "Open the kiosk display"
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "greeting": "Comment va {{name}} ?",
+  "greetingFallback": "Bonjour",
+  "seeAll": "Voir tout",
+  "unreadMessages_one": "{{count}} message non lu",
+  "unreadMessages_other": "{{count}} messages non lus",
+  "today": {
+    "title": "Aujourd'hui",
+    "empty": "Rien de prévu aujourd'hui. Une journée tranquille."
+  },
+  "categories": {
+    "visit": "Visite",
+    "medical": "Médical",
+    "nurse": "Infirmière",
+    "aide": "Auxiliaire",
+    "other": "Autre"
+  },
+  "medications": {
+    "title": "Médicaments du jour",
+    "takenCount": "{{taken}}/{{total}} prises confirmées",
+    "next": "Prochaines prises",
+    "allDone": "Toutes les prises du jour sont passées.",
+    "empty": "Aucune prise prévue aujourd'hui."
+  },
+  "journal": {
+    "title": "Dernières nouvelles",
+    "empty": "Pas encore de nouvelles. Les passages et les notes du cercle apparaîtront ici."
+  },
+  "tasks": {
+    "title": "Tâches en attente",
+    "count_one": "{{count}} tâche en attente",
+    "count_other": "{{count}} tâches en attente",
+    "empty": "Tout est fait. Rien en attente."
+  },
+  "vitals": {
+    "title": "Constantes",
+    "empty": "Aucune mesure pour le moment.",
+    "types": {
+      "weight": "Poids",
+      "bp": "Tension",
+      "temperature": "Température",
+      "glucose": "Glycémie",
+      "pain": "Douleur",
+      "mood": "Moral"
+    }
+  },
+  "errors": {
+    "load": "Impossible de charger le tableau de bord."
+  }
+}

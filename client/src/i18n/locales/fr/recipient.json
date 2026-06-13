@@ -1,0 +1,119 @@
+{
+  "title": "Profil du proche",
+  "subtitle": "Les informations essentielles sur {{name}}, partagées avec le cercle.",
+  "subtitleNoName": "Les informations essentielles sur votre proche, partagées avec le cercle.",
+  "noCircle": "Sélectionnez un cercle pour voir le profil du proche.",
+  "notFound": "Aucun profil n'est associé à ce cercle.",
+  "readOnly": "Lecture seule : seuls les administrateurs et la famille peuvent modifier ce profil.",
+  "notProvided": "Non renseigné",
+  "age_one": "{{count}} an",
+  "age_other": "{{count}} ans",
+  "photo": {
+    "alt": "Photo de {{name}}",
+    "change": "Changer la photo",
+    "choose": "Ajouter une photo",
+    "remove": "Retirer",
+    "updated": "Photo mise à jour",
+    "invalid": "Choisissez un fichier image.",
+    "error": "La mise à jour de la photo a échoué."
+  },
+  "identity": {
+    "title": "Identité",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "birthDate": "Date de naissance",
+    "phone": "Téléphone",
+    "address": "Adresse"
+  },
+  "health": {
+    "title": "Santé",
+    "bloodType": "Groupe sanguin",
+    "bloodTypeUnknown": "Inconnu",
+    "allergies": "Allergies",
+    "history": "Antécédents",
+    "mobility": "Mobilité",
+    "diet": "Alimentation",
+    "gpName": "Médecin traitant",
+    "gpPhone": "Téléphone du médecin"
+  },
+  "admin": {
+    "title": "Administratif",
+    "ssn": "Numéro de sécurité sociale",
+    "insurance": "Mutuelle",
+    "directives": "Directives anticipées"
+  },
+  "notes": {
+    "title": "Notes libres",
+    "label": "Notes",
+    "placeholder": "Habitudes, consignes, ce qui lui fait plaisir..."
+  },
+  "sensitive": {
+    "show": "Afficher {{field}}",
+    "hide": "Masquer {{field}}"
+  },
+  "saved": "Profil enregistré",
+  "errors": {
+    "load": "Impossible de charger le profil.",
+    "save": "L'enregistrement a échoué.",
+    "firstNameRequired": "Le prénom est requis."
+  },
+  "story": {
+    "title": "Qui je suis",
+    "description": "Le récit de vie de votre proche : ce qu'un nouvel intervenant doit savoir pour bien l'accompagner.",
+    "sharedNotice": "Cette page est montrée aux intervenants via leur lien.",
+    "inspiration": "Inspirée du « This is me » de l'Alzheimer's Society.",
+    "empty": "Aucune section pour le moment.",
+    "emptyHint": "Commencez avec les sections proposées, puis adaptez-les librement.",
+    "startEditing": "Remplir la page",
+    "addSection": "Ajouter une section",
+    "removeSection": "Retirer la section {{title}}",
+    "sectionTitle": "Titre",
+    "sectionContent": "Contenu",
+    "sectionPlaceholder": "Quelques phrases simples suffisent...",
+    "maxSections": "12 sections au maximum.",
+    "saved": "Page enregistrée",
+    "defaults": {
+      "work": "Métier et vie professionnelle",
+      "pride": "Fiertés",
+      "habits": "Habitudes et rituels",
+      "soothing": "Ce qui l'apaise",
+      "anxious": "Ce qui l'angoisse",
+      "music": "Musiques",
+      "family": "Famille et visages",
+      "beliefs": "Croyances"
+    },
+    "errors": {
+      "load": "Impossible de charger la page Qui je suis.",
+      "save": "L'enregistrement a échoué.",
+      "titleRequired": "Chaque section doit avoir un titre."
+    }
+  },
+  "emergency": {
+    "title": "Fiche urgence (QR frigo)",
+    "description": "Un QR code à imprimer et coller sur le frigo : les secours le scannent et voient la fiche vitale (traitements, allergies, contacts) sans compte.",
+    "enabledLabel": "Fiche accessible par QR",
+    "disabledNotice": "La fiche est désactivée : le QR imprimé ne fonctionne plus.",
+    "qrAlt": "QR code de la fiche urgence de {{name}}",
+    "openSheet": "Voir la fiche",
+    "notesLabel": "Notes complémentaires",
+    "notesPlaceholder": "Code de la porte, animal, voisine qui a la clé...",
+    "saveNotes": "Enregistrer les notes",
+    "notesSaved": "Notes enregistrées",
+    "regenerate": "Régénérer le lien",
+    "regenerateConfirm": "Régénérer le lien ? L'ancien QR imprimé cessera de fonctionner.",
+    "regenerated": "Nouveau lien généré. Pensez à réimprimer l'affiche.",
+    "updated": "Fiche mise à jour",
+    "printPoster": "Imprimer l'affiche",
+    "poster": {
+      "scan": "En cas d'urgence, scannez",
+      "name": "Fiche vitale de {{name}}",
+      "numbers": "SAMU 15, Pompiers 18",
+      "print": "Imprimer",
+      "close": "Fermer"
+    },
+    "errors": {
+      "load": "Impossible de charger la fiche urgence.",
+      "save": "L'enregistrement a échoué."
+    }
+  }
+}

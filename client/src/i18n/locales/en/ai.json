@@ -1,0 +1,58 @@
+{
+  "magic": {
+    "open": "AI assistant",
+    "title": "AI assistant ✨",
+    "description": "Describe what you want to add, the assistant takes care of the rest.",
+    "placeholder": "Add lasagna Thursday night and remind Mia about her gym bag…",
+    "parse": "Analyze",
+    "parsing": "Analyzing…",
+    "nothingFound": "No actionable items found in this note. Try rephrasing.",
+    "back": "Back",
+    "reviewHint": "Review the proposals, untick anything you don't want, then confirm.",
+    "confirm": "Add ({{count}})",
+    "confirming": "Adding…",
+    "successTitle": "Done ✨",
+    "successDescription": "{{count}} item(s) added.",
+    "partialTitle": "Partially added",
+    "partialDescription": "{{added}} added, {{failed}} failed.",
+    "allFailed": "No item could be added. Please try again.",
+    "types": {
+      "task": "Task",
+      "appointment": "Appointment",
+      "shopping_item": "Shopping",
+      "budget_entry": "Budget"
+    }
+  },
+  "settings": {
+    "title": "AI assistant",
+    "subtitle": "Connect an AI model (local or cloud) to the active circle to add items in natural language. Settings are reserved for circle admins.",
+    "provider": "Provider",
+    "providers": {
+      "ollama": "Ollama (local)",
+      "openai": "OpenAI-compatible API",
+      "anthropic": "Anthropic Claude"
+    },
+    "baseUrl": "Server URL",
+    "apiKey": "API key",
+    "keyKept": "••• (kept)",
+    "clearKey": "Clear the stored key",
+    "model": "Model",
+    "enabled": "Assistant enabled",
+    "privacy": "Privacy: the API key is encrypted and stored only on YOUR server. With Ollama nothing leaves the house: notes are processed locally.",
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Settings saved.",
+    "test": "Test connection",
+    "testing": "Testing…",
+    "testSuccess": "Connection successful: the model responds correctly."
+  },
+  "errors": {
+    "AI_NOT_CONFIGURED": "The AI assistant is not configured. Head to Settings.",
+    "AI_DISABLED": "The AI assistant is disabled in Settings.",
+    "AI_UNREACHABLE": "Cannot reach the AI provider. Check the URL and that the service is running.",
+    "AI_UNAUTHORIZED": "API key rejected. Check it in Settings.",
+    "AI_MODEL_NOT_FOUND": "Model not found at the provider. Check its name (e.g. llama3.1).",
+    "AI_INVALID_RESPONSE": "The model returned an invalid response. Retry or switch models.",
+    "AI_PROVIDER_ERROR": "The AI provider returned an error. Please try again."
+  }
+}

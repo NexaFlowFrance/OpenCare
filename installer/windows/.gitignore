@@ -1,0 +1,13 @@
+# Fichiers prepares automatiquement par la CI (voir windows-installer.yml)
+assets/OpenCare.ico
+assets/OpenCare.png
+assets/wizard-large.bmp
+assets/wizard-small.bmp
+app/schema.sql
+app/server/
+app/client/
+app/runtime/
+# Lanceur natif compile par la CI depuis OpenCareLauncher.cs
+app/OpenCare.exe
+# Brouillons locaux
+OpenCare 2.iss

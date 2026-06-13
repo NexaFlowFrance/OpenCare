@@ -1,0 +1,20 @@
+# Normalisation des fins de ligne: LF dans le depot pour tout le texte.
+* text=auto eol=lf
+
+# Fichiers qui DOIVENT rester en LF (casseraient en CRLF sous Linux/Docker).
+*.sh text eol=lf
+Dockerfile text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# Scripts Windows en CRLF (PowerShell, Inno Setup).
+*.ps1 text eol=crlf
+*.iss text eol=crlf
+
+# Binaires: pas de conversion.
+*.png binary
+*.ico binary
+*.bmp binary
+*.woff binary
+*.woff2 binary
+*.pdf binary

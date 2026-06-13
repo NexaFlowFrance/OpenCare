@@ -1,0 +1,157 @@
+:root {
+  color-scheme: light;
+
+  /* Base tokens (hex) - palette OpenCare: vert sauge desature, neutres chauds.
+     Direction: calme, sobre, credible sante (references NHS / GOV.UK / WCAG AA). */
+  --bg: #faf9f7;
+  --surface: #ffffff;
+  --surface-2: #f1efea;
+  --border-base: #e7e4df;
+  --border-strong-base: #d6d2ca;
+  --text-base: #26231f;
+  --text-muted-base: #5c564e;
+
+  --primary-base: #3e6b54;
+  --primary-hover-base: #335845;
+  --primary-pressed-base: #2b4a3a;
+  --primary-soft-base: #e9f0eb;
+
+  --success-base: #2f7a4d;
+  --warning-base: #9a6212;
+  --danger-base: #a8453c;
+  --info-base: #44617c;
+
+  /* RGB tokens for Tailwind rgb(var(--token) / alpha) */
+  --background: 250 249 247;
+  --foreground: 38 35 31;
+  --card: 255 255 255;
+  --card-foreground: 38 35 31;
+  --popover: 255 255 255;
+  --popover-foreground: 38 35 31;
+
+  --surface-rgb: 255 255 255;
+  --surface-2-rgb: 241 239 234;
+
+  --primary: 62 107 84;
+  --primary-foreground: 255 255 255;
+  --primary-hover: 51 88 69;
+  --primary-pressed: 43 74 58;
+  --primary-soft: 233 240 235;
+
+  /* Terracotta douce - 2e teinte data-viz et touches chaleureuses */
+  --peach: 176 125 98;
+  /* Bleu ardoise - 3e teinte data-viz */
+  --plum: 68 97 124;
+
+  --secondary: 241 239 234;
+  --secondary-foreground: 38 35 31;
+  --muted: 241 239 234;
+  --muted-foreground: 92 86 78;
+  --accent: 233 240 235;
+  --accent-foreground: 62 107 84;
+
+  --destructive: 168 69 60;
+  --destructive-foreground: 255 255 255;
+
+  --success: 47 122 77;
+  --warning: 154 98 18;
+  --danger: 168 69 60;
+  --info: 68 97 124;
+
+  /* Fonds semantiques doux (badges, encarts) */
+  --success-soft: 230 242 234;
+  --warning-soft: 251 241 223;
+  --danger-soft: 249 234 231;
+  --info-soft: 234 240 245;
+
+  --border: 231 228 223;
+  --border-strong: 214 210 202;
+  --input: 231 228 223;
+  --ring: 62 107 84;
+
+  --radius: 10px;
+  --radius-card: 10px;
+  --radius-input: 6px;
+  --radius-pill: 999px;
+
+  /* Sobriete: filets fins + ombres quasi invisibles, jamais plus */
+  --shadow-surface: 0 1px 2px rgba(28, 25, 20, 0.06);
+  --shadow-surface-hover: 0 2px 8px rgba(28, 25, 20, 0.08);
+
+  --motion-fast: 150ms;
+  --motion-base: 220ms;
+  --ease-soft: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.dark {
+  color-scheme: dark;
+
+  /* Mode sombre: neutres chauds assombris, sauge eclairci (reserve a l'app
+     aidants; le kiosk reste toujours en clair pour la lisibilite seniors). */
+  --bg: #1b1a18;
+  --surface: #252320;
+  --surface-2: #211f1c;
+  --border-base: #383530;
+  --border-strong-base: #4a463f;
+  --text-base: #ece9e4;
+  --text-muted-base: #a39c92;
+
+  --primary-base: #8fb8a0;
+  --primary-hover-base: #9fc4ae;
+  --primary-pressed-base: #7faa90;
+  --primary-soft-base: #243029;
+
+  --background: 27 26 24;
+  --foreground: 236 233 228;
+  --card: 37 35 32;
+  --card-foreground: 236 233 228;
+  --popover: 37 35 32;
+  --popover-foreground: 236 233 228;
+
+  --surface-rgb: 37 35 32;
+  --surface-2-rgb: 33 31 28;
+
+  --primary: 143 184 160;
+  --primary-foreground: 21 32 25;
+  --primary-hover: 159 196 174;
+  --primary-pressed: 127 170 144;
+  --primary-soft: 36 48 41;
+
+  --peach: 195 154 126;
+  --plum: 138 167 192;
+
+  --secondary: 33 31 28;
+  --secondary-foreground: 236 233 228;
+  --muted: 33 31 28;
+  --muted-foreground: 163 156 146;
+  --accent: 36 48 41;
+  --accent-foreground: 143 184 160;
+
+  --destructive: 201 122 110;
+  --destructive-foreground: 33 18 15;
+
+  --success: 111 174 138;
+  --warning: 201 163 92;
+  --danger: 201 122 110;
+  --info: 138 167 192;
+
+  --success-soft: 33 44 37;
+  --warning-soft: 46 39 26;
+  --danger-soft: 46 31 28;
+  --info-soft: 31 38 45;
+
+  --border: 56 53 48;
+  --border-strong: 74 70 63;
+  --input: 56 53 48;
+  --ring: 143 184 160;
+
+  --shadow-surface: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-surface-hover: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-fast: 1ms;
+    --motion-base: 1ms;
+  }
+}

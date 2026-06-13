@@ -1,0 +1,37 @@
+{
+  "title": "Fiche urgence",
+  "updatedAt": "Mise à jour automatique le {{date}}",
+  "fields": {
+    "birthDate": "Née le / Né le",
+    "age": "{{age}} ans",
+    "bloodType": "Groupe sanguin",
+    "address": "Adresse",
+    "insurance": "Mutuelle",
+    "gp": "médecin traitant"
+  },
+  "sections": {
+    "allergies": "Allergies",
+    "medications": "Traitements en cours",
+    "noMedications": "Aucun traitement enregistré.",
+    "history": "Antécédents",
+    "directives": "Directives anticipées",
+    "notes": "Informations complémentaires",
+    "contacts": "Contacts"
+  },
+  "categories": {
+    "doctor": "médecin",
+    "nurse": "infirmière",
+    "aide": "auxiliaire de vie",
+    "physio": "kinésithérapeute",
+    "pharmacy": "pharmacie",
+    "family": "famille",
+    "neighbor": "voisin",
+    "other": "autre"
+  },
+  "errors": {
+    "title": "Fiche indisponible",
+    "notFound": "Cette fiche n'existe pas ou a été désactivée.",
+    "network": "Connexion impossible. Vérifiez le réseau et réessayez."
+  },
+  "footer": "Fiche générée automatiquement par OpenCare à partir des informations tenues à jour par la famille."
+}

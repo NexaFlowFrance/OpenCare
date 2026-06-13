@@ -1,0 +1,49 @@
+{
+  "header": {
+    "title": "Journal de {{name}}",
+    "signedAs": "Connecté en tant que {{name}}"
+  },
+  "compose": {
+    "title": "Écrire au journal",
+    "placeholder": "Par exemple : passage de 20 minutes, a bien mangé, moral bon.",
+    "submit": "Envoyer au journal",
+    "sending": "Envoi...",
+    "sent": "C'est envoyé. Merci pour votre passage."
+  },
+  "types": {
+    "visit": "Visite",
+    "note": "Note",
+    "mood": "Moral",
+    "incident": "Incident"
+  },
+  "medications": {
+    "title": "Médicaments du jour",
+    "taken": "Pris",
+    "skipped": "Sauté",
+    "allDone": "Toutes les prises du jour sont renseignées.",
+    "status": {
+      "taken": "pris",
+      "skipped": "sauté",
+      "missed": "manqué"
+    }
+  },
+  "today": {
+    "title": "Aujourd'hui",
+    "empty": "Aucun passage enregistré aujourd'hui pour le moment."
+  },
+  "errors": {
+    "title": "Lien indisponible",
+    "invalid": "Ce lien n'est plus valide. Demandez un nouveau lien à la famille.",
+    "network": "Connexion impossible. Vérifiez le réseau et réessayez.",
+    "sendFailed": "L'envoi a échoué. Réessayez."
+  },
+  "story": {
+    "show": "Qui est {{name}} ?",
+    "showNoName": "Qui est la personne aidée ?",
+    "hide": "Masquer",
+    "loading": "Chargement...",
+    "empty": "La famille n'a pas encore rempli cette page.",
+    "error": "Impossible de charger cette page pour le moment."
+  },
+  "footer": "Ce lien vous est personnel. La famille voit vos messages en temps réel."
+}

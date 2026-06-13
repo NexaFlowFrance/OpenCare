@@ -1,0 +1,61 @@
+{
+  "greeting": "Bonjour {{name}}",
+  "greetingEvening": "Bonsoir {{name}}",
+  "exit": "Quitter",
+  "fullscreen": "Plein écran",
+  "exitFullscreen": "Quitter le plein écran",
+  "and": "et",
+  "today": {
+    "title": "Aujourd'hui",
+    "empty": "Pas de visite prévue aujourd'hui."
+  },
+  "visit": {
+    "one": "{{name}} vient te voir à {{time}}",
+    "many": "{{names}} viennent te voir à {{time}}",
+    "nurse": "L'infirmière passe à {{time}}",
+    "aide": "L'aide à domicile passe à {{time}}",
+    "medical": "Rendez-vous à {{time}} : {{title}}",
+    "other": "{{title}} à {{time}}"
+  },
+  "meds": {
+    "title": "Tes médicaments",
+    "empty": "Pas de médicament aujourd'hui.",
+    "at": "à {{time}}",
+    "taken": "C'est pris, bravo"
+  },
+  "status": {
+    "ok": "Tout va bien",
+    "help": "J'ai besoin d'aide",
+    "sentTitle": "C'est envoyé.",
+    "sentDetail": "Ta famille est prévenue.",
+    "errorTitle": "Ça n'a pas marché.",
+    "errorDetail": "Appuie encore une fois sur le bouton."
+  },
+  "weather": {
+    "clear": "Il fait beau",
+    "partlyCloudy": "Quelques nuages",
+    "cloudy": "Le ciel est couvert",
+    "fog": "Il y a du brouillard",
+    "drizzle": "Il pleut un peu",
+    "rain": "Il pleut",
+    "snow": "Il neige",
+    "storm": "Il y a de l'orage"
+  },
+  "displaySettings": {
+    "open": "Réglages de l'affichage",
+    "title": "Réglages de l'affichage",
+    "close": "Fermer",
+    "location": "Lieu pour la météo",
+    "searchPlaceholder": "Rechercher une ville…",
+    "noResults": "Aucun résultat",
+    "noLocation": "Choisissez un lieu pour afficher la météo sur cet écran.",
+    "change": "Changer",
+    "photoBackground": "Fond photo",
+    "photoBackgroundHint": "Affiche des photos de famille en arrière-plan. Nécessite une intégration Immich connectée."
+  },
+  "settings": {
+    "title": "Affichage kiosk",
+    "subtitle": "L'écran de la tablette murale chez votre proche : visites du jour, rappels de médicaments, météo, photos et boutons « Tout va bien » / « J'ai besoin d'aide ».",
+    "open": "Ouvrir l'affichage kiosk"
+  }
+}

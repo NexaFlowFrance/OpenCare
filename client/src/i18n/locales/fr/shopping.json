@@ -1,0 +1,49 @@
+{
+  "loading": "Chargement de la liste…",
+  "title": "Liste de courses",
+  "subtitle_one": "{{count}} article à acheter",
+  "subtitle_other": "{{count}} articles à acheter",
+  "categories": {
+    "food": "Alimentation",
+    "hygiene": "Hygiène",
+    "household": "Entretien",
+    "pharmacy": "Pharmacie",
+    "other": "Autre"
+  },
+  "add": {
+    "label": "Ajouter un article",
+    "placeholder": "Ajouter un article (ex : compotes, mouchoirs)…",
+    "noCategory": "Sans catégorie"
+  },
+  "row": {
+    "check": "Cocher {{name}}",
+    "uncheck": "Décocher {{name}}"
+  },
+  "checked": {
+    "title_one": "Article coché ({{count}})",
+    "title_other": "Articles cochés ({{count}})",
+    "clear": "Vider les articles cochés"
+  },
+  "edit": {
+    "description": "Précisez la quantité, l'unité ou une note pour la personne qui fait les courses.",
+    "quantity": "Quantité",
+    "unit": "Unité",
+    "unitPlaceholder": "Ex : kg, boîte, paquet",
+    "notes": "Note (facultatif)",
+    "notesPlaceholder": "Ex : la marque habituelle, sans sucre…"
+  },
+  "empty": {
+    "title": "La liste est vide",
+    "description": "Ajoutez ce qu'il faut acheter pour le prochain passage : tout le cercle voit la même liste.",
+    "allChecked": "Tout est coché : il ne reste rien à acheter."
+  },
+  "errors": {
+    "load": "Impossible de charger la liste de courses.",
+    "add": "Impossible d'ajouter cet article.",
+    "toggle": "Impossible de mettre à jour cet article.",
+    "update": "Impossible d'enregistrer cet article.",
+    "delete": "Impossible de supprimer cet article.",
+    "clear": "Impossible de vider les articles cochés.",
+    "quantityInvalid": "La quantité doit être un nombre positif."
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "loading": "Chargement des messages…",
+  "title": "Messages",
+  "viewLabel": "Choisir le fil",
+  "views": {
+    "feed": "Fil du cercle",
+    "dm": "Messages directs"
+  },
+  "feed": {
+    "empty": "Aucun message dans le fil du cercle pour le moment."
+  },
+  "dm": {
+    "empty": "Aucune conversation directe pour le moment.",
+    "emptyHint": "Choisissez un membre du cercle pour démarrer une conversation.",
+    "emptyThread": "Aucun message dans cette conversation pour le moment.",
+    "newConversation": "Nouvelle conversation",
+    "pickMember": "Choisir un membre…",
+    "youPrefix": "Vous : {{message}}"
+  },
+  "composer": {
+    "label": "Écrire un message",
+    "placeholder": "Écrire au cercle…",
+    "placeholderDm": "Écrire à {{name}}…",
+    "attach": "Joindre une image ou un PDF"
+  },
+  "attachments": {
+    "viewImage": "Voir l'image {{name}}",
+    "remove": "Retirer la pièce jointe {{name}}"
+  },
+  "menu": {
+    "label": "Actions sur le message"
+  },
+  "edited": "(modifié)",
+  "readOnly": "Vous pouvez lire les messages mais votre rôle ne permet pas d'écrire.",
+  "confirmDelete": "Supprimer ce message ?",
+  "editDialog": {
+    "title": "Modifier le message",
+    "description": "Le message sera marqué comme modifié pour tout le monde."
+  },
+  "errors": {
+    "load": "Impossible de charger les messages.",
+    "send": "Impossible d'envoyer ce message.",
+    "edit": "Impossible de modifier ce message.",
+    "delete": "Impossible de supprimer ce message.",
+    "tooManyAttachments": "{{max}} pièces jointes maximum par message.",
+    "attachmentTooLarge": "{{name}} dépasse 1,5 Mo même après compression.",
+    "unsupportedFile": "{{name}} n'est ni une image ni un PDF.",
+    "attachmentFailed": "Impossible de préparer la pièce jointe {{name}}."
+  }
+}

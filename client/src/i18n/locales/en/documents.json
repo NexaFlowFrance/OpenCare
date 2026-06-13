@@ -1,0 +1,60 @@
+{
+  "title": "Documents",
+  "subtitle": "Prescriptions, reports and the circle's paperwork",
+  "loading": "Loading documents…",
+  "upload": "Upload a document",
+  "restricted": {
+    "title": "Restricted access",
+    "description": "The circle's documents are not accessible with your role."
+  },
+  "filters": {
+    "all": "All"
+  },
+  "categories": {
+    "prescription": "Prescription",
+    "report": "Medical report",
+    "insurance": "Insurance",
+    "legal": "Legal",
+    "other": "Other"
+  },
+  "empty": {
+    "none": "No documents yet.",
+    "noMatch": "No documents in this category."
+  },
+  "meta": {
+    "uploadedBy": "Uploaded by {{name}}"
+  },
+  "dialog": {
+    "uploadTitle": "Upload a document",
+    "uploadDescription": "Image or PDF, 5 MB max. Images are compressed automatically.",
+    "editTitle": "Edit document"
+  },
+  "form": {
+    "titleLabel": "Title",
+    "titlePlaceholder": "E.g. Prescription from Dr Martin",
+    "category": "Category",
+    "notes": "Notes",
+    "file": "File (image or PDF)",
+    "processing": "Preparing the file…",
+    "ready": "File ready: {{name}}"
+  },
+  "preview": {
+    "open": "Preview",
+    "download": "Download",
+    "loading": "Loading the file…",
+    "pdfHint": "Preview is not available for PDFs: download the file instead."
+  },
+  "confirm": {
+    "delete": "Delete this document?"
+  },
+  "errors": {
+    "load": "Could not load documents.",
+    "save": "Could not save the document.",
+    "delete": "Could not delete the document.",
+    "preview": "Could not open the document.",
+    "fileRequired": "Choose a file.",
+    "fileType": "Unsupported format: choose an image or a PDF.",
+    "fileTooLarge": "File too large: 5 MB maximum.",
+    "compressFailed": "Could not shrink this image below 5 MB. Try a smaller image."
+  }
+}

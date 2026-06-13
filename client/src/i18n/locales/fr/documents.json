@@ -1,0 +1,60 @@
+{
+  "title": "Documents",
+  "subtitle": "Ordonnances, comptes-rendus et papiers du cercle",
+  "loading": "Chargement des documents…",
+  "upload": "Déposer un document",
+  "restricted": {
+    "title": "Accès restreint",
+    "description": "Les documents du cercle ne sont pas accessibles avec votre rôle."
+  },
+  "filters": {
+    "all": "Tous"
+  },
+  "categories": {
+    "prescription": "Ordonnance",
+    "report": "Compte-rendu",
+    "insurance": "Mutuelle",
+    "legal": "Juridique",
+    "other": "Autre"
+  },
+  "empty": {
+    "none": "Aucun document pour le moment.",
+    "noMatch": "Aucun document dans cette catégorie."
+  },
+  "meta": {
+    "uploadedBy": "Déposé par {{name}}"
+  },
+  "dialog": {
+    "uploadTitle": "Déposer un document",
+    "uploadDescription": "Image ou PDF, 5 Mo maximum. Les images sont compressées automatiquement.",
+    "editTitle": "Modifier le document"
+  },
+  "form": {
+    "titleLabel": "Titre",
+    "titlePlaceholder": "Ex : Ordonnance Dr Martin",
+    "category": "Catégorie",
+    "notes": "Notes",
+    "file": "Fichier (image ou PDF)",
+    "processing": "Préparation du fichier…",
+    "ready": "Fichier prêt : {{name}}"
+  },
+  "preview": {
+    "open": "Aperçu",
+    "download": "Télécharger",
+    "loading": "Chargement du fichier…",
+    "pdfHint": "L'aperçu n'est pas disponible pour les PDF : téléchargez le fichier."
+  },
+  "confirm": {
+    "delete": "Supprimer ce document ?"
+  },
+  "errors": {
+    "load": "Impossible de charger les documents.",
+    "save": "Impossible d'enregistrer le document.",
+    "delete": "Impossible de supprimer le document.",
+    "preview": "Impossible d'ouvrir le document.",
+    "fileRequired": "Choisissez un fichier.",
+    "fileType": "Format non pris en charge : choisissez une image ou un PDF.",
+    "fileTooLarge": "Fichier trop lourd : 5 Mo maximum.",
+    "compressFailed": "Impossible de réduire cette image sous 5 Mo. Essayez une image plus petite."
+  }
+}

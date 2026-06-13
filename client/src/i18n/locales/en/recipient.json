@@ -1,0 +1,119 @@
+{
+  "title": "Loved one's profile",
+  "subtitle": "The essential information about {{name}}, shared with the circle.",
+  "subtitleNoName": "The essential information about your loved one, shared with the circle.",
+  "noCircle": "Select a circle to view the profile.",
+  "notFound": "No profile is associated with this circle.",
+  "readOnly": "Read only: only administrators and family can edit this profile.",
+  "notProvided": "Not provided",
+  "age_one": "{{count}} year old",
+  "age_other": "{{count}} years old",
+  "photo": {
+    "alt": "Photo of {{name}}",
+    "change": "Change photo",
+    "choose": "Add a photo",
+    "remove": "Remove",
+    "updated": "Photo updated",
+    "invalid": "Please choose an image file.",
+    "error": "Updating the photo failed."
+  },
+  "identity": {
+    "title": "Identity",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "birthDate": "Birth date",
+    "phone": "Phone",
+    "address": "Address"
+  },
+  "health": {
+    "title": "Health",
+    "bloodType": "Blood type",
+    "bloodTypeUnknown": "Unknown",
+    "allergies": "Allergies",
+    "history": "Medical history",
+    "mobility": "Mobility",
+    "diet": "Diet",
+    "gpName": "Family doctor",
+    "gpPhone": "Doctor's phone"
+  },
+  "admin": {
+    "title": "Administrative",
+    "ssn": "Social security number",
+    "insurance": "Health insurance",
+    "directives": "Advance directives"
+  },
+  "notes": {
+    "title": "Free notes",
+    "label": "Notes",
+    "placeholder": "Habits, instructions, what makes them happy..."
+  },
+  "sensitive": {
+    "show": "Show {{field}}",
+    "hide": "Hide {{field}}"
+  },
+  "saved": "Profile saved",
+  "errors": {
+    "load": "Could not load the profile.",
+    "save": "Saving failed.",
+    "firstNameRequired": "The first name is required."
+  },
+  "story": {
+    "title": "Who I am",
+    "description": "Your loved one's life story: what a new caregiver should know to care for them well.",
+    "sharedNotice": "This page is shown to external caregivers through their link.",
+    "inspiration": "Inspired by the Alzheimer's Society \"This is me\".",
+    "empty": "No section yet.",
+    "emptyHint": "Start with the suggested sections, then adapt them freely.",
+    "startEditing": "Fill in the page",
+    "addSection": "Add a section",
+    "removeSection": "Remove the section {{title}}",
+    "sectionTitle": "Title",
+    "sectionContent": "Content",
+    "sectionPlaceholder": "A few simple sentences are enough...",
+    "maxSections": "12 sections at most.",
+    "saved": "Page saved",
+    "defaults": {
+      "work": "Occupation and working life",
+      "pride": "Proud moments",
+      "habits": "Habits and routines",
+      "soothing": "What soothes them",
+      "anxious": "What worries them",
+      "music": "Music",
+      "family": "Family and faces",
+      "beliefs": "Beliefs"
+    },
+    "errors": {
+      "load": "Could not load the Who I am page.",
+      "save": "Saving failed.",
+      "titleRequired": "Each section needs a title."
+    }
+  },
+  "emergency": {
+    "title": "Emergency sheet (fridge QR)",
+    "description": "A QR code to print and stick on the fridge: emergency services scan it and see the vital sheet (treatments, allergies, contacts) without an account.",
+    "enabledLabel": "Sheet reachable via QR",
+    "disabledNotice": "The sheet is disabled: the printed QR no longer works.",
+    "qrAlt": "QR code of {{name}}'s emergency sheet",
+    "openSheet": "View the sheet",
+    "notesLabel": "Additional notes",
+    "notesPlaceholder": "Door code, pet, neighbour who has the key...",
+    "saveNotes": "Save the notes",
+    "notesSaved": "Notes saved",
+    "regenerate": "Regenerate the link",
+    "regenerateConfirm": "Regenerate the link? The previously printed QR will stop working.",
+    "regenerated": "New link generated. Remember to reprint the poster.",
+    "updated": "Sheet updated",
+    "printPoster": "Print the poster",
+    "poster": {
+      "scan": "In an emergency, scan",
+      "name": "{{name}}'s vital sheet",
+      "numbers": "SAMU 15, Fire brigade 18",
+      "print": "Print",
+      "close": "Close"
+    },
+    "errors": {
+      "load": "Could not load the emergency sheet.",
+      "save": "Saving failed."
+    }
+  }
+}

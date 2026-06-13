@@ -1,0 +1,22 @@
+{
+  "title": "La semaine",
+  "weekOf": "Semaine du {{date}}",
+  "stats": {
+    "visits_one": "{{count}} visite",
+    "visits_other": "{{count}} visites",
+    "entries_one": "{{count}} entrée de journal",
+    "entries_other": "{{count}} entrées de journal"
+  },
+  "attentionPoints": "Points d'attention",
+  "weakSignals": "Signaux faibles",
+  "empty": "Pas encore de synthèse. Elle est préparée chaque dimanche à 18h à partir du journal, des constantes et des médicaments.",
+  "generateNow": "Générer maintenant",
+  "generating": "Génération en cours...",
+  "history": "Semaines précédentes",
+  "historyTitle": "Semaines précédentes",
+  "historyEmpty": "Aucune synthèse précédente pour le moment.",
+  "errors": {
+    "notConfigured": "L'IA du cercle n'est pas configurée ou est désactivée. Rendez-vous dans Paramètres pour l'activer.",
+    "generate": "La synthèse n'a pas pu être générée. Vérifiez le fournisseur IA et réessayez."
+  }
+}

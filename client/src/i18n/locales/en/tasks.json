@@ -1,0 +1,73 @@
+{
+  "loading": "Loading tasks…",
+  "title": "Tasks",
+  "subtitle_one": "{{count}} task to do in the circle",
+  "subtitle_other": "{{count}} tasks to do in the circle",
+  "newTask": "New task",
+  "categories": {
+    "shopping": "Groceries",
+    "pharmacy": "Pharmacy",
+    "laundry": "Laundry",
+    "admin": "Paperwork",
+    "transport": "Transport",
+    "other": "Other"
+  },
+  "frequencies": {
+    "Une fois": "One time",
+    "Quotidien": "Every day",
+    "Hebdomadaire": "Every week",
+    "Mensuel": "Every month",
+    "Annuel": "Every year"
+  },
+  "priorities": {
+    "Haute": "High priority",
+    "Moyenne": "Medium priority",
+    "Basse": "Low priority"
+  },
+  "filters": {
+    "statusLabel": "Filter by status",
+    "todo": "To do",
+    "done": "Done",
+    "all": "All",
+    "allAssignees": "All members"
+  },
+  "row": {
+    "markDone": "Mark as done",
+    "markPending": "Mark as to do",
+    "due": "Due {{date}}",
+    "overdue": "Overdue ({{date}})"
+  },
+  "completedSection_one": "Completed tasks ({{count}})",
+  "completedSection_other": "Completed tasks ({{count}})",
+  "empty": {
+    "title": "No tasks yet",
+    "description": "Create the first task to organize who does what in the circle.",
+    "noMatch": "No task matches the filters.",
+    "doneTitle": "No completed tasks"
+  },
+  "dialog": {
+    "createTitle": "New task",
+    "editTitle": "Edit task",
+    "description": "A task can be assigned to one or more circle members."
+  },
+  "form": {
+    "title": "Title",
+    "titlePlaceholder": "E.g. Renew the prescription",
+    "description": "Description (optional)",
+    "descriptionPlaceholder": "Useful details for whoever takes care of it…",
+    "category": "Category",
+    "dueDate": "Due date (optional)",
+    "priority": "Priority",
+    "frequency": "Recurrence",
+    "assignees": "Assign to (optional)",
+    "noMembers": "No members in the circle yet."
+  },
+  "confirmDelete": "Delete this task?",
+  "errors": {
+    "load": "Unable to load tasks.",
+    "loadMembers": "Unable to load circle members.",
+    "toggle": "Unable to update this task.",
+    "save": "Unable to save this task.",
+    "delete": "Unable to delete this task."
+  }
+}
