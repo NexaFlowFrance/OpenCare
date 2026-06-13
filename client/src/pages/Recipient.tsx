@@ -280,68 +280,129 @@ const StoryCard: React.FC<{ circleId: string | null; canWriteContent: boolean }>
 
 // ── Fiche urgence (QR frigo) ────────────────────────────────────────────────
 
-interface EmergencySheet {
-    id: string;
-    circle_id: string;
-    public_token: string;
-    enabled: boolean;
+// Page publique de lecture de la fiche (hebergee sur la GitHub Page du projet).
+// Elle ne contient AUCUNE donnee: la fiche voyage dans le fragment d'URL (#...),
+// jamais envoye au serveur. Fonctionne donc en 4G sans exposer OpenCare.
+const EMERGENCY_VIEWER_URL = 'https://nexaflowfrance.github.io/OpenCare/urgence.html';
+
+interface EmergencyPayload {
+    recipient: Record<string, unknown> | null;
+    medications: Array<Record<string, unknown>>;
+    contacts: Array<Record<string, unknown>>;
     extra_notes: string | null;
-    updated_at: string;
-    url: string;
 }
+
+/** Tronque une chaine longue (la fiche doit tenir dans un QR code). */
+const cap = (value: unknown, max: number): string | undefined => {
+    if (typeof value !== 'string' || !value.trim()) return undefined;
+    return value.length > max ? value.slice(0, max).trimEnd() + '…' : value;
+};
+
+/** Construit le fragment encode (base64url, UTF-8) a placer apres # dans l'URL. */
+const encodeSheet = (payload: EmergencyPayload): string => {
+    const r = (payload.recipient ?? {}) as Record<string, unknown>;
+    const str = (v: unknown) => (typeof v === 'string' && v.trim() ? v : undefined);
+    const compact = {
+        v: 1,
+        recipient: {
+            first_name: str(r.first_name),
+            last_name: str(r.last_name),
+            birth_date: str(r.birth_date),
+            blood_type: str(r.blood_type),
+            allergies: cap(r.allergies, 300),
+            medical_history: cap(r.medical_history, 500),
+            advance_directives: cap(r.advance_directives, 500),
+            gp_name: str(r.gp_name),
+            gp_phone: str(r.gp_phone),
+            insurance_info: str(r.insurance_info),
+            address: str(r.address),
+        },
+        medications: payload.medications.map((m) => ({
+            name: str(m.name),
+            dosage: str(m.dosage),
+            form: str(m.form),
+            schedules: Array.isArray(m.schedules)
+                ? (m.schedules as Array<Record<string, unknown>>).map((s) => ({ time: str(s.time) }))
+                : [],
+        })),
+        contacts: payload.contacts.map((c) => ({
+            name: str(c.name),
+            organization: str(c.organization),
+            phone: str(c.phone),
+        })),
+        extra_notes: cap(payload.extra_notes, 400),
+        generated_at: new Date().toISOString().slice(0, 10),
+    };
+    const json = JSON.stringify(compact);
+    const b64 = btoa(unescape(encodeURIComponent(json)));
+    return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+};
 
 const EmergencyCard: React.FC<{ circleId: string | null; canWriteContent: boolean; recipientName: string }> = ({
     circleId, canWriteContent, recipientName,
 }) => {
     const { t } = useTranslation(['recipient', 'common']);
     const { showToast } = useToast();
-    const [sheet, setSheet] = useState<EmergencySheet | null>(null);
+    const [payload, setPayload] = useState<EmergencyPayload | null>(null);
+    const [sheetUrl, setSheetUrl] = useState<string | null>(null);
     const [qr, setQr] = useState<string | null>(null);
+    const [tooBig, setTooBig] = useState(false);
     const [notesDraft, setNotesDraft] = useState('');
     const [busy, setBusy] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [posterOpen, setPosterOpen] = useState(false);
 
     const load = useCallback(async () => {
-        if (!circleId) return;
+        if (!circleId || !canWriteContent) { setLoading(false); return; }
+        setLoading(true);
         try {
-            const res = await api.get<{ success: boolean; data: EmergencySheet }>('/api/emergency/sheet');
-            if (res.success) setSheet(res.data);
+            const res = await api.get<{ success: boolean; data: Partial<EmergencyPayload> }>('/api/emergency/payload');
+            if (res.success && res.data && !Array.isArray(res.data)) {
+                const d = res.data;
+                setPayload({
+                    recipient: (d.recipient as Record<string, unknown>) ?? null,
+                    medications: Array.isArray(d.medications) ? d.medications : [],
+                    contacts: Array.isArray(d.contacts) ? d.contacts : [],
+                    extra_notes: typeof d.extra_notes === 'string' ? d.extra_notes : null,
+                });
+                setNotesDraft(typeof d.extra_notes === 'string' ? d.extra_notes : '');
+            }
         } catch (error) {
-            console.error('Emergency sheet load error:', error);
+            console.error('Emergency payload load error:', error);
             showToast({ title: t('recipient:emergency.errors.load') });
+        } finally {
+            setLoading(false);
         }
-    }, [circleId, showToast, t]);
+    }, [circleId, canWriteContent, showToast, t]);
 
     useEffect(() => {
-        setSheet(null);
+        setPayload(null);
         setPosterOpen(false);
         void load();
     }, [load]);
 
-    useEffect(() => {
-        setNotesDraft(sheet?.extra_notes ?? '');
-    }, [sheet?.extra_notes]);
-
-    // QR généré côté client sur l'URL publique de la fiche.
+    // QR autonome: la fiche est encodee dans le fragment de l'URL du lecteur.
     useEffect(() => {
         let cancelled = false;
-        if (!sheet?.url || !sheet.enabled) {
-            setQr(null);
-            return;
-        }
-        QRCode.toDataURL(`${window.location.origin}${sheet.url}`, { width: 512, margin: 2 })
+        if (!payload) { setSheetUrl(null); setQr(null); return; }
+        const encoded = encodeSheet(payload);
+        const url = `${EMERGENCY_VIEWER_URL}#${encoded}`;
+        setSheetUrl(url);
+        // Un QR au-dela de ~2300 caracteres devient difficile a scanner.
+        setTooBig(url.length > 2300);
+        QRCode.toDataURL(url, { width: 512, margin: 2, errorCorrectionLevel: 'L' })
             .then((dataUrl) => { if (!cancelled) setQr(dataUrl); })
             .catch(() => { if (!cancelled) setQr(null); });
         return () => { cancelled = true; };
-    }, [sheet?.url, sheet?.enabled]);
+    }, [payload]);
 
-    const updateSheet = async (payload: Record<string, unknown>, successTitle?: string) => {
+    const saveNotes = async () => {
         setBusy(true);
         try {
-            const res = await api.put<{ success: boolean; data: EmergencySheet }>('/api/emergency/sheet', payload);
+            const res = await api.put<{ success: boolean }>('/api/emergency/sheet', { extra_notes: notesDraft });
             if (res.success) {
-                setSheet(res.data);
-                if (successTitle) showToast({ title: successTitle });
+                showToast({ title: t('recipient:emergency.notesSaved') });
+                await load();
             }
         } catch (error) {
             const message = error instanceof Error ? error.message : t('recipient:emergency.errors.save');
@@ -349,11 +410,6 @@ const EmergencyCard: React.FC<{ circleId: string | null; canWriteContent: boolea
         } finally {
             setBusy(false);
         }
-    };
-
-    const regenerate = () => {
-        if (!window.confirm(t('recipient:emergency.regenerateConfirm'))) return;
-        void updateSheet({ regenerate_token: true }, t('recipient:emergency.regenerated'));
     };
 
     return (
@@ -364,86 +420,68 @@ const EmergencyCard: React.FC<{ circleId: string | null; canWriteContent: boolea
             <CardContent className="space-y-4">
                 <p className="text-caption text-muted-foreground">{t('recipient:emergency.description')}</p>
 
-                {!sheet ? (
+                {!canWriteContent ? (
+                    <p className="rounded-input bg-surface-2/60 px-4 py-3 text-caption text-muted-foreground">
+                        {t('recipient:emergency.managedByFamily')}
+                    </p>
+                ) : loading ? (
                     <p className="text-body text-muted-foreground">{t('common:states.loading')}</p>
                 ) : (
-                    <>
-                        <label className="flex items-center gap-3">
-                            <input
-                                type="checkbox"
-                                className="h-5 w-5 accent-[rgb(var(--primary))]"
-                                checked={sheet.enabled}
-                                disabled={!canWriteContent || busy}
-                                onChange={(e) => void updateSheet({ enabled: e.target.checked }, t('recipient:emergency.updated'))}
+                    <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
+                        {qr && (
+                            <img
+                                src={qr}
+                                alt={t('recipient:emergency.qrAlt', { name: recipientName })}
+                                className="h-40 w-40 shrink-0 rounded-card border border-border bg-white p-2"
                             />
-                            <span className="text-body text-foreground">{t('recipient:emergency.enabledLabel')}</span>
-                        </label>
-
-                        {!sheet.enabled ? (
-                            <p className="rounded-input bg-surface-2/60 px-4 py-3 text-caption text-muted-foreground">
-                                {t('recipient:emergency.disabledNotice')}
-                            </p>
-                        ) : (
-                            <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
-                                {qr && (
-                                    <img
-                                        src={qr}
-                                        alt={t('recipient:emergency.qrAlt', { name: recipientName })}
-                                        className="h-40 w-40 shrink-0 rounded-card border border-border bg-white p-2"
-                                    />
-                                )}
-                                <div className="min-w-0 flex-1 space-y-3">
-                                    <a
-                                        href={`${window.location.origin}${sheet.url}`}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="inline-block break-all text-caption font-medium text-primary underline-offset-2 hover:underline"
-                                    >
-                                        {t('recipient:emergency.openSheet')}
-                                    </a>
-                                    {canWriteContent ? (
-                                        <>
-                                            <Textarea
-                                                label={t('recipient:emergency.notesLabel')}
-                                                value={notesDraft}
-                                                placeholder={t('recipient:emergency.notesPlaceholder')}
-                                                rows={2}
-                                                onChange={(e) => setNotesDraft(e.target.value)}
-                                            />
-                                            <div className="flex flex-wrap gap-2">
-                                                <Button
-                                                    variant="secondary"
-                                                    size="sm"
-                                                    disabled={busy || notesDraft === (sheet.extra_notes ?? '')}
-                                                    onClick={() => void updateSheet({ extra_notes: notesDraft }, t('recipient:emergency.notesSaved'))}
-                                                >
-                                                    {t('recipient:emergency.saveNotes')}
-                                                </Button>
-                                                <Button size="sm" onClick={() => setPosterOpen(true)} disabled={!qr}>
-                                                    <Printer className="mr-2 h-4 w-4" />
-                                                    {t('recipient:emergency.printPoster')}
-                                                </Button>
-                                                <Button variant="ghost" size="sm" onClick={regenerate} disabled={busy}>
-                                                    <RefreshCw className="mr-2 h-4 w-4" />
-                                                    {t('recipient:emergency.regenerate')}
-                                                </Button>
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <>
-                                            {sheet.extra_notes && (
-                                                <p className="whitespace-pre-wrap text-body text-foreground">{sheet.extra_notes}</p>
-                                            )}
-                                            <Button size="sm" onClick={() => setPosterOpen(true)} disabled={!qr}>
-                                                <Printer className="mr-2 h-4 w-4" />
-                                                {t('recipient:emergency.printPoster')}
-                                            </Button>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
                         )}
-                    </>
+                        <div className="min-w-0 flex-1 space-y-3">
+                            <p className="rounded-input bg-primary-soft px-3.5 py-2.5 text-caption text-primary">
+                                {t('recipient:emergency.selfContainedNote')}
+                            </p>
+                            {tooBig && (
+                                <p className="rounded-input bg-[rgb(var(--warning-soft))] px-3.5 py-2.5 text-caption text-warning">
+                                    {t('recipient:emergency.tooBig')}
+                                </p>
+                            )}
+                            {sheetUrl && (
+                                <a
+                                    href={sheetUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-block text-caption font-medium text-primary underline-offset-2 hover:underline"
+                                >
+                                    {t('recipient:emergency.preview')}
+                                </a>
+                            )}
+                            <Textarea
+                                label={t('recipient:emergency.notesLabel')}
+                                value={notesDraft}
+                                placeholder={t('recipient:emergency.notesPlaceholder')}
+                                rows={2}
+                                onChange={(e) => setNotesDraft(e.target.value)}
+                            />
+                            <div className="flex flex-wrap gap-2">
+                                <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    disabled={busy || notesDraft === (payload?.extra_notes ?? '')}
+                                    onClick={() => void saveNotes()}
+                                >
+                                    {t('recipient:emergency.saveNotes')}
+                                </Button>
+                                <Button size="sm" onClick={() => setPosterOpen(true)} disabled={!qr}>
+                                    <Printer className="mr-2 h-4 w-4" />
+                                    {t('recipient:emergency.printPoster')}
+                                </Button>
+                                <Button variant="ghost" size="sm" onClick={() => void load()} disabled={busy}>
+                                    <RefreshCw className="mr-2 h-4 w-4" />
+                                    {t('recipient:emergency.refresh')}
+                                </Button>
+                            </div>
+                            <p className="text-micro text-muted-foreground">{t('recipient:emergency.reprintNote')}</p>
+                        </div>
+                    </div>
                 )}
             </CardContent>
 

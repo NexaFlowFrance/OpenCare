@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Fiche urgence</title>
+  <!--
+    Lecteur de fiche urgence OpenCare. La fiche est encodee dans le fragment de
+    l'URL (apres #) et decodee ici, dans le navigateur. Le fragment n'est JAMAIS
+    envoye au serveur: aucune donnee de sante n'atteint ni n'est stockee par
+    l'hebergeur de cette page. Aucune requete reseau n'est faite.
+  -->
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #FAF9F7; --surface: #FFFFFF; --border: #E5E1D8; --text: #26231F;
+      --muted: #6B665C; --primary: #3E6B54; --danger: #A8453C; --danger-soft: #F7ECEA;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.5;
+      padding: 0 0 3rem;
+    }
+    header {
+      background: var(--danger-soft); border-bottom: 3px solid var(--danger);
+      padding: 1.1rem 1.25rem;
+    }
+    header .row { max-width: 760px; margin: 0 auto; display: flex; align-items: center; gap: 0.8rem; }
+    header h1 { font-size: 1.5rem; color: var(--text); }
+    header svg { width: 30px; height: 30px; color: var(--danger); flex-shrink: 0; }
+    header .upd { max-width: 760px; margin: 0.3rem auto 0; font-size: 0.8rem; color: var(--muted); }
+    main { max-width: 760px; margin: 0 auto; padding: 0 1.25rem; }
+    .card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      padding: 1.1rem 1.25rem; margin-top: 1.1rem;
+    }
+    .card.alert { border-left: 5px solid var(--danger); }
+    h2 { font-size: 1.05rem; color: var(--primary); margin-bottom: 0.6rem; }
+    h2.alert { color: var(--danger); }
+    .name { font-size: 1.9rem; font-weight: 700; }
+    dl div { margin-top: 0.3rem; }
+    dt { display: inline; font-weight: 600; }
+    dd { display: inline; }
+    .blood { color: var(--danger); font-weight: 700; }
+    .alvalue { font-size: 1.15rem; font-weight: 600; white-space: pre-wrap; }
+    ul { list-style: none; }
+    li { padding: 0.45rem 0; border-top: 1px solid var(--border); font-size: 1.05rem; }
+    li:first-child { border-top: none; }
+    .sub { color: var(--muted); font-size: 0.92rem; }
+    a { color: var(--primary); text-decoration: none; font-weight: 600; }
+    .pre { white-space: pre-wrap; font-size: 1rem; }
+    .toolbar { max-width: 760px; margin: 1.25rem auto 0; padding: 0 1.25rem; display: flex; gap: 0.6rem; }
+    button {
+      background: var(--primary); color: #fff; border: none; border-radius: 8px;
+      padding: 0.6rem 1.1rem; font-size: 0.95rem; font-weight: 600; cursor: pointer;
+    }
+    .empty { max-width: 560px; margin: 4rem auto; text-align: center; padding: 0 1.25rem; color: var(--muted); }
+    .empty h1 { color: var(--text); font-size: 1.4rem; margin-bottom: 0.6rem; }
+    footer { max-width: 760px; margin: 2rem auto 0; padding: 0 1.25rem; font-size: 0.78rem; color: var(--muted); text-align: center; }
+    @media print {
+      .toolbar { display: none; }
+      body { background: #fff; }
+      .card { border-color: #999; break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script>
+    function decodeData() {
+      var raw = (location.hash || '').replace(/^#/, '');
+      if (!raw) return null;
+      try {
+        var s = raw.replace(/-/g, '+').replace(/_/g, '/');
+        while (s.length % 4) s += '=';
+        var json = decodeURIComponent(escape(atob(s)));
+        return JSON.parse(json);
+      } catch (e) {
+        return undefined; // erreur de decodage
+      }
+    }
+
+    function esc(v) {
+      return String(v == null ? '' : v).replace(/[&<>"]/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+      });
+    }
+
+    function age(birth) {
+      if (!birth) return null;
+      var b = new Date(birth);
+      if (isNaN(b.getTime())) return null;
+      var n = new Date(), a = n.getFullYear() - b.getFullYear();
+      var m = n.getMonth() - b.getMonth();
+      if (m < 0 || (m === 0 && n.getDate() < b.getDate())) a--;
+      return a;
+    }
+
+    function telLink(num) {
+      var clean = String(num).replace(/[^0-9+]/g, '');
+      return '<a href="tel:' + esc(clean) + '">' + esc(num) + '</a>';
+    }
+
+    function render(d) {
+      var app = document.getElementById('app');
+      if (d === undefined) {
+        app.innerHTML = '<div class="empty"><h1>Fiche illisible</h1><p>Ce QR code semble incomplet ou abime. Demandez une nouvelle impression a la famille.</p></div>';
+        return;
+      }
+      if (!d || !d.recipient) {
+        app.innerHTML = '<div class="empty"><h1>Aucune fiche</h1><p>Ce lien ne contient pas de fiche urgence.</p></div>';
+        return;
+      }
+      var r = d.recipient;
+      var fullName = [r.first_name, r.last_name].filter(Boolean).join(' ');
+      var a = age(r.birth_date);
+      var h = '';
+
+      h += '<header><div class="row">';
+      h += '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>';
+      h += '<h1>Fiche urgence</h1></div>';
+      if (d.generated_at) h += '<p class="upd">Generee le ' + esc(d.generated_at) + ' par la famille via OpenCare</p>';
+      h += '</header>';
+
+      h += '<main>';
+
+      // Identite
+      h += '<section class="card"><p class="name">' + esc(fullName) + '</p><dl>';
+      if (r.birth_date) h += '<div><dt>Naissance :</dt> <dd>' + esc(r.birth_date) + (a != null ? ' (' + a + ' ans)' : '') + '</dd></div>';
+      if (r.blood_type) h += '<div><dt>Groupe sanguin :</dt> <dd class="blood">' + esc(r.blood_type) + '</dd></div>';
+      if (r.address) h += '<div><dt>Adresse :</dt> <dd>' + esc(r.address) + '</dd></div>';
+      if (r.insurance_info) h += '<div><dt>Mutuelle :</dt> <dd>' + esc(r.insurance_info) + '</dd></div>';
+      h += '</dl></section>';
+
+      // Allergies
+      if (r.allergies) {
+        h += '<section class="card alert"><h2 class="alert">Allergies</h2><p class="alvalue">' + esc(r.allergies) + '</p></section>';
+      }
+
+      // Traitements
+      h += '<section class="card"><h2>Traitements en cours</h2>';
+      if (d.medications && d.medications.length) {
+        h += '<ul>';
+        d.medications.forEach(function (m) {
+          var times = (m.schedules || []).map(function (s) { return s.time; }).filter(Boolean).join(', ');
+          h += '<li><strong>' + esc(m.name) + '</strong>' + (m.dosage ? ' ' + esc(m.dosage) : '') + (m.form ? ' (' + esc(m.form) + ')' : '');
+          if (times) h += ' <span class="sub">: ' + esc(times) + '</span>';
+          h += '</li>';
+        });
+        h += '</ul>';
+      } else {
+        h += '<p class="sub">Aucun traitement enregistre.</p>';
+      }
+      h += '</section>';
+
+      // Antecedents
+      if (r.medical_history) {
+        h += '<section class="card"><h2>Antecedents</h2><p class="pre">' + esc(r.medical_history) + '</p></section>';
+      }
+      // Directives anticipees
+      if (r.advance_directives) {
+        h += '<section class="card"><h2>Directives anticipees</h2><p class="pre">' + esc(r.advance_directives) + '</p></section>';
+      }
+      // Notes complementaires
+      if (d.extra_notes) {
+        h += '<section class="card"><h2>Informations complementaires</h2><p class="pre">' + esc(d.extra_notes) + '</p></section>';
+      }
+
+      // Contacts
+      h += '<section class="card"><h2>Contacts</h2><ul>';
+      if (r.gp_name) {
+        h += '<li><strong>' + esc(r.gp_name) + '</strong> <span class="sub">(medecin traitant)</span>' + (r.gp_phone ? ' &middot; ' + telLink(r.gp_phone) : '') + '</li>';
+      }
+      (d.contacts || []).forEach(function (c) {
+        h += '<li><strong>' + esc(c.name) + '</strong>' + (c.organization ? ' <span class="sub">(' + esc(c.organization) + ')</span>' : '') + (c.phone ? ' &middot; ' + telLink(c.phone) : '') + '</li>';
+      });
+      h += '</ul></section>';
+
+      h += '</main>';
+      h += '<div class="toolbar"><button onclick="window.print()">Imprimer</button></div>';
+      h += '<footer>Fiche affichee uniquement sur cet appareil. Aucune donnee n\'est transmise ni enregistree en ligne.</footer>';
+
+      app.innerHTML = h;
+    }
+
+    render(decodeData());
+    window.addEventListener('hashchange', function () { render(decodeData()); });
+  </script>
+</body>
+</html>

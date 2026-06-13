@@ -1201,6 +1201,19 @@ async function route(method: string, path: string, q: Record<string, string>, bo
     }
 
     // ── Fiche urgence ────────────────────────────────────────────────────────
+    if (path === '/api/emergency/payload' && method === 'GET') {
+        return ok({
+            recipient: c.recipient ?? null,
+            medications: c.medications
+                .filter((m) => m.active !== false)
+                .map((m) => ({
+                    name: m.name, dosage: m.dosage, form: m.form,
+                    schedules: ((m.schedules as Json[]) || []).map((s) => ({ time: s.time_of_day, label: s.label })),
+                })),
+            contacts: c.contacts.filter((ct) => ct.phone).slice(0, 8),
+            extra_notes: c.emergencySheet.extra_notes,
+        });
+    }
     if (path === '/api/emergency/sheet' && method === 'GET') {
         return ok({ ...c.emergencySheet, url: `/urgence/${c.emergencySheet.public_token}` });
     }
