@@ -292,46 +292,32 @@ interface EmergencyPayload {
     extra_notes: string | null;
 }
 
-/** Tronque une chaine longue (la fiche doit tenir dans un QR code). */
-const cap = (value: unknown, max: number): string | undefined => {
-    if (typeof value !== 'string' || !value.trim()) return undefined;
-    return value.length > max ? value.slice(0, max).trimEnd() + '…' : value;
-};
-
-/** Construit le fragment encode (base64url, UTF-8) a placer apres # dans l'URL. */
+// Format compact v2 (positions fixes) pour garder le QR peu dense donc scannable.
+// r: [nom, naissance, groupe, allergies, directives, medecin, telMedecin, mutuelle, adresse, antecedents]
+// m item: [nom, dosage, forme, heures] ; c item: [nom, organisation, telephone]
+// Le lecteur docs/urgence.html decode exactement ces positions.
 const encodeSheet = (payload: EmergencyPayload): string => {
     const r = (payload.recipient ?? {}) as Record<string, unknown>;
-    const str = (v: unknown) => (typeof v === 'string' && v.trim() ? v : undefined);
+    const s = (v: unknown, max = 0) => {
+        if (typeof v !== 'string' || !v.trim()) return '';
+        return max && v.length > max ? v.slice(0, max).trimEnd() + '…' : v;
+    };
+    const fullName = [s(r.first_name), s(r.last_name)].filter(Boolean).join(' ');
     const compact = {
-        v: 1,
-        recipient: {
-            first_name: str(r.first_name),
-            last_name: str(r.last_name),
-            birth_date: str(r.birth_date),
-            blood_type: str(r.blood_type),
-            allergies: cap(r.allergies, 300),
-            medical_history: cap(r.medical_history, 500),
-            advance_directives: cap(r.advance_directives, 500),
-            gp_name: str(r.gp_name),
-            gp_phone: str(r.gp_phone),
-            insurance_info: str(r.insurance_info),
-            address: str(r.address),
-        },
-        medications: payload.medications.map((m) => ({
-            name: str(m.name),
-            dosage: str(m.dosage),
-            form: str(m.form),
-            schedules: Array.isArray(m.schedules)
-                ? (m.schedules as Array<Record<string, unknown>>).map((s) => ({ time: str(s.time) }))
-                : [],
-        })),
-        contacts: payload.contacts.map((c) => ({
-            name: str(c.name),
-            organization: str(c.organization),
-            phone: str(c.phone),
-        })),
-        extra_notes: cap(payload.extra_notes, 400),
-        generated_at: new Date().toISOString().slice(0, 10),
+        v: 2,
+        r: [
+            fullName, s(r.birth_date), s(r.blood_type), s(r.allergies, 150), s(r.advance_directives, 200),
+            s(r.gp_name), s(r.gp_phone), s(r.insurance_info, 60), s(r.address, 80), s(r.medical_history, 150),
+        ],
+        m: payload.medications.slice(0, 15).map((m) => [
+            s(m.name), s(m.dosage), s(m.form),
+            Array.isArray(m.schedules)
+                ? (m.schedules as Array<Record<string, unknown>>).map((x) => s(x.time)).filter(Boolean).join(' ')
+                : '',
+        ]),
+        c: payload.contacts.slice(0, 8).map((c) => [s(c.name), s(c.organization), s(c.phone)]),
+        x: s(payload.extra_notes, 120),
+        u: new Date().toISOString().slice(0, 10),
     };
     const json = JSON.stringify(compact);
     const b64 = btoa(unescape(encodeURIComponent(json)));
@@ -432,7 +418,7 @@ const EmergencyCard: React.FC<{ circleId: string | null; canWriteContent: boolea
                             <img
                                 src={qr}
                                 alt={t('recipient:emergency.qrAlt', { name: recipientName })}
-                                className="h-40 w-40 shrink-0 rounded-card border border-border bg-white p-2"
+                                className="h-64 w-64 shrink-0 self-center rounded-card border border-border bg-white p-2 sm:self-start"
                             />
                         )}
                         <div className="min-w-0 flex-1 space-y-3">

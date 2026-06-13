@@ -103,18 +103,40 @@
       return '<a href="tel:' + esc(clean) + '">' + esc(num) + '</a>';
     }
 
-    function render(d) {
+    // Normalise le format compact v2 (positions fixes, voir Recipient.tsx encodeSheet).
+    function normalize(d) {
+      if (!d) return null;
+      var r = Array.isArray(d.r) ? d.r : [];
+      return {
+        recipient: {
+          name: r[0] || '', birth_date: r[1] || '', blood_type: r[2] || '',
+          allergies: r[3] || '', advance_directives: r[4] || '', gp_name: r[5] || '',
+          gp_phone: r[6] || '', insurance_info: r[7] || '', address: r[8] || '', medical_history: r[9] || '',
+        },
+        medications: (Array.isArray(d.m) ? d.m : []).map(function (m) {
+          return { name: m[0] || '', dosage: m[1] || '', form: m[2] || '', times: m[3] || '' };
+        }),
+        contacts: (Array.isArray(d.c) ? d.c : []).map(function (c) {
+          return { name: c[0] || '', organization: c[1] || '', phone: c[2] || '' };
+        }),
+        extra_notes: d.x || '',
+        generated_at: d.u || '',
+      };
+    }
+
+    function render(raw) {
       var app = document.getElementById('app');
-      if (d === undefined) {
+      if (raw === undefined) {
         app.innerHTML = '<div class="empty"><h1>Fiche illisible</h1><p>Ce QR code semble incomplet ou abime. Demandez une nouvelle impression a la famille.</p></div>';
         return;
       }
-      if (!d || !d.recipient) {
+      var d = normalize(raw);
+      if (!d || !d.recipient.name) {
         app.innerHTML = '<div class="empty"><h1>Aucune fiche</h1><p>Ce lien ne contient pas de fiche urgence.</p></div>';
         return;
       }
       var r = d.recipient;
-      var fullName = [r.first_name, r.last_name].filter(Boolean).join(' ');
+      var fullName = r.name;
       var a = age(r.birth_date);
       var h = '';
 
@@ -144,9 +166,8 @@
       if (d.medications && d.medications.length) {
         h += '<ul>';
         d.medications.forEach(function (m) {
-          var times = (m.schedules || []).map(function (s) { return s.time; }).filter(Boolean).join(', ');
           h += '<li><strong>' + esc(m.name) + '</strong>' + (m.dosage ? ' ' + esc(m.dosage) : '') + (m.form ? ' (' + esc(m.form) + ')' : '');
-          if (times) h += ' <span class="sub">: ' + esc(times) + '</span>';
+          if (m.times) h += ' <span class="sub">: ' + esc(m.times) + '</span>';
           h += '</li>';
         });
         h += '</ul>';
