@@ -1,6 +1,6 @@
 {
     "name": "@opencare/shared",
-    "version": "1.2.0",
+    "version": "1.0.0",
     "description": "Shared types and constants for OpenCare",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
