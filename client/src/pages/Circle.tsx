@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import {
-    Copy, Link2, LogOut, Mail, Plus, RotateCcw, Ban, Trash2, UserMinus,
+    Copy, Link2, Unlink, LogOut, Mail, Plus, RotateCcw, Ban, Trash2, UserMinus,
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -262,7 +262,7 @@ const Circle: React.FC = () => {
     const { t } = useTranslation(['circle', 'common']);
     const navigate = useNavigate();
     const { user } = useAuth();
-    const { activeCircle, isAdmin, canWriteContent, refreshCircles } = useCircle();
+    const { activeCircle, circles, isAdmin, canWriteContent, refreshCircles } = useCircle();
     const { showToast } = useToast();
 
     const [detail, setDetail] = useState<CircleDetail | null>(null);
@@ -297,6 +297,11 @@ const Circle: React.FC = () => {
     const [settingsName, setSettingsName] = useState('');
     const [settingsCurrency, setSettingsCurrency] = useState('EUR');
     const [settingsSaving, setSettingsSaving] = useState(false);
+
+    // Foyer (couple)
+    const [linkTargetId, setLinkTargetId] = useState('');
+    const [householdBusy, setHouseholdBusy] = useState(false);
+    const [householdName, setHouseholdName] = useState('');
 
     const circleId = activeCircle?.id ?? null;
 
@@ -337,6 +342,11 @@ const Circle: React.FC = () => {
     }, [loadAll]);
 
     useWebSocketUpdates('circle', () => { void loadAll(); });
+
+    // Garde le champ "nom du foyer" aligné sur le cercle actif.
+    useEffect(() => {
+        setHouseholdName(activeCircle?.household_name ?? '');
+    }, [activeCircle?.id, activeCircle?.household_name]);
 
     const onError = (error: unknown) => {
         const message = error instanceof Error ? error.message : t('circle:errors.action');
@@ -514,6 +524,63 @@ const Circle: React.FC = () => {
         }
     };
 
+    // ── Foyer (couple): cercles reliés par household_id ───────────────────────
+
+    const householdPartners = activeCircle?.household_id
+        ? circles.filter((c) => c.household_id === activeCircle.household_id && c.id !== activeCircle.id)
+        : [];
+    const linkableCircles = circles.filter(
+        (c) => c.role === 'admin'
+            && c.id !== activeCircle?.id
+            && !(activeCircle?.household_id && c.household_id === activeCircle.household_id)
+    );
+
+    const linkCircle = async () => {
+        if (!circleId || !linkTargetId) return;
+        setHouseholdBusy(true);
+        try {
+            await api.post(`/api/circles/${circleId}/link`, { target_circle_id: linkTargetId });
+            setLinkTargetId('');
+            showToast({ title: t('circle:household.linked') });
+            await refreshCircles();
+            await loadAll();
+        } catch (error) {
+            onError(error);
+        } finally {
+            setHouseholdBusy(false);
+        }
+    };
+
+    const leaveHousehold = async () => {
+        if (!circleId) return;
+        setHouseholdBusy(true);
+        try {
+            await api.delete(`/api/circles/${circleId}/link`);
+            showToast({ title: t('circle:household.left') });
+            await refreshCircles();
+            await loadAll();
+        } catch (error) {
+            onError(error);
+        } finally {
+            setHouseholdBusy(false);
+        }
+    };
+
+    const renameHousehold = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!circleId) return;
+        setHouseholdBusy(true);
+        try {
+            await api.put(`/api/circles/${circleId}/household`, { name: householdName.trim() });
+            showToast({ title: t('circle:household.nameSaved') });
+            await refreshCircles();
+        } catch (error) {
+            onError(error);
+        } finally {
+            setHouseholdBusy(false);
+        }
+    };
+
     const recipientFirstName = detail?.recipient?.first_name ?? '';
     // Double confirmation: type the recipient's first name (fallback: circle name).
     const deleteTargetName = recipientFirstName.trim() || (detail?.circle.name ?? '').trim();
@@ -639,6 +706,72 @@ const Circle: React.FC = () => {
                     )}
                 </CardContent>
             </Card>
+
+            {/* Foyer (couple): relier deux cercles vivant sous le meme toit */}
+            {isAdmin && (
+                <Card hover={false}>
+                    <CardHeader>
+                        <CardTitle className="font-serif">{t('circle:household.title')}</CardTitle>
+                        <p className="mt-1 text-caption text-muted-foreground">{t('circle:household.subtitle')}</p>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        {householdPartners.length > 0 ? (
+                            <>
+                                <p className="inline-flex items-center gap-2 text-caption text-foreground">
+                                    <Link2 className="h-4 w-4 shrink-0 text-primary" />
+                                    {t('circle:household.linkedWith', {
+                                        names: householdPartners.map((p) => p.recipient_first_name || p.name).join(', '),
+                                    })}
+                                </p>
+                                <form onSubmit={(e) => void renameHousehold(e)} className="flex flex-wrap items-end gap-2">
+                                    <div className="min-w-[200px] flex-1">
+                                        <Input
+                                            label={t('circle:household.name')}
+                                            value={householdName}
+                                            onChange={(e) => setHouseholdName(e.target.value)}
+                                            placeholder={t('circle:household.namePlaceholder')}
+                                            maxLength={255}
+                                        />
+                                    </div>
+                                    <Button type="submit" variant="secondary" size="sm" disabled={householdBusy}>
+                                        {t('circle:household.save')}
+                                    </Button>
+                                </form>
+                                <div>
+                                    <Button variant="ghost" size="sm" onClick={() => void leaveHousehold()} disabled={householdBusy}>
+                                        <Unlink className="mr-2 h-4 w-4" />
+                                        {t('circle:household.leave')}
+                                    </Button>
+                                </div>
+                            </>
+                        ) : linkableCircles.length === 0 ? (
+                            <p className="text-caption text-muted-foreground">{t('circle:household.noneToLink')}</p>
+                        ) : (
+                            <div className="flex flex-wrap items-end gap-2">
+                                <div className="min-w-[200px] flex-1">
+                                    <label className="mb-1.5 block text-caption font-medium text-foreground">
+                                        {t('circle:household.linkLabel')}
+                                    </label>
+                                    <Select
+                                        value={linkTargetId}
+                                        onValueChange={setLinkTargetId}
+                                        options={linkableCircles.map((c) => ({
+                                            value: c.id,
+                                            label: c.recipient_first_name || c.name,
+                                        }))}
+                                        placeholder={t('circle:household.linkPlaceholder')}
+                                        className="h-11 w-full md:h-10"
+                                    />
+                                </div>
+                                <Button size="sm" onClick={() => void linkCircle()} disabled={householdBusy || !linkTargetId}>
+                                    <Link2 className="mr-2 h-4 w-4" />
+                                    {t('circle:household.link')}
+                                </Button>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+            )}
 
             {/* Equite de la charge: qui porte quoi sur la periode (admin et family) */}
             {canWriteContent && <EquitySection circleId={activeCircle.id} />}

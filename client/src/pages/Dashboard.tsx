@@ -12,6 +12,8 @@ import { useWebSocketUpdates } from '../hooks/useWebSocketUpdates';
 import { dateLocale, intlLocale } from '../i18n/format';
 import WeeklyDigestCard from '../components/app/WeeklyDigestCard';
 import PresenceBanner from '../components/app/PresenceBanner';
+import HeatwaveBanner from '../components/app/HeatwaveBanner';
+import HouseholdOverview from '../components/app/HouseholdOverview';
 
 // ─── Payload of GET /api/dashboard ────────────────────────────────────────────
 
@@ -156,11 +158,13 @@ const CardEmpty: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 const Dashboard: React.FC = () => {
     const { t } = useTranslation(['dashboard', 'common']);
     const navigate = useNavigate();
-    const { activeCircle } = useCircle();
+    const { activeCircle, circles } = useCircle();
 
     const [data, setData] = useState<DashboardData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    // Vue foyer (couple): 'single' = un proche, 'household' = tout le foyer.
+    const [view, setView] = useState<'single' | 'household'>('single');
 
     const load = async () => {
         if (!activeCircle) return;
@@ -180,6 +184,7 @@ const Dashboard: React.FC = () => {
 
     useEffect(() => {
         setLoading(true);
+        setView('single'); // changer de proche revient à la vue individuelle
         void load();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeCircle?.id]);
@@ -208,6 +213,11 @@ const Dashboard: React.FC = () => {
         data?.recipient?.first_name || activeCircle?.recipient_first_name || activeCircle?.name || '';
     const photoUrl = data?.recipient?.photo_url || activeCircle?.recipient_photo_url || null;
 
+    // Foyer (couple): autres cercles du meme household_id, pour un acces rapide.
+    const householdPartners = activeCircle?.household_id
+        ? circles.filter((c) => c.household_id === activeCircle.household_id && c.id !== activeCircle.id)
+        : [];
+
     const intakes = data?.medication_intakes_today ?? null;
     const takenCount = intakes ? intakes.filter((intake) => intake.status === 'taken').length : 0;
     const nextIntakes = intakes ? intakes.filter((intake) => intake.status === 'pending').slice(0, 3) : [];
@@ -224,7 +234,40 @@ const Dashboard: React.FC = () => {
                 </div>
             ) : null}
 
+            <HeatwaveBanner />
+
             <PresenceBanner />
+
+            {householdPartners.length > 0 && (
+                <div className="inline-flex rounded-pill border border-border bg-card p-1">
+                    <button
+                        type="button"
+                        onClick={() => setView('single')}
+                        className={cn(
+                            'min-h-[36px] rounded-pill px-4 text-caption font-medium transition-colors duration-fast',
+                            view === 'single' ? 'bg-primary-soft text-primary' : 'text-muted-foreground hover:text-foreground'
+                        )}
+                    >
+                        {recipientName}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setView('household')}
+                        className={cn(
+                            'min-h-[36px] rounded-pill px-4 text-caption font-medium transition-colors duration-fast',
+                            view === 'household' ? 'bg-primary-soft text-primary' : 'text-muted-foreground hover:text-foreground'
+                        )}
+                    >
+                        {activeCircle?.household_name || t('dashboard:household.viewAll')}
+                    </button>
+                </div>
+            )}
+
+            {view === 'household' && householdPartners.length > 0 ? (
+                <HouseholdOverview />
+            ) : (
+            <>
+            {/* single-recipient dashboard */}
 
             {/* Warm header: recipient photo or initial + greeting + full date */}
             <div className="flex items-center gap-4">
@@ -427,6 +470,8 @@ const Dashboard: React.FC = () => {
 
             {/* Weekly AI digest: full width, below the grid */}
             <WeeklyDigestCard />
+            </>
+            )}
         </div>
     );
 };

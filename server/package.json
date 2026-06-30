@@ -1,6 +1,6 @@
 {
     "name": "@opencare/server",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "OpenCare backend server",
     "main": "dist/index.js",
     "scripts": {

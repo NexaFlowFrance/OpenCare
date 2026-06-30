@@ -26,7 +26,7 @@ All on **your** server: the health data of a vulnerable person should not live o
 
 | | |
 |---|---|
-| 👥 **Care circle** | One circle per cared-for person, invite by link, fine-grained roles (family, professional, neighbour, read-only). Multi-circle from day one: follow both parents |
+| 👥 **Care circle** | One circle per cared-for person, invite by link, fine-grained roles (family, professional, neighbour, read-only). Multi-circle from day one: follow both parents, or link two into a **household** (a couple) with a combined dashboard |
 | 📔 **Care journal** | The digital liaison book: timestamped entries with photos, real time on every device (WebSocket). The heart of the app |
 | 💊 **Medications** | Treatments and schedules, intake confirmation written to the journal, prescription renewal alerts |
 | 📅 **Shared calendar** | Visits, medical appointments, nurse rounds, recurrences, reminders, iCal export (.ics / webcal) |
@@ -50,6 +50,8 @@ All on **your** server: the health data of a vulnerable person should not live o
 | 🏠 **Passive monitoring** | Home Assistant webhooks (door sensor, coffee-maker plug, motion): "normal activity this morning" on the family dashboard, alert cascade if no sign of life. No camera, no wristband |
 | 🎙️ **Voice journal** | Dictate on your way out ("20 minute visit, all fine, get paracetamol"): your self-hosted Whisper transcribes, the AI files the journal entry and the shopping item |
 | 🤖 **Weekly AI digest** | Every Sunday: "Calm week. 5 visits. Stable blood pressure. Attention: 2 missed doses on Tuesday and Thursday." With slow-trend detection (recurring low mood, gradual weight loss) |
+| 🌡️ **Heat-wave watch** | Declare a heat episode in one tap: prevention checklist on the dashboard and kiosk, hydration reminders to caregivers at chosen times, and an "I drank water" button on the kiosk |
+| 🗣️ **AI companion** | An optional voice companion the cared-for person chats with from the kiosk: gentle reminiscence drawn from the "Who I am" page, voice in (your Whisper) and read aloud. Strict guardrails (never medical advice, distress alerts the circle). Local-first with Ollama, or your own cloud key |
 
 ### Built to be yours
 

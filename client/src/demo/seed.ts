@@ -69,6 +69,8 @@ export interface CircleData {
     presenceSignals: Json[];
     presenceRule: Json | null;
     presenceWebhookUrl: string | null;
+    heatwave?: Json | null;
+    household_id?: string | null;
 }
 
 export interface DemoStore {
@@ -550,6 +552,7 @@ export function createSeed(): DemoStore {
                     alert_member_ids: [cmMarie.id, cmPaul.id], last_alert_date: null,
                 },
                 presenceWebhookUrl: '/api/presence/webhook/c-jeanne/demo-webhook-token',
+                household_id: 'demo-foyer',
             },
             // Second cercle minimal : le père, pour montrer le multi-proches.
             {
@@ -647,6 +650,7 @@ export function createSeed(): DemoStore {
                 presenceSignals: [],
                 presenceRule: null,
                 presenceWebhookUrl: null,
+                household_id: 'demo-foyer',
             },
         ],
     };

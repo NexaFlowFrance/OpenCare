@@ -13,12 +13,32 @@
     "creating": "Création...",
     "error": "La création du cercle a échoué. Réessayez.",
     "back": "Revenir à l'application",
-    "logout": "Se déconnecter"
+    "logout": "Se déconnecter",
+    "linkLabel": "Ce proche partage le foyer d'un proche déjà suivi (couple)",
+    "linkSelect": "Avec quel proche ?",
+    "copyMembers": "Reprendre la même équipe d'aidants",
+    "copyMembersHint": "Les membres du cercle choisi seront ajoutés à ce nouveau cercle, avec leur rôle. Vous n'aurez pas à les réinviter."
   },
   "title": "Cercle de soin",
   "subtitle": "Les personnes qui entourent {{name}} : membres, invitations et intervenants.",
   "subtitleNoName": "Les personnes qui entourent votre proche : membres, invitations et intervenants.",
   "noCircle": "Sélectionnez un cercle pour gérer ses membres.",
+  "household": {
+    "title": "Foyer",
+    "subtitle": "Reliez ce cercle à celui d'un proche qui vit sous le même toit (par exemple un couple). Chaque proche garde son cercle, mais vous passez de l'un à l'autre facilement.",
+    "linkedWith": "Relié au cercle de {{names}}.",
+    "name": "Nom du foyer",
+    "namePlaceholder": "Par exemple : Foyer Dupont",
+    "save": "Enregistrer le nom",
+    "nameSaved": "Nom du foyer enregistré.",
+    "leave": "Quitter le foyer",
+    "left": "Cercle retiré du foyer.",
+    "linkLabel": "Lier à un autre proche que vous gérez",
+    "linkPlaceholder": "Choisir un proche",
+    "link": "Lier",
+    "linked": "Cercles reliés.",
+    "noneToLink": "Vous n'avez pas d'autre cercle (dont vous êtes administrateur) à relier."
+  },
   "roles": {
     "admin": "Administrateur",
     "family": "Famille",

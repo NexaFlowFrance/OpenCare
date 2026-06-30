@@ -13,12 +13,32 @@
     "creating": "Creating...",
     "error": "Creating the circle failed. Please try again.",
     "back": "Back to the app",
-    "logout": "Sign out"
+    "logout": "Sign out",
+    "linkLabel": "This person shares a home with someone already followed (couple)",
+    "linkSelect": "With whom?",
+    "copyMembers": "Reuse the same caregiver team",
+    "copyMembersHint": "Members of the chosen circle will be added to this new circle with their role. No need to re-invite them."
   },
   "title": "Care circle",
   "subtitle": "The people around {{name}}: members, invitations and caregivers.",
   "subtitleNoName": "The people around your loved one: members, invitations and caregivers.",
   "noCircle": "Select a circle to manage its members.",
+  "household": {
+    "title": "Household",
+    "subtitle": "Link this circle to that of a loved one living under the same roof (for example a couple). Each person keeps their own circle, but you switch between them easily.",
+    "linkedWith": "Linked to {{names}}'s circle.",
+    "name": "Household name",
+    "namePlaceholder": "For example: The Smith household",
+    "save": "Save name",
+    "nameSaved": "Household name saved.",
+    "leave": "Leave the household",
+    "left": "Circle removed from the household.",
+    "linkLabel": "Link to another person you manage",
+    "linkPlaceholder": "Choose a person",
+    "link": "Link",
+    "linked": "Circles linked.",
+    "noneToLink": "You have no other circle (that you administer) to link."
+  },
   "roles": {
     "admin": "Administrator",
     "family": "Family",

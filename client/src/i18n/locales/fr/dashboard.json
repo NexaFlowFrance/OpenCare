@@ -2,6 +2,19 @@
   "greeting": "Comment va {{name}} ?",
   "greetingFallback": "Bonjour",
   "seeAll": "Voir tout",
+  "household": {
+    "label": "Même foyer :",
+    "viewAll": "Le foyer",
+    "current": "Proche affiché",
+    "nextEvent": "À {{time}} : {{title}}",
+    "eventsDone": "{{count}} rendez-vous aujourd'hui",
+    "noEvent": "Rien de prévu aujourd'hui",
+    "meds": "{{taken}}/{{total}} médicaments pris",
+    "medsNone": "Pas de médicament aujourd'hui",
+    "lastNews": "Dernière nouvelle {{when}} ({{author}})",
+    "noNews": "Pas encore de note",
+    "open": "Ouvrir"
+  },
   "unreadMessages_one": "{{count}} message non lu",
   "unreadMessages_other": "{{count}} messages non lus",
   "today": {

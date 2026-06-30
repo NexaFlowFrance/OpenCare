@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, Plus, Check } from 'lucide-react';
+import { ChevronDown, Plus, Check, Link2 } from 'lucide-react';
 import { useCircle } from '../../contexts/CircleContext';
 import { cn } from '../../lib/utils';
 
@@ -29,6 +29,14 @@ export const CircleSwitcher: React.FC<{ onNavigate?: () => void }> = ({ onNaviga
     if (!activeCircle) return null;
 
     const recipientName = activeCircle.recipient_first_name || activeCircle.name;
+
+    // Partenaires du foyer (couple): autres cercles partageant le household_id.
+    const partnersOf = (householdId: string | null, selfId: string): string[] =>
+        householdId
+            ? circles
+                .filter((c) => c.household_id === householdId && c.id !== selfId)
+                .map((c) => c.recipient_first_name || c.name)
+            : [];
 
     const Avatar: React.FC<{ photo: string | null; name: string; size?: string }> = ({ photo, name, size = 'h-9 w-9' }) => (
         photo ? (
@@ -65,6 +73,7 @@ export const CircleSwitcher: React.FC<{ onNavigate?: () => void }> = ({ onNaviga
                     {circles.map((circle) => {
                         const name = circle.recipient_first_name || circle.name;
                         const isActive = circle.id === activeCircle.id;
+                        const partners = partnersOf(circle.household_id, circle.id);
                         return (
                             <button
                                 key={circle.id}
@@ -80,7 +89,15 @@ export const CircleSwitcher: React.FC<{ onNavigate?: () => void }> = ({ onNaviga
                                 )}
                             >
                                 <Avatar photo={circle.recipient_photo_url} name={name} size="h-7 w-7" />
-                                <span className="min-w-0 flex-1 truncate font-medium">{name}</span>
+                                <span className="min-w-0 flex-1">
+                                    <span className="block truncate font-medium">{name}</span>
+                                    {partners.length > 0 && (
+                                        <span className="flex items-center gap-1 truncate text-micro text-muted-foreground">
+                                            <Link2 className="h-3 w-3 shrink-0" />
+                                            {t('circle.householdWith', { names: partners.join(', ') })}
+                                        </span>
+                                    )}
+                                </span>
                                 {isActive && <Check className="h-4 w-4 shrink-0" />}
                             </button>
                         );

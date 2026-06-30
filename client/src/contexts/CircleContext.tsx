@@ -11,6 +11,10 @@ export interface CircleSummary {
     currency: string;
     settings: Record<string, unknown>;
     created_at: string;
+    /** Foyer (couple): cercles partageant cet id; null = cercle isole. */
+    household_id: string | null;
+    /** Nom du foyer (editable); null si non defini. */
+    household_name: string | null;
     role: CircleRole;
     color: string;
     recipient_id: string | null;

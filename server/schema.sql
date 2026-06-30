@@ -29,7 +29,23 @@ CREATE TABLE care_circles (
     name VARCHAR(255) NOT NULL,
     created_by UUID REFERENCES users(id) ON DELETE SET NULL,
     currency VARCHAR(3) NOT NULL DEFAULT 'EUR',
+    -- Foyer (couple): des cercles partageant le meme household_id sont lies.
+    -- Pas de table dediee: l'invariant "un cercle = un proche" reste intact,
+    -- c'est juste un identifiant de regroupement partage (NULL = cercle isole).
+    household_id UUID,
     settings JSONB NOT NULL DEFAULT '{}',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_care_circles_household ON care_circles(household_id) WHERE household_id IS NOT NULL;
+
+-- Foyer (couple): regroupe des cercles vivant sous le meme toit. Optionnel:
+-- care_circles.household_id reference cet id (pas de FK dure pour rester
+-- tolerant aux installations existantes). Le nom est editable par un admin.
+CREATE TABLE households (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(255),
+    created_by UUID REFERENCES users(id) ON DELETE SET NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -420,6 +436,23 @@ CREATE TABLE emergency_sheets (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Suivi canicule / fortes chaleurs (un par cercle)
+-- Declenchement manuel de l'episode (active) par un admin/family; pas de source
+-- meteo externe (offline-first). reminder_times: creneaux HH:MM des rappels
+-- d'hydratation pousses aux aidants pendant un episode actif.
+CREATE TABLE heatwave_settings (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    circle_id UUID UNIQUE NOT NULL REFERENCES care_circles(id) ON DELETE CASCADE,
+    enabled BOOLEAN NOT NULL DEFAULT FALSE,
+    active BOOLEAN NOT NULL DEFAULT FALSE,
+    level VARCHAR(10) NOT NULL DEFAULT 'orange' CHECK (level IN ('orange', 'red')),
+    reminder_times JSONB NOT NULL DEFAULT '["10:00","14:00","17:00"]',
+    activated_at TIMESTAMP,
+    activated_by UUID REFERENCES users(id) ON DELETE SET NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Signaux de presence (webhooks Home Assistant)
 CREATE TABLE presence_signals (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -489,6 +522,10 @@ CREATE TABLE ai_settings (
     encrypted_api_key TEXT,
     model VARCHAR(100) NOT NULL,
     enabled BOOLEAN NOT NULL DEFAULT true,
+    -- Compagnon de conversation pour le proche (kiosk). Distinct de enabled:
+    -- un admin peut vouloir l'IA pour les syntheses sans confier les
+    -- conversations intimes a un fournisseur cloud. Off par defaut.
+    companion_enabled BOOLEAN NOT NULL DEFAULT false,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -550,6 +587,7 @@ $$ language 'plpgsql';
 
 CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_care_circles_updated_at BEFORE UPDATE ON care_circles FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_households_updated_at BEFORE UPDATE ON households FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_care_recipients_updated_at BEFORE UPDATE ON care_recipients FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_recipient_stories_updated_at BEFORE UPDATE ON recipient_stories FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_journal_entries_updated_at BEFORE UPDATE ON journal_entries FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
@@ -562,6 +600,7 @@ CREATE TRIGGER update_contacts_updated_at BEFORE UPDATE ON contacts FOR EACH ROW
 CREATE TRIGGER update_expenses_updated_at BEFORE UPDATE ON expenses FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_aid_records_updated_at BEFORE UPDATE ON aid_records FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_emergency_sheets_updated_at BEFORE UPDATE ON emergency_sheets FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_heatwave_settings_updated_at BEFORE UPDATE ON heatwave_settings FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_presence_rules_updated_at BEFORE UPDATE ON presence_rules FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_ai_settings_updated_at BEFORE UPDATE ON ai_settings FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_integrations_updated_at BEFORE UPDATE ON integrations FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

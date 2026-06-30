@@ -35,7 +35,8 @@
     "addExpense": "Ajouter un frais"
   },
   "circle": {
-    "create": "Suivre un autre proche"
+    "create": "Suivre un autre proche",
+    "householdWith": "Foyer avec {{names}}"
   },
   "roles": {
     "admin": "Administrateur",

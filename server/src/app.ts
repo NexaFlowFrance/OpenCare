@@ -24,6 +24,7 @@ import insightsRoutes from './routes/insights';
 import storyRoutes from './routes/story';
 import handoverRoutes from './routes/handover';
 import presenceRoutes from './routes/presence';
+import heatwaveRoutes from './routes/heatwave';
 import voiceRoutes from './routes/voice';
 import digestsRoutes from './routes/digests';
 import dashboardRoutes from './routes/dashboard';
@@ -33,6 +34,7 @@ import calendarRoutes from './routes/calendar';
 import integrationsRoutes from './routes/integrations';
 import notesRoutes from './routes/notes';
 import aiRoutes from './routes/ai';
+import companionRoutes from './routes/companion';
 import { loadEnv } from './config/loadEnv';
 import logger from './lib/logger';
 
@@ -167,6 +169,7 @@ app.use('/api/insights', insightsRoutes);
 app.use('/api/story', storyRoutes);
 app.use('/api/handover', handoverRoutes);
 app.use('/api/presence', presenceRoutes);
+app.use('/api/heatwave', heatwaveRoutes);
 app.use('/api/voice', voiceRoutes);
 app.use('/api/digests', digestsRoutes);
 app.use('/api/dashboard', dashboardRoutes);
@@ -176,6 +179,7 @@ app.use('/api/calendar', calendarRoutes);
 app.use('/api/integrations', integrationsRoutes);
 app.use('/api/notes', notesRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/companion', companionRoutes);
 
 // Static client (native Windows install): serve the built SPA from the same origin
 // as the API, so the app is reachable from any device on the LAN via http://<ip>:3000.

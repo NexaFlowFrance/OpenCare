@@ -127,7 +127,48 @@ export const runMigrations = async () => {
 
     // OpenCare repart d'un schema neuf (schema.sql). Les migrations futures
     // s'ajoutent ici, idempotentes, dans l'ordre chronologique.
-    const migrations: string[] = [];
+    const migrations: string[] = [
+        // Suivi canicule / fortes chaleurs (cf. schema.sql). Idempotent: la table
+        // existe deja sur une installation neuve (bootstrapSchema), absente sur
+        // une mise a jour. Le trigger est garde par une recherche pg_trigger.
+        `CREATE TABLE IF NOT EXISTS heatwave_settings (
+            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+            circle_id UUID UNIQUE NOT NULL REFERENCES care_circles(id) ON DELETE CASCADE,
+            enabled BOOLEAN NOT NULL DEFAULT FALSE,
+            active BOOLEAN NOT NULL DEFAULT FALSE,
+            level VARCHAR(10) NOT NULL DEFAULT 'orange' CHECK (level IN ('orange', 'red')),
+            reminder_times JSONB NOT NULL DEFAULT '["10:00","14:00","17:00"]',
+            activated_at TIMESTAMP,
+            activated_by UUID REFERENCES users(id) ON DELETE SET NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );`,
+        `DO $$ BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_heatwave_settings_updated_at') THEN
+                CREATE TRIGGER update_heatwave_settings_updated_at BEFORE UPDATE ON heatwave_settings
+                    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+            END IF;
+        END $$;`,
+        // Compagnon de conversation: drapeau distinct de ai_settings.enabled (cf. schema.sql).
+        `ALTER TABLE ai_settings ADD COLUMN IF NOT EXISTS companion_enabled BOOLEAN NOT NULL DEFAULT false;`,
+        // Foyer (couple): regroupement de cercles par household_id partage (cf. schema.sql).
+        `ALTER TABLE care_circles ADD COLUMN IF NOT EXISTS household_id UUID;`,
+        `CREATE INDEX IF NOT EXISTS idx_care_circles_household ON care_circles(household_id) WHERE household_id IS NOT NULL;`,
+        // Nom de foyer editable (cf. schema.sql). household_id reference households.id.
+        `CREATE TABLE IF NOT EXISTS households (
+            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+            name VARCHAR(255),
+            created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );`,
+        `DO $$ BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_households_updated_at') THEN
+                CREATE TRIGGER update_households_updated_at BEFORE UPDATE ON households
+                    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+            END IF;
+        END $$;`,
+    ];
 
     for (const migration of migrations) {
         await pool.query(migration);

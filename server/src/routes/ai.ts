@@ -73,6 +73,7 @@ router.get('/settings', async (req: CircleRequest, res) => {
                 base_url: row.base_url,
                 model: row.model,
                 has_api_key: Boolean(row.encrypted_api_key),
+                companion_enabled: row.companion_enabled,
             },
         });
     } catch (error) {
@@ -85,12 +86,13 @@ router.get('/settings', async (req: CircleRequest, res) => {
 // explicit null clears it; the key is encrypted at rest (AES-256-GCM).
 router.put('/settings', requireAdmin, async (req: CircleRequest, res) => {
     try {
-        const { provider, base_url, api_key, model, enabled } = req.body as {
+        const { provider, base_url, api_key, model, enabled, companion_enabled } = req.body as {
             provider?: string;
             base_url?: string | null;
             api_key?: string | null;
             model?: string;
             enabled?: boolean;
+            companion_enabled?: boolean;
         };
 
         if (!provider || !PROVIDERS.includes(provider as AiProvider)) {
@@ -129,16 +131,17 @@ router.put('/settings', requireAdmin, async (req: CircleRequest, res) => {
         }
 
         const result = await query(
-            `INSERT INTO ai_settings (circle_id, provider, base_url, encrypted_api_key, model, enabled)
-             VALUES ($1, $2, $3, $4, $5, $6)
+            `INSERT INTO ai_settings (circle_id, provider, base_url, encrypted_api_key, model, enabled, companion_enabled)
+             VALUES ($1, $2, $3, $4, $5, $6, $8)
              ON CONFLICT (circle_id) DO UPDATE SET
                provider = EXCLUDED.provider,
                base_url = EXCLUDED.base_url,
                encrypted_api_key = CASE WHEN $7 THEN EXCLUDED.encrypted_api_key ELSE ai_settings.encrypted_api_key END,
                model = EXCLUDED.model,
                enabled = EXCLUDED.enabled,
+               companion_enabled = EXCLUDED.companion_enabled,
                updated_at = NOW()
-             RETURNING provider, base_url, encrypted_api_key, model, enabled`,
+             RETURNING provider, base_url, encrypted_api_key, model, enabled, companion_enabled`,
             [
                 req.circleId,
                 provider,
@@ -147,6 +150,7 @@ router.put('/settings', requireAdmin, async (req: CircleRequest, res) => {
                 cleanedModel,
                 enabled === undefined ? true : Boolean(enabled),
                 encryptedKeyExpr !== undefined, // $7: replace/clear the key?
+                Boolean(companion_enabled), // $8
             ]
         );
 
@@ -160,6 +164,7 @@ router.put('/settings', requireAdmin, async (req: CircleRequest, res) => {
                 base_url: row.base_url,
                 model: row.model,
                 has_api_key: Boolean(row.encrypted_api_key),
+                companion_enabled: row.companion_enabled,
             },
         });
     } catch (error) {

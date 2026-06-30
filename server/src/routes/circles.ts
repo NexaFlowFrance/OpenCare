@@ -1,4 +1,5 @@
 import { Router, Response } from 'express';
+import crypto from 'crypto';
 import { query, getClient } from '../db';
 import { authMiddleware, AuthRequest } from '../middleware/auth';
 import { circleMiddleware, requireAdmin, CircleRequest } from '../middleware/circle';
@@ -7,6 +8,8 @@ import { broadcastToCircle } from '../lib/broadcaster';
 const router = Router();
 
 router.use(authMiddleware);
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const RECIPIENT_FIELDS = `id, circle_id, first_name, last_name, birth_date, photo_url, address, phone,
     blood_type, allergies, medical_history, mobility_notes, diet_notes, social_security_number,
@@ -23,7 +26,8 @@ const recipientFieldsFor = (role: string | undefined) =>
 router.get('/', async (req: AuthRequest, res: Response) => {
     try {
         const result = await query(
-            `SELECT c.id, c.name, c.currency, c.settings, c.created_at,
+            `SELECT c.id, c.name, c.currency, c.settings, c.created_at, c.household_id,
+                    h.name AS household_name,
                     m.role, m.color,
                     r.id AS recipient_id, r.first_name AS recipient_first_name,
                     r.last_name AS recipient_last_name, r.photo_url AS recipient_photo_url,
@@ -32,6 +36,7 @@ router.get('/', async (req: AuthRequest, res: Response) => {
              FROM care_circles c
              JOIN circle_members m ON m.circle_id = c.id AND m.user_id = $1
              LEFT JOIN care_recipients r ON r.circle_id = c.id
+             LEFT JOIN households h ON h.id = c.household_id
              ORDER BY c.created_at`,
             [req.userId]
         );
@@ -43,10 +48,13 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 });
 
 // Create a circle around a cared-for person. The creator becomes admin.
+// Optional link_circle_id: attach the new circle to the household (foyer) of an
+// existing circle the requester ADMINISTERS (e.g. the spouse). copy_members then
+// copies that circle's caregiver team so the family is not re-invited twice.
 router.post('/', async (req: AuthRequest, res: Response) => {
     const client = await getClient();
     try {
-        const { name, recipient_first_name, recipient_last_name, recipient_birth_date } = req.body;
+        const { name, recipient_first_name, recipient_last_name, recipient_birth_date, link_circle_id, copy_members } = req.body;
         const cleanedFirstName = typeof recipient_first_name === 'string' ? recipient_first_name.trim() : '';
 
         if (!cleanedFirstName) {
@@ -54,12 +62,34 @@ router.post('/', async (req: AuthRequest, res: Response) => {
         }
 
         const circleName = (typeof name === 'string' && name.trim()) ? name.trim() : cleanedFirstName;
+        const linkCircleId = typeof link_circle_id === 'string' && UUID_RE.test(link_circle_id) ? link_circle_id : null;
 
         await client.query('BEGIN');
 
+        // Resolve the household to attach to, if linking to an existing circle.
+        let householdId: string | null = null;
+        if (linkCircleId) {
+            const linkResult = await client.query(
+                `SELECT c.household_id, m.role
+                 FROM care_circles c
+                 JOIN circle_members m ON m.circle_id = c.id AND m.user_id = $2
+                 WHERE c.id = $1`,
+                [linkCircleId, req.userId]
+            );
+            const linkRow = linkResult.rows[0] as { household_id: string | null; role: string } | undefined;
+            if (!linkRow || linkRow.role !== 'admin') {
+                await client.query('ROLLBACK');
+                return res.status(403).json({ success: false, error: 'Vous devez être administrateur du cercle à lier' });
+            }
+            householdId = linkRow.household_id ?? crypto.randomUUID();
+            if (!linkRow.household_id) {
+                await client.query('UPDATE care_circles SET household_id = $1 WHERE id = $2', [householdId, linkCircleId]);
+            }
+        }
+
         const circleResult = await client.query(
-            'INSERT INTO care_circles (name, created_by) VALUES ($1, $2) RETURNING *',
-            [circleName, req.userId]
+            'INSERT INTO care_circles (name, created_by, household_id) VALUES ($1, $2, $3) RETURNING *',
+            [circleName, req.userId, householdId]
         );
         const circle = circleResult.rows[0];
 
@@ -78,6 +108,17 @@ router.post('/', async (req: AuthRequest, res: Response) => {
                 recipient_birth_date || null,
             ]
         );
+
+        // Copy the linked circle's caregiver team (except the creator, already admin).
+        if (linkCircleId && copy_members === true) {
+            await client.query(
+                `INSERT INTO circle_members (circle_id, user_id, role, color)
+                 SELECT $1, user_id, role, color FROM circle_members
+                 WHERE circle_id = $2 AND user_id <> $3
+                 ON CONFLICT (circle_id, user_id) DO NOTHING`,
+                [circle.id, linkCircleId, req.userId]
+            );
+        }
 
         await client.query('COMMIT');
         res.json({ success: true, data: { circle, recipient: recipientResult.rows[0] } });
@@ -172,6 +213,133 @@ router.delete('/:circleId', circleMiddleware, requireAdmin, async (req: CircleRe
         res.json({ success: true });
     } catch (error) {
         console.error('Delete circle error:', error);
+        res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+});
+
+// Link two existing circles into the same household/foyer (couple).
+// Requester must administer BOTH circles. Keeps the "one circle = one recipient"
+// invariant: only a shared household_id is set.
+router.post('/:circleId/link', circleMiddleware, requireAdmin, async (req: CircleRequest, res: Response) => {
+    try {
+        const targetId = typeof req.body?.target_circle_id === 'string' ? req.body.target_circle_id : '';
+        if (!UUID_RE.test(targetId) || targetId === req.circleId) {
+            return res.status(400).json({ success: false, error: 'Cercle cible invalide' });
+        }
+
+        const targetResult = await query(
+            `SELECT c.household_id, m.role
+             FROM care_circles c
+             JOIN circle_members m ON m.circle_id = c.id AND m.user_id = $2
+             WHERE c.id = $1`,
+            [targetId, req.userId]
+        );
+        const target = targetResult.rows[0] as { household_id: string | null; role: string } | undefined;
+        if (!target || target.role !== 'admin') {
+            return res.status(403).json({ success: false, error: 'Vous devez être administrateur des deux cercles' });
+        }
+
+        const sourceResult = await query('SELECT household_id FROM care_circles WHERE id = $1', [req.circleId]);
+        const sourceHousehold = (sourceResult.rows[0]?.household_id as string | null) ?? null;
+        const targetHousehold = target.household_id;
+
+        if (sourceHousehold && targetHousehold && sourceHousehold !== targetHousehold) {
+            return res.status(400).json({ success: false, error: 'Un des cercles appartient déjà à un autre foyer' });
+        }
+
+        const householdId = sourceHousehold ?? targetHousehold ?? crypto.randomUUID();
+        await query(
+            'UPDATE care_circles SET household_id = $1 WHERE id = ANY($2::uuid[])',
+            [householdId, [req.circleId, targetId]]
+        );
+
+        await broadcastToCircle(req.circleId!, { type: 'update', entity: 'circle', action: 'updated' });
+        await broadcastToCircle(targetId, { type: 'update', entity: 'circle', action: 'updated' });
+        res.json({ success: true, data: { household_id: householdId } });
+    } catch (error) {
+        console.error('Link circle error:', error);
+        res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+});
+
+// Leave the household/foyer (admin). Clears this circle's household_id; if a single
+// circle is left in that household, clears it too (no lonely foyer).
+router.delete('/:circleId/link', circleMiddleware, requireAdmin, async (req: CircleRequest, res: Response) => {
+    const client = await getClient();
+    try {
+        await client.query('BEGIN');
+
+        const current = await client.query('SELECT household_id FROM care_circles WHERE id = $1', [req.circleId]);
+        const householdId = (current.rows[0]?.household_id as string | null) ?? null;
+        if (!householdId) {
+            await client.query('COMMIT');
+            return res.json({ success: true });
+        }
+
+        // Verrouille tout le foyer dans un ordre stable (par id) pour serialiser
+        // deux departs concurrents sans interblocage.
+        await client.query(
+            'SELECT id FROM care_circles WHERE household_id = $1 ORDER BY id FOR UPDATE',
+            [householdId]
+        );
+
+        await client.query('UPDATE care_circles SET household_id = NULL WHERE id = $1', [req.circleId]);
+
+        const remaining = await client.query('SELECT id FROM care_circles WHERE household_id = $1', [householdId]);
+        let lonelyId: string | null = null;
+        if (remaining.rows.length === 1) {
+            lonelyId = remaining.rows[0].id as string;
+            await client.query('UPDATE care_circles SET household_id = NULL WHERE id = $1', [lonelyId]);
+        }
+
+        // Plus aucun cercle dans ce foyer: on retire la ligne households (nom inclus).
+        await client.query(
+            'DELETE FROM households WHERE id = $1 AND NOT EXISTS (SELECT 1 FROM care_circles WHERE household_id = $1)',
+            [householdId]
+        );
+
+        await client.query('COMMIT');
+
+        if (lonelyId) await broadcastToCircle(lonelyId, { type: 'update', entity: 'circle', action: 'updated' });
+        await broadcastToCircle(req.circleId!, { type: 'update', entity: 'circle', action: 'updated' });
+        res.json({ success: true });
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Unlink circle error:', error);
+        res.status(500).json({ success: false, error: 'Internal server error' });
+    } finally {
+        client.release();
+    }
+});
+
+// Rename the household/foyer (admin). Creates the households row lazily (the
+// link flows only set a shared household_id; the name is added on demand).
+router.put('/:circleId/household', circleMiddleware, requireAdmin, async (req: CircleRequest, res: Response) => {
+    try {
+        const name = typeof req.body?.name === 'string' ? req.body.name.trim().slice(0, 255) : '';
+
+        const current = await query('SELECT household_id FROM care_circles WHERE id = $1', [req.circleId]);
+        const householdId = (current.rows[0]?.household_id as string | null) ?? null;
+        if (!householdId) {
+            return res.status(400).json({ success: false, error: 'Ce cercle ne fait pas partie d\'un foyer' });
+        }
+
+        const result = await query(
+            `INSERT INTO households (id, name, created_by) VALUES ($1, $2, $3)
+             ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, updated_at = NOW()
+             RETURNING name`,
+            [householdId, name || null, req.userId]
+        );
+
+        // Tous les cercles du foyer voient le changement.
+        const siblings = await query('SELECT id FROM care_circles WHERE household_id = $1', [householdId]);
+        for (const row of siblings.rows as Array<{ id: string }>) {
+            await broadcastToCircle(row.id, { type: 'update', entity: 'circle', action: 'updated' });
+        }
+
+        res.json({ success: true, data: { household_name: result.rows[0]?.name ?? null } });
+    } catch (error) {
+        console.error('Rename household error:', error);
         res.status(500).json({ success: false, error: 'Internal server error' });
     }
 });

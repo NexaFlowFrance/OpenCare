@@ -28,7 +28,8 @@ export type WsEntity =
     | 'notifications'
     | 'integrations'
     | 'notes'
-    | 'presence';
+    | 'presence'
+    | 'heatwave';
 
 export type WsAction = 'created' | 'updated' | 'deleted' | 'synced';
 

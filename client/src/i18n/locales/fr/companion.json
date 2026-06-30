@@ -1,0 +1,24 @@
+{
+  "title": "Un moment ensemble",
+  "subtitle": "Appuie sur le micro et parle-moi.",
+  "close": "Fermer",
+  "you": "Toi",
+  "companion": "Compagnon",
+  "mic": {
+    "idle": "Appuie pour parler",
+    "recording": "Je t'écoute, appuie pour terminer",
+    "thinking": "Un instant...",
+    "denied": "Le micro n'est pas accessible. Tu peux écrire ci-dessous."
+  },
+  "textPlaceholder": "Écris ici si tu préfères",
+  "send": "Envoyer",
+  "replay": "Réécouter",
+  "starters": [
+    "Bonjour, comment vas-tu aujourd'hui ?",
+    "Raconte-moi un beau souvenir.",
+    "Parle-moi de ma journée."
+  ],
+  "openingLine": "Bonjour {{name}}, je suis content de te parler. Comment te sens-tu aujourd'hui ?",
+  "openingLineNoName": "Bonjour, je suis content de te parler. Comment te sens-tu aujourd'hui ?",
+  "error": "Désolé, je n'ai pas réussi à répondre. On réessaie ?"
+}

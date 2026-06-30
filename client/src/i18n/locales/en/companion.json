@@ -1,0 +1,24 @@
+{
+  "title": "A moment together",
+  "subtitle": "Tap the microphone and talk to me.",
+  "close": "Close",
+  "you": "You",
+  "companion": "Companion",
+  "mic": {
+    "idle": "Tap to talk",
+    "recording": "I am listening, tap to finish",
+    "thinking": "One moment...",
+    "denied": "The microphone is not available. You can type below."
+  },
+  "textPlaceholder": "Type here if you prefer",
+  "send": "Send",
+  "replay": "Play again",
+  "starters": [
+    "Hello, how are you today?",
+    "Tell me a happy memory.",
+    "Talk to me about my day."
+  ],
+  "openingLine": "Hello {{name}}, I am glad to talk with you. How are you feeling today?",
+  "openingLineNoName": "Hello, I am glad to talk with you. How are you feeling today?",
+  "error": "Sorry, I could not reply. Shall we try again?"
+}

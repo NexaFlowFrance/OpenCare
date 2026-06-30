@@ -2,6 +2,19 @@
   "greeting": "How is {{name}} doing?",
   "greetingFallback": "Hello",
   "seeAll": "See all",
+  "household": {
+    "label": "Same household:",
+    "viewAll": "The household",
+    "current": "Currently shown",
+    "nextEvent": "At {{time}}: {{title}}",
+    "eventsDone": "{{count}} appointments today",
+    "noEvent": "Nothing planned today",
+    "meds": "{{taken}}/{{total}} medications taken",
+    "medsNone": "No medication today",
+    "lastNews": "Latest update {{when}} ({{author}})",
+    "noNews": "No note yet",
+    "open": "Open"
+  },
   "unreadMessages_one": "{{count}} unread message",
   "unreadMessages_other": "{{count}} unread messages",
   "today": {

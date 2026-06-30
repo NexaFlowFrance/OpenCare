@@ -35,7 +35,8 @@
     "addExpense": "Add an expense"
   },
   "circle": {
-    "create": "Care for another person"
+    "create": "Care for another person",
+    "householdWith": "Household with {{names}}"
   },
   "roles": {
     "admin": "Administrator",

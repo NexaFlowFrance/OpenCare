@@ -2,6 +2,7 @@ import { Router, Response } from 'express';
 import { query } from '../db';
 import { authMiddleware } from '../middleware/auth';
 import { circleMiddleware, CircleRequest } from '../middleware/circle';
+import { toLocalISO } from './events';
 
 const router = Router();
 router.use(authMiddleware);
@@ -178,6 +179,96 @@ router.get('/', async (req: CircleRequest, res: Response) => {
         });
     } catch (error) {
         console.error('Get dashboard error:', error);
+        res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+});
+
+// Combined household view: a compact per-recipient summary for every circle of
+// the active circle's household that the user belongs to. Health figures (meds)
+// respect the user's role in EACH circle (neighbors never get them).
+router.get('/household', async (req: CircleRequest, res: Response) => {
+    try {
+        const hhResult = await query('SELECT household_id FROM care_circles WHERE id = $1', [req.circleId]);
+        const householdId = (hhResult.rows[0]?.household_id as string | null) ?? null;
+        if (!householdId) {
+            return res.json({ success: true, data: { circles: [] } });
+        }
+
+        const circlesResult = await query(
+            `SELECT c.id, m.role, r.first_name, r.photo_url
+             FROM care_circles c
+             JOIN circle_members m ON m.circle_id = c.id AND m.user_id = $1
+             LEFT JOIN care_recipients r ON r.circle_id = c.id
+             WHERE c.household_id = $2
+             ORDER BY c.created_at`,
+            [req.userId, householdId]
+        );
+
+        const today = new Date();
+        const nowMs = today.getTime();
+
+        const summaries = await Promise.all((circlesResult.rows as any[]).map(async (circle) => {
+            const includeHealth = circle.role !== 'neighbor';
+            const [simpleEv, recurEv, medsRes, journalRes] = await Promise.all([
+                query(
+                    `SELECT id, title, category, start_time, end_time, location FROM events
+                     WHERE circle_id = $1 AND (rrule IS NULL OR rrule = '') AND start_time::date = CURRENT_DATE
+                     ORDER BY start_time`,
+                    [circle.id]
+                ),
+                query(
+                    `SELECT * FROM events
+                     WHERE circle_id = $1 AND rrule IS NOT NULL AND rrule <> '' AND start_time::date <= CURRENT_DATE`,
+                    [circle.id]
+                ),
+                includeHealth
+                    ? query(
+                        `SELECT COUNT(*)::int AS total, COUNT(*) FILTER (WHERE status = 'taken')::int AS taken
+                         FROM medication_intakes WHERE circle_id = $1 AND due_at::date = CURRENT_DATE`,
+                        [circle.id]
+                    )
+                    : Promise.resolve(null),
+                query(
+                    `SELECT author_name, occurred_at FROM journal_entries
+                     WHERE circle_id = $1 ORDER BY occurred_at DESC LIMIT 1`,
+                    [circle.id]
+                ),
+            ]);
+
+            const recurringToday = (recurEv.rows as any[])
+                .filter((e) => occursToday(String(e.rrule), new Date(e.start_time), today))
+                .map((e) => projectToToday(e, today));
+            const todayEvents = [...simpleEv.rows, ...recurringToday]
+                .sort((a: any, b: any) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
+            const upcoming = todayEvents.filter((e: any) => new Date(e.start_time).getTime() >= nowMs);
+            const nextRaw = upcoming[0] ?? null;
+            const nextEvent = nextRaw
+                ? {
+                    title: nextRaw.title,
+                    start_time: nextRaw.start_time instanceof Date ? toLocalISO(nextRaw.start_time) : String(nextRaw.start_time),
+                }
+                : null;
+
+            const meds = includeHealth && medsRes
+                ? { taken: medsRes.rows[0]?.taken ?? 0, total: medsRes.rows[0]?.total ?? 0 }
+                : null;
+            const last = journalRes.rows[0] ?? null;
+
+            return {
+                circle_id: circle.id,
+                recipient_first_name: circle.first_name ?? null,
+                recipient_photo_url: circle.photo_url ?? null,
+                role: circle.role,
+                today_event_count: todayEvents.length,
+                next_event: nextEvent,
+                meds,
+                last_journal: last ? { author_name: last.author_name, occurred_at: last.occurred_at } : null,
+            };
+        }));
+
+        res.json({ success: true, data: { circles: summaries } });
+    } catch (error) {
+        console.error('Get household dashboard error:', error);
         res.status(500).json({ success: false, error: 'Internal server error' });
     }
 });

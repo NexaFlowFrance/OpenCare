@@ -9,6 +9,7 @@ import { cn } from '../lib/utils';
 import { intlLocale } from '../i18n/format';
 import { useCircle } from '../contexts/CircleContext';
 import { useWebSocketUpdates } from '../hooks/useWebSocketUpdates';
+import HeatwaveSection from '../components/app/HeatwaveSection';
 
 // Brand SVG icons (Simple Icons paths, viewBox 0 0 24 24)
 const BRAND_SVG: Record<string, { path: string; hex: string }> = {
@@ -690,6 +691,9 @@ const Integrations: React.FC = () => {
 
             {/* Veille passive (Home Assistant): signaux de présence + règle d'alerte */}
             <PresenceSection />
+
+            {/* Suivi canicule: activation, créneaux d'hydratation, épisode en cours */}
+            <HeatwaveSection />
 
             {/* Connect modal */}
             {activeModal && (() => {

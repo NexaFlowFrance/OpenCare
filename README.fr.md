@@ -27,7 +27,7 @@ les données de santé d'une personne vulnérable n'ont rien à faire sur le clo
 
 | | |
 |---|---|
-| 👥 **Cercle de soin** | Un cercle par proche aidé, invitation par lien, rôles fins (famille, professionnel, voisin, lecture seule). Multi-proches dès le départ : suivez vos deux parents |
+| 👥 **Cercle de soin** | Un cercle par proche aidé, invitation par lien, rôles fins (famille, professionnel, voisin, lecture seule). Multi-proches dès le départ : suivez vos deux parents, ou reliez deux cercles en **foyer** (un couple) avec un tableau de bord combiné |
 | 📔 **Journal de liaison** | Le cahier de transmission numérique : entrées horodatées avec photos, en temps réel sur tous les appareils. Le cœur de l'application |
 | 💊 **Médicaments** | Traitements et horaires, confirmation de prise reportée au journal, alertes de renouvellement d'ordonnance |
 | 📅 **Calendrier partagé** | Visites, rendez-vous médicaux, passages infirmière, récurrences, rappels, export iCal (.ics / webcal) |
@@ -51,6 +51,8 @@ les données de santé d'une personne vulnérable n'ont rien à faire sur le clo
 | 🏠 **Veille passive** | Webhooks Home Assistant (capteur de porte, prise de la cafetière, mouvement) : « activité normale ce matin » sur le tableau de bord, cascade d'alertes si aucun signe de vie. Ni caméra, ni bracelet |
 | 🎙️ **Journal vocal** | Dictez en sortant (« passage de 20 minutes, RAS, prévoir du paracétamol ») : votre Whisper auto-hébergé transcrit, l'IA range l'entrée au journal et le paracétamol dans les courses |
 | 🤖 **Synthèse hebdo IA** | Chaque dimanche : « Semaine calme. 5 visites. Tension stable. Point d'attention : 2 prises oubliées mardi et jeudi. » Avec détection des signaux faibles (moral en baisse, perte de poids lente) |
+| 🌡️ **Veille canicule** | Déclarez un épisode de forte chaleur en un geste : checklist de prévention sur le tableau de bord et le kiosk, rappels d'hydratation aux aidants aux heures choisies, et un bouton « J'ai bu de l'eau » sur le kiosk |
+| 🗣️ **Compagnon IA** | Un compagnon vocal optionnel avec qui le proche discute depuis le kiosk : réminiscence douce à partir de la page « Qui je suis », parole en entrée (votre Whisper) et lecture à voix haute. Garde-fous stricts (jamais de conseil médical, alerte le cercle en cas de détresse). Local d'abord avec Ollama, ou votre propre clé cloud |
 
 ### Chez vous, pour de bon
 
