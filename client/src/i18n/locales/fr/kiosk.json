@@ -31,6 +31,14 @@
     "errorTitle": "Ça n'a pas marché.",
     "errorDetail": "Appuie encore une fois sur le bouton."
   },
+  "heat": {
+    "banner": "Il fait chaud aujourd'hui. Pense à boire de l'eau régulièrement.",
+    "drink": "J'ai bu de l'eau",
+    "thanks": "Très bien, c'est noté"
+  },
+  "companion": {
+    "open": "Discuter un moment"
+  },
   "weather": {
     "clear": "Il fait beau",
     "partlyCloudy": "Quelques nuages",

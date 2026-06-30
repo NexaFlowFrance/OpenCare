@@ -29,12 +29,14 @@ export interface AiSettingsRow {
     encrypted_api_key: string | null;
     model: string;
     enabled: boolean;
+    /** Conversation companion enabled for the recipient (kiosk). */
+    companion_enabled: boolean;
 }
 
 /** Load the ai_settings row of a care circle (one row per circle). */
 export async function loadAiSettingsRow(circleId: string): Promise<AiSettingsRow | null> {
     const result = await query(
-        'SELECT provider, base_url, encrypted_api_key, model, enabled FROM ai_settings WHERE circle_id = $1',
+        'SELECT provider, base_url, encrypted_api_key, model, enabled, companion_enabled FROM ai_settings WHERE circle_id = $1',
         [circleId]
     );
     return (result.rows[0] as AiSettingsRow) ?? null;

@@ -63,6 +63,9 @@ const myMemberIn = (c: CircleData): Json | undefined =>
 
 // ── Cercles ──────────────────────────────────────────────────────────────────
 
+// Noms de foyer (demo): keyes par household_id. Editables via PUT.
+const demoHouseholdNames: Record<string, string> = { 'demo-foyer': 'Foyer Dupont' };
+
 const circleSummary = (c: CircleData): Json => ({
     id: c.id,
     name: c.name,
@@ -76,6 +79,8 @@ const circleSummary = (c: CircleData): Json => ({
     recipient_last_name: c.recipient ? c.recipient.last_name : null,
     recipient_photo_url: c.recipient ? c.recipient.photo_url : null,
     recipient_birth_date: c.recipient ? c.recipient.birth_date : null,
+    household_id: c.household_id ?? null,
+    household_name: c.household_id ? (demoHouseholdNames[c.household_id as string] ?? null) : null,
     member_count: c.members.length,
 });
 
@@ -98,7 +103,21 @@ function makeCircle(name: string, recipient: Json): CircleData {
         story: { id: uid(), circle_id: id, sections: [], updated_by: null, updated_at: naiveNow(), created_at: naiveNow() },
         emergencySheet: { id: uid(), circle_id: id, public_token: 'demo-urgence-' + id.slice(0, 8), enabled: false, extra_notes: null, updated_at: naiveNow(), created_at: naiveNow() },
         digests: [], presenceSignals: [], presenceRule: null, presenceWebhookUrl: null,
+        heatwave: null, household_id: null,
     };
+}
+
+// Etat canicule de demo (defauts si jamais configure sur ce cercle).
+function heatwaveOf(c: CircleData): { enabled: boolean; active: boolean; level: 'orange' | 'red'; reminder_times: string[]; activated_at: string | null } {
+    const h = (c.heatwave ?? null) as Record<string, unknown> | null;
+    return {
+        circle_id: c.id,
+        enabled: Boolean(h?.enabled),
+        active: Boolean(h?.active),
+        level: h?.level === 'red' ? 'red' : 'orange',
+        reminder_times: Array.isArray(h?.reminder_times) ? (h!.reminder_times as string[]) : ['10:00', '14:00', '17:00'],
+        activated_at: typeof h?.activated_at === 'string' ? (h.activated_at as string) : null,
+    } as { enabled: boolean; active: boolean; level: 'orange' | 'red'; reminder_times: string[]; activated_at: string | null };
 }
 
 // ── Calendrier : expansion NAÏVE des récurrences (FREQ=DAILY / WEEKLY+BYDAY) ─
@@ -450,6 +469,39 @@ function dashboard(c: CircleData): Json {
     };
 }
 
+function householdDashboard(active: CircleData): Json {
+    const householdId = active.household_id ?? null;
+    if (!householdId) return { circles: [] };
+    const now = new Date();
+    const dayStart = startOfDay(now);
+    const dayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+    const today = isoDate(now);
+
+    const circles = store.circles
+        .filter((c) => c.household_id === householdId)
+        .map((c) => {
+            const includeHealth = c.role !== 'neighbor';
+            const events = expandEvents(c, dayStart, dayEnd);
+            const upcoming = events.filter((e) => new Date(String(e.start_time)).getTime() >= now.getTime());
+            const next = upcoming[0] ?? null;
+            const intakes = includeHealth ? intakesForRange(c, today, today) : [];
+            const last = journalDesc(c)[0] ?? null;
+            return {
+                circle_id: c.id,
+                recipient_first_name: c.recipient ? c.recipient.first_name : null,
+                recipient_photo_url: c.recipient ? c.recipient.photo_url : null,
+                role: c.role,
+                today_event_count: events.length,
+                next_event: next ? { title: next.title, start_time: next.start_time } : null,
+                meds: includeHealth
+                    ? { taken: intakes.filter((i) => i.status === 'taken').length, total: intakes.length }
+                    : null,
+                last_journal: last ? { author_name: last.author_name, occurred_at: last.occurred_at } : null,
+            };
+        });
+    return { circles };
+}
+
 function kioskToday(c: CircleData): Json {
     const now = new Date();
     const dayStart = startOfDay(now);
@@ -471,6 +523,11 @@ function kioskToday(c: CircleData): Json {
             medication_name: i.medication_name, dosage: i.dosage, form: i.form,
         })),
         photos_enabled: false,
+        heatwave: (() => {
+            const h = heatwaveOf(c);
+            return h.enabled && h.active ? { active: true, level: h.level } : null;
+        })(),
+        companion_enabled: true,
     };
 }
 
@@ -612,6 +669,20 @@ async function route(method: string, path: string, q: Record<string, string>, bo
             last_name: typeof body.recipient_last_name === 'string' ? body.recipient_last_name.trim() || null : null,
             birth_date: body.recipient_birth_date || null,
         });
+        // Foyer (couple): lier au cercle existant et reprendre son equipe.
+        const linkId = typeof body.link_circle_id === 'string' ? body.link_circle_id : '';
+        const linkTarget = linkId ? circleById(linkId) : undefined;
+        if (linkTarget) {
+            const household = (linkTarget.household_id as string | null) ?? uid();
+            linkTarget.household_id = household;
+            created.household_id = household;
+            if (body.copy_members === true) {
+                for (const m of linkTarget.members) {
+                    if (m.user_id === store.user.id) continue;
+                    created.members.push({ ...m, id: uid(), circle_id: created.id, created_at: naiveNow() });
+                }
+            }
+        }
         store.circles.push(created);
         return ok({ circle: circleRow(created), recipient: created.recipient });
     }
@@ -630,6 +701,36 @@ async function route(method: string, path: string, q: Record<string, string>, bo
             if (seg.length === 3 && method === 'DELETE') {
                 removeFrom(store.circles as unknown as Json[], target.id);
                 return ok({});
+            }
+            if (seg[3] === 'link' && seg.length === 4) {
+                if (method === 'POST') {
+                    const other = circleById(typeof body.target_circle_id === 'string' ? body.target_circle_id : '');
+                    if (other) {
+                        const household = (target.household_id as string | null)
+                            ?? (other.household_id as string | null) ?? uid();
+                        target.household_id = household;
+                        other.household_id = household;
+                        return ok({ household_id: household });
+                    }
+                    return ok({});
+                }
+                if (method === 'DELETE') {
+                    const household = target.household_id as string | null;
+                    target.household_id = null;
+                    if (household) {
+                        const remaining = store.circles.filter((x) => x.household_id === household);
+                        if (remaining.length === 1) remaining[0].household_id = null;
+                    }
+                    return ok({});
+                }
+            }
+            if (seg[3] === 'household' && seg.length === 4 && method === 'PUT') {
+                const household = target.household_id as string | null;
+                if (!household) return ok({ household_name: null });
+                const nm = typeof body.name === 'string' ? body.name.trim() : '';
+                if (nm) demoHouseholdNames[household] = nm;
+                else delete demoHouseholdNames[household];
+                return ok({ household_name: nm || null });
             }
             if (seg[3] === 'members' && seg.length === 5) {
                 if (method === 'PUT') {
@@ -1136,6 +1237,7 @@ async function route(method: string, path: string, q: Record<string, string>, bo
 
     // ── Tableau de bord ──────────────────────────────────────────────────────
     if (path === '/api/dashboard') return ok(dashboard(c));
+    if (path === '/api/dashboard/household') return ok(householdDashboard(c));
 
     // ── Notes (post-its du cercle) ───────────────────────────────────────────
     if (path === '/api/notes' && method === 'GET') {
@@ -1300,18 +1402,44 @@ async function route(method: string, path: string, q: Record<string, string>, bo
         return ok({ webhook_url: c.presenceWebhookUrl });
     }
 
+    // ── Canicule / fortes chaleurs ───────────────────────────────────────────
+    if (path === '/api/heatwave' && method === 'GET') return ok(heatwaveOf(c));
+    if (path === '/api/heatwave' && method === 'PUT') {
+        const current = heatwaveOf(c);
+        const times = Array.isArray(body.reminder_times)
+            ? (body.reminder_times as unknown[]).filter((x): x is string => typeof x === 'string')
+            : current.reminder_times;
+        c.heatwave = { ...current, enabled: body.enabled === true, reminder_times: times };
+        return ok(heatwaveOf(c));
+    }
+    if (path === '/api/heatwave/toggle' && method === 'POST') {
+        const current = heatwaveOf(c);
+        const active = body.active === true;
+        c.heatwave = {
+            ...current,
+            enabled: active ? true : current.enabled,
+            active,
+            level: body.level === 'red' ? 'red' : 'orange',
+            activated_at: active ? naiveNow() : null,
+        };
+        return ok(heatwaveOf(c));
+    }
+
     // ── Kiosk ────────────────────────────────────────────────────────────────
     if (path === '/api/kiosk/today') return ok(kioskToday(c));
     if (path === '/api/kiosk/status' && method === 'POST') {
-        const kind = body.kind === 'help' ? 'help' : 'ok';
+        const kind = body.kind === 'help' ? 'help' : body.kind === 'hydration' ? 'hydration' : 'ok';
         const firstName = c.recipient ? c.recipient.first_name : 'Kiosk';
+        const content = kind === 'help'
+            ? 'J\'ai besoin d\'aide (signal envoyé depuis le kiosk)'
+            : kind === 'hydration'
+                ? 'A bu de l\'eau (signalé depuis le kiosk)'
+                : 'Tout va bien (signal envoyé depuis le kiosk)';
         const entry = {
             id: uid(), circle_id: c.id, author_user_id: null, caregiver_link_id: null,
             author_name: firstName,
-            type: kind === 'help' ? 'incident' : 'mood',
-            content: kind === 'help'
-                ? 'J\'ai besoin d\'aide (signal envoyé depuis le kiosk)'
-                : 'Tout va bien (signal envoyé depuis le kiosk)',
+            type: kind === 'help' ? 'incident' : kind === 'hydration' ? 'note' : 'mood',
+            content,
             data: { source: 'kiosk', kind },
             occurred_at: naiveNow(), created_at: naiveNow(), photos: [],
         };
@@ -1345,7 +1473,7 @@ async function route(method: string, path: string, q: Record<string, string>, bo
 
     // ── IA (la démo se présente comme configurée pour montrer les ✨) ────────
     if (path === '/api/ai/settings' && method === 'GET') {
-        return ok({ configured: true, enabled: true, provider: 'ollama', base_url: 'http://localhost:11434', model: 'llama3.1', has_api_key: false });
+        return ok({ configured: true, enabled: true, provider: 'ollama', base_url: 'http://localhost:11434', model: 'llama3.1', has_api_key: false, companion_enabled: true });
     }
     if (path === '/api/ai/settings' && method === 'PUT') {
         return ok({
@@ -1355,7 +1483,17 @@ async function route(method: string, path: string, q: Record<string, string>, bo
             base_url: (body.base_url as string) ?? null,
             model: (body.model as string) || 'llama3.1',
             has_api_key: Boolean(body.api_key),
+            companion_enabled: body.companion_enabled === true,
         });
+    }
+    if (path === '/api/companion/message' && method === 'POST') {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        const msgs = Array.isArray(body.messages) ? (body.messages as Array<{ role: string; content: string }>) : [];
+        const last = msgs.length > 0 ? String(msgs[msgs.length - 1]?.content || '') : '';
+        const reply = last
+            ? `C'est gentil de me raconter ça. Et qu'est-ce que ça t'évoque comme souvenir ?`
+            : `Je suis là pour discuter avec toi. De quoi as-tu envie de parler ?`;
+        return ok({ reply, flagged: false });
     }
     if (path === '/api/ai/test' && method === 'POST') {
         await new Promise((resolve) => setTimeout(resolve, 600));

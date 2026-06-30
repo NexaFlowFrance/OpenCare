@@ -12,7 +12,7 @@ import { expandEventOccurrences, toLocalISO } from './events';
 const router = Router();
 router.use(authMiddleware, circleMiddleware);
 
-type KioskStatusKind = 'ok' | 'help';
+type KioskStatusKind = 'ok' | 'help' | 'hydration';
 
 // Server-side strings: the kiosk writes journal entries and notifications on
 // behalf of the care recipient, so the wording is resolved here (per user
@@ -21,12 +21,14 @@ const STRINGS = {
     fr: {
         okContent: 'Tout va bien (signal envoyé depuis le kiosk)',
         helpContent: "J'ai besoin d'aide (signal envoyé depuis le kiosk)",
+        hydrationContent: "A bu de l'eau (signalé depuis le kiosk)",
         helpTitle: (name: string) => `${name} demande de l'aide`,
         helpMessage: (name: string) => `${name} a appuyé sur le bouton d'aide du kiosk. Pensez à prendre des nouvelles tout de suite.`,
     },
     en: {
         okContent: 'All is well (signal sent from the kiosk)',
         helpContent: 'I need help (signal sent from the kiosk)',
+        hydrationContent: 'Drank water (logged from the kiosk)',
         helpTitle: (name: string) => `${name} is asking for help`,
         helpMessage: (name: string) => `${name} pressed the help button on the kiosk. Please check in right away.`,
     },
@@ -35,14 +37,19 @@ const STRINGS = {
 const pickLang = (language: unknown): keyof typeof STRINGS =>
     String(language || '').toLowerCase().startsWith('en') ? 'en' : 'fr';
 
-// POST /api/kiosk/status : the two big buttons of the kiosk.
-// 'ok'   -> journal entry of type 'mood' authored by the care recipient.
-// 'help' -> journal entry of type 'incident' + urgent notification to every
-//           member of the circle (in-app + web push via createNotification).
+// Journal entry type written for each kiosk button.
+const KIND_TO_TYPE: Record<KioskStatusKind, string> = { ok: 'mood', help: 'incident', hydration: 'note' };
+
+// POST /api/kiosk/status : the big buttons of the kiosk.
+// 'ok'        -> journal entry of type 'mood' authored by the care recipient.
+// 'help'      -> journal entry of type 'incident' + urgent notification to every
+//                member of the circle (in-app + web push via createNotification).
+// 'hydration' -> journal entry of type 'note' (heat episode hydration check-in),
+//                no notification.
 router.post('/status', async (req: CircleRequest, res: Response) => {
     try {
         const kind = req.body?.kind as KioskStatusKind;
-        if (kind !== 'ok' && kind !== 'help') {
+        if (kind !== 'ok' && kind !== 'help' && kind !== 'hydration') {
             return res.status(400).json({ success: false, error: 'Invalid kind' });
         }
 
@@ -55,6 +62,12 @@ router.post('/status', async (req: CircleRequest, res: Response) => {
         const sessionLang = pickLang(sessionUserResult.rows[0]?.language);
         const sessionStrings = STRINGS[sessionLang];
 
+        const content = kind === 'help'
+            ? sessionStrings.helpContent
+            : kind === 'hydration'
+                ? sessionStrings.hydrationContent
+                : sessionStrings.okContent;
+
         const entryResult = await query(
             `INSERT INTO journal_entries (circle_id, author_name, type, content, data)
              VALUES ($1, $2, $3, $4, $5)
@@ -62,8 +75,8 @@ router.post('/status', async (req: CircleRequest, res: Response) => {
             [
                 req.circleId,
                 firstName,
-                kind === 'help' ? 'incident' : 'mood',
-                kind === 'help' ? sessionStrings.helpContent : sessionStrings.okContent,
+                KIND_TO_TYPE[kind],
+                content,
                 JSON.stringify({ source: 'kiosk', kind }),
             ]
         );
@@ -114,7 +127,7 @@ router.get('/today', async (req: CircleRequest, res: Response) => {
         const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
         const dayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
 
-        const [recipientResult, eventsResult, membersResult, intakesResult, immichResult] = await Promise.all([
+        const [recipientResult, eventsResult, membersResult, intakesResult, immichResult, heatwaveResult, companionResult] = await Promise.all([
             query('SELECT first_name, photo_url FROM care_recipients WHERE circle_id = $1', [circleId]),
             // Candidate events: anything overlapping today, plus every recurring
             // event started before tonight (expanded below).
@@ -143,6 +156,15 @@ router.get('/today', async (req: CircleRequest, res: Response) => {
                 [circleId]
             ),
             query(`SELECT 1 FROM integrations WHERE circle_id = $1 AND type = 'immich' LIMIT 1`, [circleId]),
+            query(
+                `SELECT level FROM heatwave_settings WHERE circle_id = $1 AND enabled = TRUE AND active = TRUE`,
+                [circleId]
+            ),
+            query(
+                `SELECT 1 FROM ai_settings
+                 WHERE circle_id = $1 AND enabled = TRUE AND companion_enabled = TRUE AND model <> ''`,
+                [circleId]
+            ),
         ]);
 
         const membersById = new Map(
@@ -184,6 +206,10 @@ router.get('/today', async (req: CircleRequest, res: Response) => {
                 events_today: eventsToday,
                 intakes_today: intakesResult.rows,
                 photos_enabled: immichResult.rows.length > 0,
+                heatwave: heatwaveResult.rows[0]
+                    ? { active: true, level: heatwaveResult.rows[0].level as string }
+                    : null,
+                companion_enabled: companionResult.rows.length > 0,
             },
         });
     } catch (error) {

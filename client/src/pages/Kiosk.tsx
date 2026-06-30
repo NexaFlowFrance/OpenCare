@@ -3,13 +3,14 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
     CalendarDays, Check, Hand, MapPin, Maximize2, Minimize2, Pill, Search,
-    Settings as SettingsIcon, X,
+    Settings as SettingsIcon, X, ThermometerSun, GlassWater, MessageCircle,
     Sun, Moon, CloudSun, CloudMoon, Cloud, CloudFog, CloudDrizzle, CloudRain, CloudSnow, CloudLightning,
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useWebSocketUpdates } from '../hooks/useWebSocketUpdates';
 import { intlLocale } from '../i18n/format';
 import { cn } from '../lib/utils';
+import KioskCompanion from '../components/app/KioskCompanion';
 
 // Kiosk OpenCare: the wall tablet at the care recipient's home. Everything here
 // is designed for an elderly person, possibly with early dementia:
@@ -56,6 +57,8 @@ interface KioskToday {
     recipient: { first_name: string; photo_url: string | null } | null;
     events_today: KioskEvent[];
     intakes_today: KioskIntake[];
+    heatwave: { active: boolean; level: 'orange' | 'red' } | null;
+    companion_enabled: boolean;
 }
 
 // ── Per-device kiosk settings (localStorage: the right scope for a wall display) ──
@@ -160,6 +163,12 @@ const Kiosk: React.FC = () => {
     // The two big buttons: in-flight kind, then a full-screen confirmation (5s)
     const [sending, setSending] = useState<'ok' | 'help' | null>(null);
     const [confirmation, setConfirmation] = useState<'sent' | 'error' | null>(null);
+
+    // Heat hydration check-in: idle -> sending -> done (inline confirmation, 4s)
+    const [hydration, setHydration] = useState<'idle' | 'sending' | 'done'>('idle');
+
+    // Conversation companion overlay
+    const [companionOpen, setCompanionOpen] = useState(false);
 
     // Per-device settings + weather + photo background
     const [settings, setSettings] = useState<KioskSettings>(loadKioskSettings);
@@ -290,6 +299,24 @@ const Kiosk: React.FC = () => {
         return () => clearTimeout(id);
     }, [confirmation]);
 
+    // Heat hydration check-in: writes a light journal note, then a short thanks.
+    const sendHydration = async () => {
+        if (hydration !== 'idle') return;
+        setHydration('sending');
+        try {
+            await api.post('/api/kiosk/status', { kind: 'hydration' });
+            setHydration('done');
+        } catch {
+            setHydration('idle');
+        }
+    };
+
+    useEffect(() => {
+        if (hydration !== 'done') return;
+        const id = setTimeout(() => setHydration('idle'), 4_000);
+        return () => clearTimeout(id);
+    }, [hydration]);
+
     // ── Simple, warm sentences ──
 
     const isFr = (i18n.language || 'fr').toLowerCase().startsWith('fr');
@@ -324,6 +351,16 @@ const Kiosk: React.FC = () => {
     const recipient = today?.recipient ?? null;
     const events = today?.events_today ?? [];
     const intakes = today?.intakes_today ?? [];
+
+    // Heat episode banner: warm panel + a big "I drank water" button.
+    const heatActive = Boolean(today?.heatwave?.active);
+    const heatRed = today?.heatwave?.level === 'red';
+    const heatColor = heatRed ? C.terracotta : '#b9772a';
+    const heatPanelStyle: React.CSSProperties = {
+        backgroundColor: heatRed ? '#fbeae8' : '#fdf3e7',
+        border: `1px solid ${heatRed ? '#e7c3bf' : '#efd8b4'}`,
+        color: C.text,
+    };
 
     const greetingKey = now.getHours() >= 18 ? 'kiosk:greetingEvening' : 'kiosk:greeting';
     const clock = new Intl.DateTimeFormat(intlLocale(), { hour: '2-digit', minute: '2-digit' }).format(now);
@@ -401,6 +438,19 @@ const Kiosk: React.FC = () => {
                             </Link>
                         </div>
 
+                        {/* Companion: a calm, clearly labeled button when enabled */}
+                        {today?.companion_enabled && (
+                            <button
+                                type="button"
+                                onClick={() => setCompanionOpen(true)}
+                                className="flex min-h-[56px] items-center gap-3 rounded-2xl px-5 text-[22px] font-bold text-white shadow-lg active:shadow-inner"
+                                style={{ backgroundColor: C.sage }}
+                            >
+                                <MessageCircle className="h-7 w-7 shrink-0" aria-hidden="true" />
+                                {t('kiosk:companion.open')}
+                            </button>
+                        )}
+
                         {/* Weather, simplified: big temperature + one phrase */}
                         {weather && settings.location && (
                             <div className="flex items-center gap-4 rounded-2xl px-5 py-3" style={panelStyle}>
@@ -433,6 +483,37 @@ const Kiosk: React.FC = () => {
 
                 {/* Two blocks: who comes today + medicines. pb clears the fixed button bar. */}
                 <main className="grid flex-1 grid-cols-1 gap-5 px-6 pb-44 pt-6 lg:grid-cols-2 lg:gap-6 lg:px-10">
+                    {/* Heat episode: gentle reminder + hydration check-in (full width) */}
+                    {heatActive && (
+                        <section className="rounded-2xl p-6 lg:col-span-2 lg:p-8" style={heatPanelStyle}>
+                            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+                                <div className="flex items-center gap-4">
+                                    <ThermometerSun className="h-12 w-12 shrink-0" style={{ color: heatColor }} aria-hidden="true" />
+                                    <p className="text-[26px] font-bold leading-snug">{t('kiosk:heat.banner')}</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => void sendHydration()}
+                                    disabled={hydration !== 'idle'}
+                                    className="flex min-h-[72px] shrink-0 items-center justify-center gap-3 rounded-2xl px-7 text-[24px] font-bold text-white shadow-lg active:shadow-inner"
+                                    style={{ backgroundColor: hydration === 'done' ? C.success : heatColor }}
+                                >
+                                    {hydration === 'done' ? (
+                                        <>
+                                            <Check className="h-9 w-9 shrink-0" strokeWidth={3} aria-hidden="true" />
+                                            {t('kiosk:heat.thanks')}
+                                        </>
+                                    ) : (
+                                        <>
+                                            <GlassWater className="h-9 w-9 shrink-0" aria-hidden="true" />
+                                            {t('kiosk:heat.drink')}
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </section>
+                    )}
+
                     {/* Today's visits */}
                     <section className="rounded-2xl p-6 lg:p-8" style={panelStyle}>
                         <h2 className="mb-6 flex items-center gap-3 text-[2rem] font-bold">
@@ -551,6 +632,14 @@ const Kiosk: React.FC = () => {
                     </button>
                 </div>
             </div>
+
+            {/* Conversation companion, full-screen overlay */}
+            {companionOpen && (
+                <KioskCompanion
+                    recipientName={recipient?.first_name ?? ''}
+                    onClose={() => setCompanionOpen(false)}
+                />
+            )}
 
             {/* Full-screen confirmation, exactly 5 seconds */}
             {confirmation && (

@@ -31,6 +31,14 @@
     "errorTitle": "It did not work.",
     "errorDetail": "Please press the button again."
   },
+  "heat": {
+    "banner": "It is hot today. Remember to drink water regularly.",
+    "drink": "I drank water",
+    "thanks": "Great, noted"
+  },
+  "companion": {
+    "open": "Have a chat"
+  },
   "weather": {
     "clear": "It is sunny",
     "partlyCloudy": "A few clouds",

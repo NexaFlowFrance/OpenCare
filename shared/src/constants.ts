@@ -81,3 +81,7 @@ export type TaskPriority = typeof TASK_PRIORITY[keyof typeof TASK_PRIORITY];
 // Groupes sanguins
 export const BLOOD_TYPES = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] as const;
 export type BloodType = typeof BLOOD_TYPES[number];
+
+// Niveaux d'alerte canicule (calques sur la vigilance: orange, rouge)
+export const HEATWAVE_LEVELS = ['orange', 'red'] as const;
+export type HeatwaveLevel = typeof HEATWAVE_LEVELS[number];

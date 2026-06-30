@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useCircle } from '../contexts/CircleContext';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
+import { Select } from '../components/ui';
 
 /**
  * Onboarding: création d'un cercle de soin autour d'un proche.
@@ -24,6 +25,12 @@ const Onboarding: React.FC = () => {
     const [submitting, setSubmitting] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
 
+    // Foyer (couple): lier ce nouveau cercle a un cercle existant que l'on administre.
+    const adminCircles = circles.filter((c) => c.role === 'admin');
+    const [enableLink, setEnableLink] = React.useState(false);
+    const [linkCircleId, setLinkCircleId] = React.useState('');
+    const [copyMembers, setCopyMembers] = React.useState(true);
+
     const hasCircles = circles.length > 0;
 
     const handleSubmit = async (event: React.FormEvent) => {
@@ -33,10 +40,13 @@ const Onboarding: React.FC = () => {
         setSubmitting(true);
         setError(null);
         try {
+            const useLink = enableLink && linkCircleId !== '';
             const response = await api.post<{ success: boolean; data: { circle: { id: string } } }>('/api/circles', {
                 recipient_first_name: firstName.trim(),
                 recipient_last_name: lastName.trim() || undefined,
                 recipient_birth_date: birthDate || undefined,
+                link_circle_id: useLink ? linkCircleId : undefined,
+                copy_members: useLink ? copyMembers : undefined,
             });
             if (response.success && response.data?.circle) {
                 await refreshCircles();
@@ -108,6 +118,53 @@ const Onboarding: React.FC = () => {
                             onChange={(e) => setBirthDate(e.target.value)}
                         />
                     </div>
+
+                    {adminCircles.length > 0 && (
+                        <div className="space-y-3 rounded-card border border-border bg-surface-2/40 p-4">
+                            <label className="flex cursor-pointer items-start gap-2.5">
+                                <input
+                                    type="checkbox"
+                                    checked={enableLink}
+                                    onChange={(e) => {
+                                        setEnableLink(e.target.checked);
+                                        if (e.target.checked && !linkCircleId) setLinkCircleId(adminCircles[0].id);
+                                    }}
+                                    className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                                />
+                                <span className="text-caption text-foreground">{t('onboarding.linkLabel')}</span>
+                            </label>
+
+                            {enableLink && (
+                                <div className="space-y-3 pl-6">
+                                    <div>
+                                        <label className="mb-1.5 block text-label text-foreground">{t('onboarding.linkSelect')}</label>
+                                        <Select
+                                            value={linkCircleId}
+                                            onValueChange={setLinkCircleId}
+                                            options={adminCircles.map((c) => ({
+                                                value: c.id,
+                                                label: c.recipient_first_name || c.name,
+                                            }))}
+                                            placeholder={t('onboarding.linkSelect')}
+                                            className="h-11 w-full md:h-10"
+                                        />
+                                    </div>
+                                    <label className="flex cursor-pointer items-start gap-2.5">
+                                        <input
+                                            type="checkbox"
+                                            checked={copyMembers}
+                                            onChange={(e) => setCopyMembers(e.target.checked)}
+                                            className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                                        />
+                                        <span>
+                                            <span className="block text-caption text-foreground">{t('onboarding.copyMembers')}</span>
+                                            <span className="mt-0.5 block text-micro text-muted-foreground">{t('onboarding.copyMembersHint')}</span>
+                                        </span>
+                                    </label>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {error && (
                         <p className="rounded-input bg-[rgb(var(--danger-soft))] px-3 py-2 text-caption text-danger">{error}</p>

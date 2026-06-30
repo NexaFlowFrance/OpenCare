@@ -13,6 +13,7 @@ import type {
     ContactCategory,
     ExpenseCategory,
     AidType,
+    HeatwaveLevel,
 } from './constants';
 
 // Base Entity
@@ -36,6 +37,8 @@ export interface CareCircle extends BaseEntity {
     name: string;
     created_by?: string;
     currency: string;
+    /** Foyer (couple): cercles partageant ce meme id; NULL = cercle isole. */
+    household_id?: string | null;
     settings: Record<string, unknown>;
 }
 
@@ -72,6 +75,20 @@ export interface CareRecipient extends BaseEntity {
     gp_name?: string;
     gp_phone?: string;
     notes?: string;
+}
+
+// Suivi canicule / fortes chaleurs (un par cercle)
+export interface HeatwaveSettings {
+    circle_id: string;
+    /** Fonction activee pour le cercle. */
+    enabled: boolean;
+    /** Episode de forte chaleur en cours (bascule manuelle par un aidant). */
+    active: boolean;
+    level: HeatwaveLevel;
+    /** Creneaux HH:MM des rappels d'hydratation pousses aux aidants. */
+    reminder_times: string[];
+    /** Horodatage naif 'YYYY-MM-DDTHH:mm:ss' du dernier declenchement, ou null. */
+    activated_at: string | null;
 }
 
 export interface CircleInvite {

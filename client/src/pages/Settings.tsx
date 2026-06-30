@@ -19,6 +19,8 @@ import {
     Moon,
     Monitor,
     SunMoon,
+    ShieldCheck,
+    AlertTriangle,
 } from 'lucide-react';
 import { Card, CardContent, Button, Input, Select } from '../components/ui';
 import { LanguageSwitcher } from '../components/ui/LanguageSwitcher';
@@ -53,6 +55,7 @@ interface AiSettingsData {
     base_url?: string | null;
     model?: string;
     has_api_key?: boolean;
+    companion_enabled?: boolean;
 }
 
 // "Assistant IA" card: AI settings are stored per care circle and only circle
@@ -69,6 +72,7 @@ const AiAssistantCard: React.FC = () => {
     const [apiKeyCleared, setApiKeyCleared] = useState(false);
     const [model, setModel] = useState('');
     const [enabled, setEnabled] = useState(true);
+    const [companionEnabled, setCompanionEnabled] = useState(false);
     const [saving, setSaving] = useState(false);
     const [saveError, setSaveError] = useState('');
     const [saveSuccess, setSaveSuccess] = useState(false);
@@ -84,6 +88,7 @@ const AiAssistantCard: React.FC = () => {
                     setBaseUrl(response.data.base_url ?? '');
                     setModel(response.data.model ?? '');
                     setEnabled(response.data.enabled);
+                    setCompanionEnabled(Boolean(response.data.companion_enabled));
                     setHasApiKey(Boolean(response.data.has_api_key));
                 }
             } catch (err) {
@@ -122,6 +127,7 @@ const AiAssistantCard: React.FC = () => {
                 api_key: trimmedKey ? trimmedKey : apiKeyCleared ? null : '',
                 model: model.trim(),
                 enabled,
+                companion_enabled: companionEnabled,
             });
             if (response.success) {
                 setSaveSuccess(true);
@@ -189,6 +195,16 @@ const AiAssistantCard: React.FC = () => {
                                         onValueChange={handleProviderChange}
                                         options={providerOptions}
                                     />
+                                    {provider === 'ollama' ? (
+                                        <p className="mt-1.5 inline-flex items-center gap-1.5 text-micro font-medium text-green-700 dark:text-green-400">
+                                            <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
+                                            {t('ai:settings.localBadge')} · {t('ai:settings.localNote')}
+                                        </p>
+                                    ) : (
+                                        <p className="mt-1.5 text-micro text-muted-foreground">
+                                            {t('ai:settings.cloudNote', { provider: t(`ai:settings.providers.${provider}`) })}
+                                        </p>
+                                    )}
                                 </div>
 
                                 {provider !== 'anthropic' && (
@@ -244,6 +260,27 @@ const AiAssistantCard: React.FC = () => {
                                     />
                                     <span className="text-caption text-foreground">{t('ai:settings.enabled')}</span>
                                 </label>
+
+                                <div className="border-t border-border pt-4">
+                                    <label className="flex min-h-[44px] cursor-pointer items-start gap-2">
+                                        <input
+                                            type="checkbox"
+                                            checked={companionEnabled}
+                                            onChange={(e) => setCompanionEnabled(e.target.checked)}
+                                            className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                                        />
+                                        <span>
+                                            <span className="block text-caption text-foreground">{t('ai:settings.companion')}</span>
+                                            <span className="mt-0.5 block text-micro text-muted-foreground">{t('ai:settings.companionHint')}</span>
+                                        </span>
+                                    </label>
+                                    {companionEnabled && provider !== 'ollama' && (
+                                        <p className="mt-2 flex items-start gap-1.5 rounded-input bg-warning/10 px-3 py-2 text-micro text-foreground">
+                                            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+                                            {t('ai:settings.companionCloudWarning', { provider: t(`ai:settings.providers.${provider}`) })}
+                                        </p>
+                                    )}
+                                </div>
 
                                 <p className="rounded-input bg-surface-2 px-3 py-2 text-micro text-muted-foreground">
                                     {t('ai:settings.privacy')}

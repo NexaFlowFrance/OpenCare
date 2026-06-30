@@ -231,12 +231,106 @@ async function checkPrescriptionRenewals(): Promise<void> {
     }
 }
 
+function buildHydrationTexts(firstName: string, language: string): ReminderTexts {
+    if (language === 'en') {
+        return {
+            title: '🌡️ Heat: time to hydrate',
+            body: firstName
+                ? `Strong heat today. Offer ${firstName} a glass of water and keep the home cool.`
+                : 'Strong heat today. Offer a glass of water and keep the home cool.',
+        };
+    }
+    return {
+        title: '🌡️ Forte chaleur : pensez à hydrater',
+        body: firstName
+            ? `Forte chaleur aujourd'hui. Proposez un verre d'eau à ${firstName} et gardez le logement au frais.`
+            : `Forte chaleur aujourd'hui. Proposez un verre d'eau et gardez le logement au frais.`,
+    };
+}
+
+/**
+ * Heat-episode hydration reminders: every minute, for circles with an ACTIVE
+ * heat episode whose reminder_times contains the current local HH:mm, notify the
+ * admin + family members. Dedup window of 5 minutes (keyed on the circle id in
+ * related_id) guards against a double cron tick; reminder_times default 4 hours
+ * apart, so the next slot fires normally. A missed minute (server down) simply
+ * skips that slot: hydration reminders are preventive, not critical.
+ */
+async function checkHeatwaveHydration(): Promise<void> {
+    try {
+        // L'heure courante DOIT etre calculee dans le meme fuseau que le cron
+        // (process.env.TZ ?? 'Europe/Paris'), pas dans le fuseau de l'OS: les
+        // reminder_times sont saisis par l'aidant en heure locale. Sinon, sur un
+        // Docker en UTC sans TZ, les rappels tomberaient a la mauvaise heure.
+        const tz = process.env.TZ || 'Europe/Paris';
+        const nowHm = new Intl.DateTimeFormat('en-GB', {
+            timeZone: tz, hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+        }).format(new Date());
+        const { rows } = await query(
+            `SELECT h.circle_id
+             FROM heatwave_settings h
+             WHERE h.enabled = TRUE AND h.active = TRUE
+               AND h.reminder_times @> to_jsonb($1::text)
+               AND NOT EXISTS (
+                 SELECT 1 FROM notifications n
+                 WHERE n.related_id = h.circle_id
+                   AND n.type = 'heatwave_hydration'
+                   AND n.created_at >= NOW() - INTERVAL '5 minutes'
+               )`,
+            [nowHm]
+        );
+
+        for (const { circle_id: circleId } of rows as Array<{ circle_id: string }>) {
+            const recipientResult = await query(
+                'SELECT first_name FROM care_recipients WHERE circle_id = $1',
+                [circleId]
+            );
+            const firstName: string = recipientResult.rows[0]?.first_name?.trim() || '';
+
+            const { rows: memberRows } = await query(
+                `SELECT cm.user_id, COALESCE(u.language, 'fr') AS language
+                 FROM circle_members cm
+                 JOIN users u ON u.id = cm.user_id
+                 WHERE cm.circle_id = $1 AND cm.role IN ('admin', 'family')`,
+                [circleId]
+            );
+
+            for (const member of memberRows as MemberRow[]) {
+                const { title, body } = buildHydrationTexts(firstName, member.language);
+                await createNotification({
+                    userId: member.user_id,
+                    circleId,
+                    title,
+                    message: body,
+                    type: 'heatwave_hydration',
+                    relatedId: circleId,
+                    url: '/',
+                    tag: `heatwave-${circleId}`,
+                });
+            }
+            if ((memberRows as MemberRow[]).length > 0) {
+                logger.info('reminder.heatwave_sent', { circleId, recipients: (memberRows as MemberRow[]).length });
+            }
+        }
+    } catch (err) {
+        logger.error('reminder.heatwave_error', {
+            error: err instanceof Error ? err.message : String(err),
+        });
+    }
+}
+
 export function startReminderScheduler(): void {
     const tz = process.env.TZ ?? 'Europe/Paris';
 
     // Event reminders: every minute
     cron.schedule('* * * * *', () => {
         void checkEventReminders();
+    }, { timezone: tz });
+
+    // Heat-episode hydration reminders: every minute (matches the configured
+    // HH:mm slots; the per-circle dedup window makes a double tick idempotent)
+    cron.schedule('* * * * *', () => {
+        void checkHeatwaveHydration();
     }, { timezone: tz });
 
     // Prescription renewals: every day at 9:00 (the daily dedup makes it idempotent)
