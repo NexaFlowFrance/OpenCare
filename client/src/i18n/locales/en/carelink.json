@@ -1,0 +1,49 @@
+{
+  "header": {
+    "title": "{{name}}'s journal",
+    "signedAs": "Signed in as {{name}}"
+  },
+  "compose": {
+    "title": "Write in the journal",
+    "placeholder": "For example: 20 minute visit, ate well, good spirits.",
+    "submit": "Send to the journal",
+    "sending": "Sending...",
+    "sent": "Sent. Thank you for your visit."
+  },
+  "types": {
+    "visit": "Visit",
+    "note": "Note",
+    "mood": "Mood",
+    "incident": "Incident"
+  },
+  "medications": {
+    "title": "Today's medications",
+    "taken": "Taken",
+    "skipped": "Skipped",
+    "allDone": "All of today's doses are recorded.",
+    "status": {
+      "taken": "taken",
+      "skipped": "skipped",
+      "missed": "missed"
+    }
+  },
+  "today": {
+    "title": "Today",
+    "empty": "No visit recorded today yet."
+  },
+  "errors": {
+    "title": "Link unavailable",
+    "invalid": "This link is no longer valid. Ask the family for a new link.",
+    "network": "Could not connect. Check the network and try again.",
+    "sendFailed": "Sending failed. Please try again."
+  },
+  "story": {
+    "show": "Who is {{name}}?",
+    "showNoName": "Who is the person being cared for?",
+    "hide": "Hide",
+    "loading": "Loading...",
+    "empty": "The family has not filled in this page yet.",
+    "error": "Could not load this page for now."
+  },
+  "footer": "This link is personal to you. The family sees your messages in real time."
+}

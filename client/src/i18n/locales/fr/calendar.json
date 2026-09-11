@@ -1,0 +1,79 @@
+{
+  "loading": "Chargement de l'agenda…",
+  "title": "Agenda",
+  "subtitle": "Les rendez-vous et passages autour de {{name}}",
+  "subtitleNoName": "Les rendez-vous et passages du cercle",
+  "newEvent": "Nouvel événement",
+  "prevMonth": "Mois précédent",
+  "nextMonth": "Mois suivant",
+  "view": {
+    "label": "Affichage",
+    "month": "Mois",
+    "list": "Liste"
+  },
+  "moreCount_one": "+{{count}} autre",
+  "moreCount_other": "+{{count}} autres",
+  "emptyMonth": "Aucun événement ce mois-ci. Tout est calme.",
+  "recurring": "Se répète",
+  "categories": {
+    "visit": "Visite",
+    "medical": "Médical",
+    "nurse": "Infirmière",
+    "aide": "Auxiliaire",
+    "other": "Autre"
+  },
+  "dialog": {
+    "createTitle": "Nouvel événement",
+    "editTitle": "Modifier l'événement",
+    "description": "Renseignez les détails du rendez-vous ou du passage",
+    "editRecurringHint": "Cet événement se répète : les modifications s'appliquent à toutes les occurrences."
+  },
+  "form": {
+    "title": "Titre",
+    "titlePlaceholder": "ex. Passage infirmière, rendez-vous cardiologue…",
+    "category": "Catégorie",
+    "scheduling": "Date et horaires",
+    "date": "Date",
+    "startTime": "Heure de début",
+    "endTime": "Heure de fin (facultatif)",
+    "location": "Lieu (facultatif)",
+    "locationPlaceholder": "ex. Cabinet du Dr Martin, domicile…",
+    "participants": "Participants (membres du cercle)",
+    "noMembers": "Aucun membre dans le cercle pour le moment.",
+    "repeat": "Récurrence",
+    "repeatNone": "Aucune",
+    "repeatDaily": "Tous les jours",
+    "repeatWeekly": "Toutes les semaines",
+    "repeatMonthly": "Tous les mois",
+    "repeatDays": "Jours de la semaine",
+    "repeatUntil": "Jusqu'au (facultatif)",
+    "dayLetters": ["L", "M", "M", "J", "V", "S", "D"],
+    "reminders": "Rappels",
+    "reminder30": "30 minutes avant",
+    "reminder1h": "1 heure avant",
+    "notes": "Notes (facultatif)",
+    "notesPlaceholder": "Consignes, choses à apporter…"
+  },
+  "confirmDelete": "Supprimer cet événement ?",
+  "deleteRecurringHint": "Toutes ses occurrences seront supprimées.",
+  "feed": {
+    "title": "Flux iCal",
+    "description": "Abonnez-vous depuis votre application de calendrier (Apple, Google, Outlook) pour retrouver les événements du cercle.",
+    "generate": "Générer le lien d'abonnement",
+    "linkLabel": "Lien d'abonnement iCal",
+    "copy": "Copier le lien",
+    "subscribe": "S'abonner (webcal)",
+    "regenerate": "Régénérer le lien",
+    "confirmRegen": "Régénérer le lien ? Les abonnements existants cesseront de fonctionner.",
+    "privateNote": "Ce lien est privé : toute personne qui le possède peut consulter l'agenda."
+  },
+  "errors": {
+    "load": "Impossible de charger les événements.",
+    "titleRequired": "Le titre est requis.",
+    "startRequired": "La date et l'heure de début sont requises.",
+    "endAfterStart": "L'heure de fin doit être après l'heure de début.",
+    "save": "Impossible d'enregistrer cet événement.",
+    "delete": "Impossible de supprimer cet événement.",
+    "feed": "Impossible de générer le lien iCal."
+  }
+}

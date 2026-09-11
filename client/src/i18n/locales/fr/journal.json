@@ -1,0 +1,97 @@
+{
+    "title": "Journal",
+    "subtitle": "Le cahier de liaison du cercle",
+    "loading": "Chargement du journal...",
+    "composer": {
+        "placeholder": "a bien mangé, tension 13/8, moral bon",
+        "typeLabel": "Type d'entrée",
+        "dateLabel": "Date et heure du passage",
+        "addPhotos": "Ajouter des photos",
+        "photoHint": "{{current}}/{{max}} photos",
+        "removePhoto": "Retirer la photo",
+        "publish": "Publier",
+        "publishing": "Publication...",
+        "vitalTypeLabel": "Type de constante",
+        "valueLabel": "Valeur",
+        "systolicLabel": "Systolique",
+        "diastolicLabel": "Diastolique"
+    },
+    "types": {
+        "visit": "Visite",
+        "note": "Note",
+        "vital": "Constante",
+        "medication": "Médicament",
+        "incident": "Incident",
+        "mood": "Humeur"
+    },
+    "vitalTypes": {
+        "weight": "Poids",
+        "bp": "Tension",
+        "pain": "Douleur",
+        "mood": "Moral",
+        "temperature": "Température",
+        "glucose": "Glycémie"
+    },
+    "filters": {
+        "all": "Tout"
+    },
+    "days": {
+        "today": "Aujourd'hui",
+        "yesterday": "Hier"
+    },
+    "timeline": {
+        "loadMore": "Voir plus",
+        "loadingMore": "Chargement..."
+    },
+    "photo": {
+        "title": "Photo",
+        "alt": "Photo du journal",
+        "open": "Agrandir la photo"
+    },
+    "edit": {
+        "title": "Modifier l'entrée",
+        "contentLabel": "Texte",
+        "dateLabel": "Date et heure"
+    },
+    "actions": {
+        "edit": "Modifier l'entrée",
+        "delete": "Supprimer l'entrée"
+    },
+    "empty": {
+        "title": "Aucune entrée pour le moment",
+        "description": "Racontez un passage, une observation ou une mesure: tout le cercle reste informé.",
+        "filtered": "Aucune entrée de ce type."
+    },
+    "confirmDelete": "Supprimer cette entrée ?",
+    "voice": {
+        "record": "Dicter",
+        "stop": "Arrêter l'enregistrement",
+        "transcribing": "Transcription…",
+        "autoFile": "Ranger automatiquement",
+        "autoFiling": "Rangement…",
+        "filedTitle": "Entrée « {{type}} » créée",
+        "filedShopping": "Courses ajoutées : {{items}}",
+        "emptyTranscript": "Aucun texte reconnu dans l'enregistrement.",
+        "tooLong": "Enregistrement trop long pour être envoyé. Dictez des notes plus courtes.",
+        "micDeniedTitle": "Micro indisponible",
+        "micDeniedBody": "Autorisez l'accès au micro pour dicter une note.",
+        "notConfiguredTitle": "Transcription non configurée",
+        "notConfiguredBody": "Connectez l'intégration « Transcription vocale (Whisper) » dans la page Intégrations pour dicter vos notes.",
+        "transcribeError": "Impossible de transcrire l'enregistrement.",
+        "fileError": "Impossible de ranger la note automatiquement."
+    },
+    "toasts": {
+        "published": "Entrée publiée",
+        "updated": "Entrée modifiée",
+        "deleted": "Entrée supprimée"
+    },
+    "errors": {
+        "load": "Impossible de charger le journal.",
+        "publish": "Impossible de publier l'entrée.",
+        "update": "Impossible de modifier l'entrée.",
+        "delete": "Impossible de supprimer l'entrée.",
+        "valueRequired": "Renseignez une valeur numérique valide.",
+        "photoTooLarge": "Photo trop lourde après compression (1,5 Mo max).",
+        "photoRead": "Impossible de lire cette image."
+    }
+}

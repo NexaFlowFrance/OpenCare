@@ -1,0 +1,49 @@
+{
+  "loading": "Loading the list…",
+  "title": "Shopping list",
+  "subtitle_one": "{{count}} item to buy",
+  "subtitle_other": "{{count}} items to buy",
+  "categories": {
+    "food": "Food",
+    "hygiene": "Hygiene",
+    "household": "Household",
+    "pharmacy": "Pharmacy",
+    "other": "Other"
+  },
+  "add": {
+    "label": "Add an item",
+    "placeholder": "Add an item (e.g. applesauce, tissues)…",
+    "noCategory": "No category"
+  },
+  "row": {
+    "check": "Check {{name}}",
+    "uncheck": "Uncheck {{name}}"
+  },
+  "checked": {
+    "title_one": "Checked item ({{count}})",
+    "title_other": "Checked items ({{count}})",
+    "clear": "Clear checked items"
+  },
+  "edit": {
+    "description": "Add a quantity, a unit or a note for whoever does the shopping.",
+    "quantity": "Quantity",
+    "unit": "Unit",
+    "unitPlaceholder": "E.g. kg, box, pack",
+    "notes": "Note (optional)",
+    "notesPlaceholder": "E.g. the usual brand, sugar-free…"
+  },
+  "empty": {
+    "title": "The list is empty",
+    "description": "Add what needs to be bought for the next visit: the whole circle sees the same list.",
+    "allChecked": "Everything is checked: nothing left to buy."
+  },
+  "errors": {
+    "load": "Unable to load the shopping list.",
+    "add": "Unable to add this item.",
+    "toggle": "Unable to update this item.",
+    "update": "Unable to save this item.",
+    "delete": "Unable to delete this item.",
+    "clear": "Unable to clear checked items.",
+    "quantityInvalid": "Quantity must be a positive number."
+  }
+}

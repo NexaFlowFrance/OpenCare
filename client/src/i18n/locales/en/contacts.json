@@ -1,0 +1,51 @@
+{
+  "title": "Contacts",
+  "subtitle": "The circle's address book",
+  "loading": "Loading contacts…",
+  "newContact": "New contact",
+  "filters": {
+    "all": "All"
+  },
+  "categories": {
+    "doctor": "Doctor",
+    "nurse": "Nurse",
+    "aide": "Care aide",
+    "physio": "Physiotherapist",
+    "pharmacy": "Pharmacy",
+    "family": "Family",
+    "neighbor": "Neighbor",
+    "other": "Other"
+  },
+  "hasKey": "Has a key",
+  "empty": {
+    "none": "No contacts yet.",
+    "noMatch": "No contacts in this category.",
+    "action": "Add the first contact"
+  },
+  "dialog": {
+    "createTitle": "New contact",
+    "editTitle": "Edit contact"
+  },
+  "form": {
+    "name": "Name",
+    "namePlaceholder": "E.g. Dr Martin",
+    "category": "Category",
+    "organization": "Organization",
+    "organizationPlaceholder": "E.g. Les Lilas medical practice",
+    "phone": "Phone",
+    "phone2": "Secondary phone",
+    "email": "Email",
+    "address": "Address",
+    "hasKey": "This person has a key to the home",
+    "notes": "Notes",
+    "notesPlaceholder": "E.g. comes on Tuesday mornings"
+  },
+  "confirm": {
+    "delete": "Delete this contact?"
+  },
+  "errors": {
+    "load": "Could not load contacts.",
+    "save": "Could not save the contact.",
+    "delete": "Could not delete the contact."
+  }
+}

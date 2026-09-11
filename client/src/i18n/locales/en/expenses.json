@@ -1,0 +1,110 @@
+{
+  "title": "Shared expenses",
+  "subtitle": "Track the circle's expenses and balance the accounts",
+  "loading": "Loading expenses…",
+  "newExpense": "New expense",
+  "restricted": {
+    "title": "Family only",
+    "description": "Shared expenses are only visible to family members and circle administrators."
+  },
+  "categories": {
+    "pharmacy": "Pharmacy",
+    "aide": "Care aide",
+    "equipment": "Equipment",
+    "works": "Home works",
+    "food": "Food",
+    "transport": "Transport",
+    "other": "Other"
+  },
+  "balances": {
+    "title": "Balances",
+    "subtitle": "Who paid what, who owes what",
+    "paid": "Paid",
+    "owed": "Owes",
+    "net": "Balance",
+    "settleTitle": "To balance out",
+    "suggestion": "{{from}} owes {{amount}} to {{to}}",
+    "allSettled": "Accounts are balanced.",
+    "markSettled": "Mark as settled",
+    "settledToast": "Settlement recorded"
+  },
+  "list": {
+    "title": "Expenses",
+    "empty": "No expenses yet. Add the first one to start tracking.",
+    "paidBy": "paid by {{name}}",
+    "customSplit": "Custom split"
+  },
+  "dialog": {
+    "createTitle": "New expense",
+    "editTitle": "Edit expense",
+    "description": "The expense is split between the circle's family members."
+  },
+  "form": {
+    "amount": "Amount ({{currency}})",
+    "category": "Category",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "E.g. pharmacy on March 3rd",
+    "date": "Date",
+    "paidBy": "Paid by",
+    "split": "Split",
+    "splitEqual": "Equal",
+    "splitCustom": "Custom",
+    "shareOf": "{{name}}'s share",
+    "splitTotal": "Sum of shares: {{sum}} of {{total}}"
+  },
+  "aids": {
+    "title": "Aid and benefits",
+    "subtitle": "APA, CESU, tax credit",
+    "add": "Add an aid",
+    "empty": "No aid recorded yet.",
+    "yearTotal": "Total aid {{year}}",
+    "createTitle": "New aid",
+    "editTitle": "Edit aid",
+    "types": {
+      "apa": "APA",
+      "cesu": "CESU",
+      "tax_credit": "Tax credit",
+      "other": "Other"
+    },
+    "form": {
+      "type": "Type",
+      "label": "Label",
+      "labelPlaceholder": "E.g. APA from the county council",
+      "amount": "Amount ({{currency}})",
+      "periodStart": "Period start",
+      "periodEnd": "Period end",
+      "notes": "Notes"
+    },
+    "periodBoth": "From {{start}} to {{end}}",
+    "periodFrom": "Since {{start}}",
+    "periodTo": "Until {{end}}"
+  },
+  "summary": {
+    "title": "{{year}} summary",
+    "subtitle": "Yearly total by category",
+    "totalExpenses": "Total expenses",
+    "totalAids": "Total aid",
+    "empty": "No expenses this year."
+  },
+  "settlements": {
+    "title": "Settlement history",
+    "show": "Show",
+    "hide": "Hide",
+    "empty": "No settlements yet.",
+    "row": "{{from}} reimbursed {{to}}"
+  },
+  "confirm": {
+    "deleteExpense": "Delete this expense?",
+    "deleteAid": "Delete this aid?",
+    "deleteSettlement": "Delete this settlement?"
+  },
+  "errors": {
+    "load": "Could not load expenses.",
+    "save": "Could not save the expense.",
+    "saveAid": "Could not save the aid.",
+    "saveSettlement": "Could not save the settlement.",
+    "delete": "Could not delete.",
+    "amountInvalid": "The amount must be greater than zero.",
+    "splitSum": "The sum of the shares must equal the amount."
+  }
+}

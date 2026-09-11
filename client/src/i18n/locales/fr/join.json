@@ -1,0 +1,14 @@
+{
+  "title": "Rejoindre un cercle de soin",
+  "loggedInAs": "Connecté en tant que",
+  "checking": "Vérification de l'invitation…",
+  "missing": "Lien d'invitation incomplet : aucun jeton trouvé. Vérifiez le lien reçu.",
+  "invalid": "Invitation invalide ou expirée. Demandez un nouveau lien à la personne qui vous a invité.",
+  "invitedBy": "{{inviter}} vous invite à rejoindre le cercle de {{recipient}}.",
+  "someone": "Un membre du cercle",
+  "roleLabel": "Votre rôle dans le cercle :",
+  "expiresOn": "Invitation valable jusqu'au {{date}}",
+  "join": "Rejoindre le cercle",
+  "joining": "Adhésion en cours…",
+  "joinError": "Impossible de rejoindre le cercle. Réessayez."
+}

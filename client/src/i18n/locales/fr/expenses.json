@@ -1,0 +1,110 @@
+{
+  "title": "Frais partagés",
+  "subtitle": "Suivez les dépenses du cercle et équilibrez les comptes",
+  "loading": "Chargement des frais…",
+  "newExpense": "Nouveau frais",
+  "restricted": {
+    "title": "Réservé à la famille",
+    "description": "Les frais partagés ne concernent que les membres famille et les administrateurs du cercle."
+  },
+  "categories": {
+    "pharmacy": "Pharmacie",
+    "aide": "Auxiliaire",
+    "equipment": "Équipement",
+    "works": "Travaux",
+    "food": "Alimentation",
+    "transport": "Transport",
+    "other": "Autre"
+  },
+  "balances": {
+    "title": "Soldes",
+    "subtitle": "Qui a avancé quoi, qui doit quoi",
+    "paid": "Payé",
+    "owed": "Dû",
+    "net": "Solde",
+    "settleTitle": "Pour équilibrer",
+    "suggestion": "{{from}} doit {{amount}} à {{to}}",
+    "allSettled": "Les comptes sont équilibrés.",
+    "markSettled": "Marquer comme réglé",
+    "settledToast": "Règlement enregistré"
+  },
+  "list": {
+    "title": "Frais",
+    "empty": "Aucun frais pour le moment. Ajoutez le premier pour commencer le suivi.",
+    "paidBy": "payé par {{name}}",
+    "customSplit": "Répartition personnalisée"
+  },
+  "dialog": {
+    "createTitle": "Nouveau frais",
+    "editTitle": "Modifier le frais",
+    "description": "Le frais est réparti entre les membres famille du cercle."
+  },
+  "form": {
+    "amount": "Montant ({{currency}})",
+    "category": "Catégorie",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Ex : pharmacie du 3 mars",
+    "date": "Date",
+    "paidBy": "Payeur",
+    "split": "Répartition",
+    "splitEqual": "Égale",
+    "splitCustom": "Personnalisée",
+    "shareOf": "Part de {{name}}",
+    "splitTotal": "Total des parts : {{sum}} sur {{total}}"
+  },
+  "aids": {
+    "title": "Aides",
+    "subtitle": "APA, CESU, crédit d'impôt",
+    "add": "Ajouter une aide",
+    "empty": "Aucune aide enregistrée.",
+    "yearTotal": "Total des aides {{year}}",
+    "createTitle": "Nouvelle aide",
+    "editTitle": "Modifier l'aide",
+    "types": {
+      "apa": "APA",
+      "cesu": "CESU",
+      "tax_credit": "Crédit d'impôt",
+      "other": "Autre"
+    },
+    "form": {
+      "type": "Type",
+      "label": "Libellé",
+      "labelPlaceholder": "Ex : APA conseil départemental",
+      "amount": "Montant ({{currency}})",
+      "periodStart": "Début de période",
+      "periodEnd": "Fin de période",
+      "notes": "Notes"
+    },
+    "periodBoth": "Du {{start}} au {{end}}",
+    "periodFrom": "Depuis le {{start}}",
+    "periodTo": "Jusqu'au {{end}}"
+  },
+  "summary": {
+    "title": "Résumé {{year}}",
+    "subtitle": "Total par catégorie sur l'année",
+    "totalExpenses": "Total des frais",
+    "totalAids": "Total des aides",
+    "empty": "Aucun frais cette année."
+  },
+  "settlements": {
+    "title": "Historique des règlements",
+    "show": "Afficher",
+    "hide": "Masquer",
+    "empty": "Aucun règlement pour le moment.",
+    "row": "{{from}} a remboursé {{to}}"
+  },
+  "confirm": {
+    "deleteExpense": "Supprimer ce frais ?",
+    "deleteAid": "Supprimer cette aide ?",
+    "deleteSettlement": "Supprimer ce règlement ?"
+  },
+  "errors": {
+    "load": "Impossible de charger les frais.",
+    "save": "Impossible d'enregistrer le frais.",
+    "saveAid": "Impossible d'enregistrer l'aide.",
+    "saveSettlement": "Impossible d'enregistrer le règlement.",
+    "delete": "Impossible de supprimer.",
+    "amountInvalid": "Le montant doit être supérieur à zéro.",
+    "splitSum": "La somme des parts doit être égale au montant."
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "title": "Settings",
+  "subtitle": "Your account, your preferences and the circle data.",
+  "profile": {
+    "title": "Account profile",
+    "subtitle": "Your name and photo, visible to the members of your circles.",
+    "name": "Display name",
+    "namePlaceholder": "e.g. Jane Doe",
+    "save": "Save",
+    "saved": "Profile saved.",
+    "change": "Change photo",
+    "choose": "Choose a photo",
+    "remove": "Remove"
+  },
+  "language": {
+    "title": "Language",
+    "subtitle": "Choose the language of the app interface."
+  },
+  "theme": {
+    "title": "Theme",
+    "subtitle": "Light, dark, or automatically matched to your device.",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "notif": {
+    "title": "Push notifications",
+    "subtitle": "Get the circle's reminders and alerts directly on this device, even when the app is closed.",
+    "unsupported": "Notifications are not supported on this browser.",
+    "denied": "Permission denied. Allow notifications in your browser settings.",
+    "enable": "Enable notifications",
+    "disable": "Disable notifications",
+    "inProgress": "Working…",
+    "active": "Notifications enabled on this device."
+  },
+  "export": {
+    "title": "Export circle data",
+    "subtitle": "Download all the data of the active circle (journal, health, medications, calendar, tasks, expenses, documents…) as a JSON file. Your data stays with you.",
+    "button": "Export",
+    "inProgress": "Exporting…"
+  },
+  "import": {
+    "title": "Import data",
+    "subtitle": "Restore data from an OpenCare export file into the active circle. Imported items are added to the existing data.",
+    "success": "Import successful",
+    "itemsImported_one": "item imported",
+    "itemsImported_other": "items imported",
+    "chooseFile": "Choose a file…",
+    "button": "Import",
+    "inProgress": "Importing…",
+    "invalidJson": "Invalid JSON file."
+  },
+  "entities": {
+    "care_recipients": "Care recipient profile",
+    "recipient_stories": "\"Who I am\" page",
+    "journal_entries": "Journal entries",
+    "journal_photos": "Journal photos",
+    "vitals": "Vitals",
+    "medications": "Medications",
+    "medication_schedules": "Medication schedules",
+    "medication_intakes": "Medication intakes",
+    "prescriptions": "Prescriptions",
+    "events": "Appointments",
+    "tasks": "Tasks",
+    "shopping_items": "Shopping items",
+    "circle_notes": "Notes",
+    "messages": "Messages",
+    "documents": "Documents",
+    "contacts": "Contacts",
+    "expenses": "Expenses",
+    "expense_settlements": "Settlements",
+    "aid_records": "Aid records"
+  },
+  "errors": {
+    "notif": "Error while configuring notifications.",
+    "profile": "Error while updating the profile.",
+    "avatarImage": "Please choose an image.",
+    "avatarRead": "Could not read the file.",
+    "avatarInvalid": "Invalid image.",
+    "avatarCanvas": "Canvas unavailable.",
+    "avatarUpdate": "Error while updating the photo.",
+    "avatarRemove": "Error while removing the photo.",
+    "export": "Error during export.",
+    "import": "Error during import."
+  }
+}

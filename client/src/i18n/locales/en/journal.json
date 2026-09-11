@@ -1,0 +1,97 @@
+{
+    "title": "Journal",
+    "subtitle": "The circle's care logbook",
+    "loading": "Loading the journal...",
+    "composer": {
+        "placeholder": "ate well, blood pressure 13/8, good mood",
+        "typeLabel": "Entry type",
+        "dateLabel": "Date and time of the visit",
+        "addPhotos": "Add photos",
+        "photoHint": "{{current}}/{{max}} photos",
+        "removePhoto": "Remove photo",
+        "publish": "Publish",
+        "publishing": "Publishing...",
+        "vitalTypeLabel": "Vital type",
+        "valueLabel": "Value",
+        "systolicLabel": "Systolic",
+        "diastolicLabel": "Diastolic"
+    },
+    "types": {
+        "visit": "Visit",
+        "note": "Note",
+        "vital": "Vital",
+        "medication": "Medication",
+        "incident": "Incident",
+        "mood": "Mood"
+    },
+    "vitalTypes": {
+        "weight": "Weight",
+        "bp": "Blood pressure",
+        "pain": "Pain",
+        "mood": "Mood",
+        "temperature": "Temperature",
+        "glucose": "Blood sugar"
+    },
+    "filters": {
+        "all": "All"
+    },
+    "days": {
+        "today": "Today",
+        "yesterday": "Yesterday"
+    },
+    "timeline": {
+        "loadMore": "Show more",
+        "loadingMore": "Loading..."
+    },
+    "photo": {
+        "title": "Photo",
+        "alt": "Journal photo",
+        "open": "Open photo"
+    },
+    "edit": {
+        "title": "Edit entry",
+        "contentLabel": "Text",
+        "dateLabel": "Date and time"
+    },
+    "actions": {
+        "edit": "Edit entry",
+        "delete": "Delete entry"
+    },
+    "empty": {
+        "title": "No entries yet",
+        "description": "Share a visit, an observation or a measurement: the whole circle stays informed.",
+        "filtered": "No entries of this type."
+    },
+    "confirmDelete": "Delete this entry?",
+    "voice": {
+        "record": "Dictate",
+        "stop": "Stop recording",
+        "transcribing": "Transcribing…",
+        "autoFile": "File automatically",
+        "autoFiling": "Filing…",
+        "filedTitle": "\"{{type}}\" entry created",
+        "filedShopping": "Shopping items added: {{items}}",
+        "emptyTranscript": "No text was recognized in the recording.",
+        "tooLong": "Recording too long to upload. Dictate shorter notes.",
+        "micDeniedTitle": "Microphone unavailable",
+        "micDeniedBody": "Allow microphone access to dictate a note.",
+        "notConfiguredTitle": "Transcription not configured",
+        "notConfiguredBody": "Connect the \"Voice transcription (Whisper)\" integration on the Integrations page to dictate your notes.",
+        "transcribeError": "Could not transcribe the recording.",
+        "fileError": "Could not file the note automatically."
+    },
+    "toasts": {
+        "published": "Entry published",
+        "updated": "Entry updated",
+        "deleted": "Entry deleted"
+    },
+    "errors": {
+        "load": "Could not load the journal.",
+        "publish": "Could not publish the entry.",
+        "update": "Could not update the entry.",
+        "delete": "Could not delete the entry.",
+        "valueRequired": "Enter a valid numeric value.",
+        "photoTooLarge": "Photo is too large after compression (1.5 MB max).",
+        "photoRead": "Could not read this image."
+    }
+}

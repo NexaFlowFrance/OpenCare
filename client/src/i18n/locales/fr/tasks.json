@@ -1,0 +1,73 @@
+{
+  "loading": "Chargement des tâches…",
+  "title": "Tâches",
+  "subtitle_one": "{{count}} tâche à faire dans le cercle",
+  "subtitle_other": "{{count}} tâches à faire dans le cercle",
+  "newTask": "Nouvelle tâche",
+  "categories": {
+    "shopping": "Courses",
+    "pharmacy": "Pharmacie",
+    "laundry": "Lessive",
+    "admin": "Administratif",
+    "transport": "Transport",
+    "other": "Autre"
+  },
+  "frequencies": {
+    "Une fois": "Une fois",
+    "Quotidien": "Tous les jours",
+    "Hebdomadaire": "Toutes les semaines",
+    "Mensuel": "Tous les mois",
+    "Annuel": "Tous les ans"
+  },
+  "priorities": {
+    "Haute": "Priorité haute",
+    "Moyenne": "Priorité moyenne",
+    "Basse": "Priorité basse"
+  },
+  "filters": {
+    "statusLabel": "Filtrer par statut",
+    "todo": "À faire",
+    "done": "Faites",
+    "all": "Toutes",
+    "allAssignees": "Tous les membres"
+  },
+  "row": {
+    "markDone": "Marquer comme faite",
+    "markPending": "Marquer comme à faire",
+    "due": "Pour le {{date}}",
+    "overdue": "En retard ({{date}})"
+  },
+  "completedSection_one": "Tâches terminées ({{count}})",
+  "completedSection_other": "Tâches terminées ({{count}})",
+  "empty": {
+    "title": "Aucune tâche pour le moment",
+    "description": "Créez la première tâche pour organiser le qui fait quoi du cercle.",
+    "noMatch": "Aucune tâche ne correspond aux filtres.",
+    "doneTitle": "Aucune tâche terminée"
+  },
+  "dialog": {
+    "createTitle": "Nouvelle tâche",
+    "editTitle": "Modifier la tâche",
+    "description": "Une tâche peut être assignée à un ou plusieurs membres du cercle."
+  },
+  "form": {
+    "title": "Titre",
+    "titlePlaceholder": "Ex : Renouveler l'ordonnance",
+    "description": "Description (facultatif)",
+    "descriptionPlaceholder": "Détails utiles pour la personne qui s'en charge…",
+    "category": "Catégorie",
+    "dueDate": "Échéance (facultatif)",
+    "priority": "Priorité",
+    "frequency": "Récurrence",
+    "assignees": "Assigner à (facultatif)",
+    "noMembers": "Aucun membre dans le cercle pour le moment."
+  },
+  "confirmDelete": "Supprimer cette tâche ?",
+  "errors": {
+    "load": "Impossible de charger les tâches.",
+    "loadMembers": "Impossible de charger les membres du cercle.",
+    "toggle": "Impossible de mettre à jour cette tâche.",
+    "save": "Impossible d'enregistrer cette tâche.",
+    "delete": "Impossible de supprimer cette tâche."
+  }
+}

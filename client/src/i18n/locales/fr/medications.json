@@ -1,0 +1,137 @@
+{
+  "loading": "Chargement des médicaments…",
+  "title": "Médicaments",
+  "subtitle": "Prises du jour, traitements et ordonnances du proche",
+  "tabs": {
+    "today": "Aujourd'hui",
+    "treatments": "Traitements",
+    "prescriptions": "Ordonnances"
+  },
+  "moments": {
+    "morning": "Matin",
+    "noon": "Midi",
+    "evening": "Soir",
+    "night": "Nuit"
+  },
+  "dayLetters": [
+    "L",
+    "M",
+    "M",
+    "J",
+    "V",
+    "S",
+    "D"
+  ],
+  "today": {
+    "empty": "Aucune prise prévue aujourd'hui.",
+    "emptyHint": "Ajoutez un traitement avec ses horaires pour suivre les prises ici.",
+    "status": {
+      "pending": "À prendre",
+      "taken": "Pris",
+      "takenAt": "Pris à {{time}}",
+      "skipped": "Sauté",
+      "missed": "Manqué"
+    },
+    "markTaken": "Pris",
+    "markSkipped": "Sauté",
+    "undo": "Annuler"
+  },
+  "treatments": {
+    "add": "Ajouter un traitement",
+    "empty": "Aucun traitement actif.",
+    "emptyHint": "Ajoutez les médicaments du proche pour générer le suivi quotidien.",
+    "showArchived": "Voir les traitements archivés",
+    "archived": "Archivé",
+    "archive": "Archiver",
+    "unarchive": "Réactiver",
+    "edit": "Modifier",
+    "everyDay": "tous les jours",
+    "prescribedBy": "Prescrit par {{name}}",
+    "fromDate": "à partir du {{date}}",
+    "untilDate": "jusqu'au {{date}}",
+    "photoAlt": "Photo de {{name}}",
+    "noSchedule": "Aucun horaire de prise défini"
+  },
+  "forms": {
+    "tablet": "Comprimé",
+    "capsule": "Gélule",
+    "syrup": "Sirop",
+    "drops": "Gouttes",
+    "patch": "Patch",
+    "injection": "Injection",
+    "other": "Autre"
+  },
+  "form": {
+    "createTitle": "Nouveau traitement",
+    "editTitle": "Modifier le traitement",
+    "description": "Renseignez le médicament et ses horaires de prise.",
+    "name": "Nom du médicament",
+    "namePlaceholder": "Ex. Doliprane",
+    "dosage": "Dosage",
+    "dosagePlaceholder": "Ex. 500 mg",
+    "form": "Forme",
+    "formPlaceholder": "Choisir une forme",
+    "instructions": "Consignes",
+    "instructionsPlaceholder": "Ex. à prendre au milieu du repas",
+    "prescriber": "Prescripteur",
+    "prescriberPlaceholder": "Ex. Dr Martin",
+    "startDate": "Date de début",
+    "endDate": "Date de fin",
+    "photo": "Photo du médicament",
+    "photoAdd": "Ajouter une photo",
+    "photoChange": "Changer la photo",
+    "photoRemove": "Retirer la photo",
+    "photoProcessing": "Compression de la photo…",
+    "schedules": "Horaires de prise",
+    "schedulesHint": "Chaque ligne génère une prise à confirmer aux jours choisis.",
+    "addSchedule": "Ajouter un horaire",
+    "removeSchedule": "Supprimer cet horaire",
+    "time": "Heure",
+    "label": "Libellé (facultatif)",
+    "labelPlaceholder": "Ex. avant le repas",
+    "noSchedules": "Aucun horaire pour le moment. Ajoutez une ligne pour suivre les prises au quotidien.",
+    "scheduleTimeError": "Renseignez une heure pour chaque horaire de prise.",
+    "scheduleDaysError": "Sélectionnez au moins un jour pour chaque horaire de prise."
+  },
+  "prescriptions": {
+    "add": "Ajouter une ordonnance",
+    "empty": "Aucune ordonnance enregistrée.",
+    "emptyHint": "Suivez ici les dates de renouvellement pour anticiper le passage en pharmacie.",
+    "renewalOn": "Renouvellement le {{date}}",
+    "noRenewal": "Pas de date de renouvellement",
+    "issuedOn": "Délivrée le {{date}}",
+    "overdue": "Échéance dépassée",
+    "dueSoon": "À renouveler bientôt",
+    "confirmDelete": "Supprimer cette ordonnance ?",
+    "form": {
+      "createTitle": "Nouvelle ordonnance",
+      "editTitle": "Modifier l'ordonnance",
+      "description": "Suivez la date de renouvellement pour ne pas être pris de court.",
+      "title": "Titre",
+      "titlePlaceholder": "Ex. Ordonnance traitement de fond",
+      "prescriber": "Prescripteur",
+      "prescriberPlaceholder": "Ex. Dr Martin",
+      "issuedDate": "Date de délivrance",
+      "renewalDate": "Date de renouvellement",
+      "reminderDays": "Alerte (jours avant échéance)",
+      "notes": "Notes",
+      "notesPlaceholder": "Ex. à déposer à la pharmacie du centre"
+    }
+  },
+  "errors": {
+    "load": "Impossible de charger les médicaments.",
+    "loadIntakes": "Impossible de charger les prises du jour.",
+    "loadPrescriptions": "Impossible de charger les ordonnances.",
+    "save": "Impossible d'enregistrer le traitement.",
+    "saveIntake": "Impossible de mettre à jour la prise.",
+    "savePrescription": "Impossible d'enregistrer l'ordonnance.",
+    "deletePrescription": "Impossible de supprimer l'ordonnance.",
+    "archive": "Impossible de mettre à jour le traitement.",
+    "photo": "Impossible de traiter la photo.",
+    "photoTooLarge": "La photo reste trop volumineuse après compression (1,5 Mo maximum)."
+  },
+  "restricted": {
+    "title": "Accès réservé",
+    "description": "Les médicaments du proche sont visibles par la famille et les professionnels du cercle."
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "title": "Préparation de consultation",
+  "subtitle": "En un clic, un document imprimable pour le médecin : événements marquants, évolution des constantes, traitements en cours et questions de la famille.",
+  "noCircle": "Sélectionnez un cercle pour préparer une consultation.",
+  "error": "Impossible de préparer le document.",
+  "controls": {
+    "since": "Événements depuis le",
+    "sinceHint": "Par défaut : les 90 derniers jours.",
+    "questions": "Questions de la famille",
+    "questionsPlaceholder": "Une question par ligne. Par exemple : faut-il revoir le traitement contre la douleur ?",
+    "print": "Imprimer / PDF",
+    "preview": "Aperçu du document"
+  },
+  "doc": {
+    "title": "Préparation de consultation",
+    "patient": "Patient(e)",
+    "birthDate": "Date de naissance : {{date}}",
+    "generatedOn": "Document établi le {{date}}",
+    "period": "Période couverte : du {{from}} au {{to}}",
+    "gp": "Médecin traitant : {{name}}",
+    "bloodType": "Groupe sanguin : {{value}}",
+    "allergies": "Allergies : {{value}}",
+    "history": "Antécédents : {{value}}",
+    "medications": "Traitements en cours",
+    "medsName": "Médicament",
+    "medsDosage": "Posologie",
+    "medsSchedule": "Horaires",
+    "medsInstructions": "Consignes",
+    "noMedications": "Aucun traitement actif.",
+    "intakes": "Observance sur la période",
+    "intakesSummary": "{{taken}} prises confirmées sur {{scheduled}} prévues ({{percent}} %), {{skipped}} sautées, {{missed}} manquées.",
+    "noIntakes": "Aucune prise planifiée sur la période.",
+    "missed": "Prises manquées",
+    "vitals": "Constantes",
+    "vitalsType": "Constante",
+    "vitalsFirst": "Début de période",
+    "vitalsLast": "Dernière mesure",
+    "vitalsTrend": "Tendance",
+    "vitalsCount_one": "{{count}} mesure",
+    "vitalsCount_other": "{{count}} mesures",
+    "trend": {
+      "up": "en hausse",
+      "down": "en baisse",
+      "stable": "stable"
+    },
+    "noVitals": "Aucune constante enregistrée sur la période.",
+    "highlights": "Événements marquants",
+    "noHighlights": "Aucun événement marquant sur la période.",
+    "entryTypes": {
+      "visit": "Visite",
+      "incident": "Incident",
+      "mood": "Humeur"
+    },
+    "prescriptions": "Ordonnances",
+    "renewalOn": "À renouveler le {{date}}",
+    "noRenewal": "Sans date de renouvellement",
+    "questions": "Questions de la famille",
+    "noQuestions": "Aucune question notée."
+  },
+  "vitalTypes": {
+    "weight": "Poids",
+    "bp": "Tension",
+    "pain": "Douleur",
+    "mood": "Humeur",
+    "temperature": "Température",
+    "glucose": "Glycémie"
+  }
+}

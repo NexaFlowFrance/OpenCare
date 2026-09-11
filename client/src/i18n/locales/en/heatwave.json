@@ -1,0 +1,48 @@
+{
+  "banner": {
+    "titleOrange": "Heat episode under way",
+    "titleRed": "Heatwave: heightened alert",
+    "intro": "A heat episode is flagged for {{name}}. A few simple habits help get through the day cool.",
+    "introNoName": "A heat episode is flagged. A few simple habits help get through the day cool.",
+    "activeSince": "Declared {{since}}",
+    "endEpisode": "End the episode",
+    "ending": "Ending"
+  },
+  "checklist": {
+    "title": "What helps",
+    "items": [
+      "Close shutters and windows during the hottest hours, air out early morning and evening.",
+      "Offer drinks regularly, even without thirst (water, cold soups, fruit).",
+      "Keep one cool room and invite the person to spend time there.",
+      "Light, fresh meals, cool the skin (damp cloth, water spray).",
+      "Watch for warning signs (headache, unusual tiredness, confusion, little urine). When in doubt, call emergency services."
+    ]
+  },
+  "level": {
+    "orange": "Orange alert",
+    "red": "Red alert"
+  },
+  "section": {
+    "title": "Heat monitoring",
+    "intro": "During a heat episode, OpenCare shows the right habits on the dashboard and the kiosk, and sends hydration reminders to caregivers.",
+    "enable": "Enable heat monitoring for this circle",
+    "enableHint": "Once enabled, you can declare an episode in one tap when the heat rises.",
+    "reminderTimes": "Hydration reminders",
+    "reminderTimesHint": "Times at which caregivers get a reminder during an active episode.",
+    "addTime": "Add a slot",
+    "removeTime": "Remove this slot",
+    "noTimes": "No reminder scheduled.",
+    "episodeTitle": "Current episode",
+    "episodeActive": "A heat episode is active.",
+    "episodeInactive": "No episode under way.",
+    "level": "Alert level",
+    "start": "Declare an episode",
+    "stop": "End the episode",
+    "save": "Save",
+    "saved": "Saved",
+    "disabledHint": "Enable heat monitoring above first."
+  },
+  "errors": {
+    "save": "Could not save. Please try again."
+  }
+}

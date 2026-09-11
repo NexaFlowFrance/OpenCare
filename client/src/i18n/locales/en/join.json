@@ -1,0 +1,14 @@
+{
+  "title": "Join a care circle",
+  "loggedInAs": "Signed in as",
+  "checking": "Checking the invitation…",
+  "missing": "Incomplete invitation link: no token found. Check the link you received.",
+  "invalid": "Invalid or expired invitation. Ask the person who invited you for a new link.",
+  "invitedBy": "{{inviter}} invites you to join {{recipient}}'s circle.",
+  "someone": "A circle member",
+  "roleLabel": "Your role in the circle:",
+  "expiresOn": "Invitation valid until {{date}}",
+  "join": "Join the circle",
+  "joining": "Joining…",
+  "joinError": "Could not join the circle. Please try again."
+}

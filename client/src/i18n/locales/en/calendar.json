@@ -1,0 +1,79 @@
+{
+  "loading": "Loading the calendar…",
+  "title": "Calendar",
+  "subtitle": "Appointments and care visits around {{name}}",
+  "subtitleNoName": "The circle's appointments and care visits",
+  "newEvent": "New event",
+  "prevMonth": "Previous month",
+  "nextMonth": "Next month",
+  "view": {
+    "label": "View",
+    "month": "Month",
+    "list": "List"
+  },
+  "moreCount_one": "+{{count}} more",
+  "moreCount_other": "+{{count}} more",
+  "emptyMonth": "No events this month. All is calm.",
+  "recurring": "Repeats",
+  "categories": {
+    "visit": "Visit",
+    "medical": "Medical",
+    "nurse": "Nurse",
+    "aide": "Care aide",
+    "other": "Other"
+  },
+  "dialog": {
+    "createTitle": "New event",
+    "editTitle": "Edit event",
+    "description": "Fill in the details of the appointment or care visit",
+    "editRecurringHint": "This event repeats: changes apply to every occurrence."
+  },
+  "form": {
+    "title": "Title",
+    "titlePlaceholder": "e.g. Nurse visit, cardiologist appointment…",
+    "category": "Category",
+    "scheduling": "Date and times",
+    "date": "Date",
+    "startTime": "Start time",
+    "endTime": "End time (optional)",
+    "location": "Location (optional)",
+    "locationPlaceholder": "e.g. Dr Martin's office, home…",
+    "participants": "Participants (circle members)",
+    "noMembers": "No members in the circle yet.",
+    "repeat": "Recurrence",
+    "repeatNone": "None",
+    "repeatDaily": "Every day",
+    "repeatWeekly": "Every week",
+    "repeatMonthly": "Every month",
+    "repeatDays": "Days of the week",
+    "repeatUntil": "Until (optional)",
+    "dayLetters": ["M", "T", "W", "T", "F", "S", "S"],
+    "reminders": "Reminders",
+    "reminder30": "30 minutes before",
+    "reminder1h": "1 hour before",
+    "notes": "Notes (optional)",
+    "notesPlaceholder": "Instructions, things to bring…"
+  },
+  "confirmDelete": "Delete this event?",
+  "deleteRecurringHint": "All of its occurrences will be deleted.",
+  "feed": {
+    "title": "iCal feed",
+    "description": "Subscribe from your calendar app (Apple, Google, Outlook) to see the circle's events.",
+    "generate": "Generate the subscription link",
+    "linkLabel": "iCal subscription link",
+    "copy": "Copy the link",
+    "subscribe": "Subscribe (webcal)",
+    "regenerate": "Regenerate the link",
+    "confirmRegen": "Regenerate the link? Existing subscriptions will stop working.",
+    "privateNote": "This link is private: anyone who has it can view the calendar."
+  },
+  "errors": {
+    "load": "Unable to load events.",
+    "titleRequired": "A title is required.",
+    "startRequired": "A start date and time are required.",
+    "endAfterStart": "The end time must be after the start time.",
+    "save": "Unable to save this event.",
+    "delete": "Unable to delete this event.",
+    "feed": "Unable to generate the iCal link."
+  }
+}

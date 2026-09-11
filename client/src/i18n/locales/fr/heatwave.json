@@ -1,0 +1,48 @@
+{
+  "banner": {
+    "titleOrange": "Forte chaleur en cours",
+    "titleRed": "Canicule : vigilance renforcée",
+    "intro": "Un épisode de forte chaleur est signalé pour {{name}}. Quelques gestes simples aident à passer la journée au frais.",
+    "introNoName": "Un épisode de forte chaleur est signalé. Quelques gestes simples aident à passer la journée au frais.",
+    "activeSince": "Déclaré {{since}}",
+    "endEpisode": "Clore l'épisode",
+    "ending": "Clôture en cours"
+  },
+  "checklist": {
+    "title": "Les bons gestes",
+    "items": [
+      "Fermez volets et fenêtres aux heures chaudes, aérez tôt le matin et le soir.",
+      "Proposez à boire régulièrement, même sans soif (eau, soupes froides, fruits).",
+      "Gardez une pièce fraîche et invitez la personne à y passer du temps.",
+      "Repas légers et frais, rafraîchissez la peau (linge humide, brumisateur).",
+      "Surveillez les signes d'alerte (maux de tête, grande fatigue, confusion, peu d'urines). En cas de doute, appelez le 15."
+    ]
+  },
+  "level": {
+    "orange": "Vigilance orange",
+    "red": "Vigilance rouge"
+  },
+  "section": {
+    "title": "Suivi canicule",
+    "intro": "Pendant un épisode de forte chaleur, OpenCare affiche les bons gestes sur le tableau de bord et le kiosk, et envoie des rappels d'hydratation aux aidants.",
+    "enable": "Activer le suivi canicule pour ce cercle",
+    "enableHint": "Une fois activé, vous pourrez déclarer un épisode en un geste quand la chaleur monte.",
+    "reminderTimes": "Rappels d'hydratation",
+    "reminderTimesHint": "Heures auxquelles les aidants reçoivent un rappel pendant un épisode actif.",
+    "addTime": "Ajouter un créneau",
+    "removeTime": "Retirer ce créneau",
+    "noTimes": "Aucun rappel programmé.",
+    "episodeTitle": "Épisode en cours",
+    "episodeActive": "Un épisode de forte chaleur est actif.",
+    "episodeInactive": "Aucun épisode en cours.",
+    "level": "Niveau de vigilance",
+    "start": "Déclarer un épisode",
+    "stop": "Clore l'épisode",
+    "save": "Enregistrer",
+    "saved": "Enregistré",
+    "disabledHint": "Activez d'abord le suivi canicule ci-dessus."
+  },
+  "errors": {
+    "save": "Enregistrement impossible. Réessayez."
+  }
+}

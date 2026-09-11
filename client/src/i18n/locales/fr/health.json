@@ -1,0 +1,64 @@
+{
+  "title": "Santé",
+  "subtitle": "Constantes et évolution dans le temps",
+  "loading": "Chargement du suivi santé...",
+  "addMeasure": "Nouvelle mesure",
+  "latest": {
+    "title": "Dernières valeurs",
+    "emptyTitle": "Aucune mesure pour le moment",
+    "emptyDescription": "Ajoutez une première mesure pour suivre son évolution.",
+    "addFirst": "Ajouter une mesure"
+  },
+  "chart": {
+    "title": "Évolution",
+    "subtitle": "Courbe sur la période choisie",
+    "empty": "Aucune mesure sur cette période.",
+    "systolic": "Systolique",
+    "diastolic": "Diastolique",
+    "periods": {
+      "30": "30 jours",
+      "90": "90 jours",
+      "365": "1 an"
+    }
+  },
+  "recent": {
+    "title": "Mesures récentes",
+    "empty": "Aucune mesure récente."
+  },
+  "vitalTypes": {
+    "weight": "Poids",
+    "bp": "Tension",
+    "pain": "Douleur",
+    "mood": "Moral",
+    "temperature": "Température",
+    "glucose": "Glycémie"
+  },
+  "form": {
+    "title": "Nouvelle mesure",
+    "description": "La mesure est partagée avec tout le cercle.",
+    "typeLabel": "Type de constante",
+    "valueLabel": "Valeur",
+    "systolicLabel": "Systolique",
+    "diastolicLabel": "Diastolique",
+    "dateLabel": "Date et heure",
+    "notesLabel": "Notes (facultatif)"
+  },
+  "actions": {
+    "delete": "Supprimer la mesure"
+  },
+  "confirmDelete": "Supprimer cette mesure ?",
+  "toasts": {
+    "saved": "Mesure enregistrée",
+    "deleted": "Mesure supprimée"
+  },
+  "errors": {
+    "load": "Impossible de charger les mesures.",
+    "save": "Impossible d'enregistrer la mesure.",
+    "delete": "Impossible de supprimer la mesure.",
+    "valueRequired": "Renseignez une valeur numérique valide."
+  },
+  "restricted": {
+    "title": "Accès réservé",
+    "description": "Le suivi santé du proche est visible par la famille et les professionnels du cercle."
+  }
+}

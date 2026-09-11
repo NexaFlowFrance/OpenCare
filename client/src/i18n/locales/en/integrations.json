@@ -1,0 +1,117 @@
+{
+  "title": "Integrations",
+  "subtitle": "Connect your self-hosted apps to centralize shopping, calendar and photos.",
+  "connected": "Connected",
+  "available": "Available",
+  "status": {
+    "error": "Error",
+    "connected": "Connected"
+  },
+  "lastSync": "Synced {{date}}",
+  "syncTitle": "Sync",
+  "disconnectTitle": "Disconnect",
+  "confirmDisconnect": "Disconnect this integration?",
+  "modal": {
+    "connect": "Connect {{name}}",
+    "test": "Test",
+    "testing": "Testing…",
+    "connecting": "Connecting…",
+    "connectBtn": "Connect",
+    "encrypted": "Credentials are AES-256 encrypted and stored on your server only.",
+    "error": "Error"
+  },
+  "syncs": {
+    "shopping": "Shopping list",
+    "stock": "Stock",
+    "calendar": "Calendar",
+    "appointments": "Appointments",
+    "photos": "Photos",
+    "voice": "Voice journal"
+  },
+  "presence": {
+    "title": "Passive monitoring (Home Assistant)",
+    "intro": "A door sensor, the coffee maker's smart plug or a motion detector are enough to reassure the circle: no camera, no wearable.",
+    "normal": "Normal activity detected this morning",
+    "noSignalYet": "No signal so far",
+    "lastSignal": "Last signal: {{source}} ({{kind}}), {{time}}",
+    "noSignals": "No signal received yet.",
+    "kinds": {
+      "motion": "motion",
+      "door": "door",
+      "power": "power",
+      "other": "other"
+    },
+    "webhookTitle": "Webhook URL",
+    "webhookHelp": "Called by a Home Assistant automation (rest_command) on every sign of life detected at your relative's home.",
+    "generate": "Generate URL",
+    "regenerate": "Regenerate URL",
+    "copy": "Copy",
+    "copied": "Copied",
+    "exampleTitle": "Home Assistant automation example",
+    "rule": {
+      "title": "Alert rule",
+      "enable": "Alert when there is no sign of life",
+      "beforeLabel": "Before",
+      "membersLabel": "Members to alert",
+      "membersHint": "With no selection, every admin and family member is alerted.",
+      "save": "Save rule",
+      "saved": "Rule saved"
+    },
+    "banner": {
+      "normal": "Normal activity this morning",
+      "waiting": "No signal so far",
+      "late": "No signal so far: the monitoring deadline has passed"
+    }
+  },
+  "catalog": {
+    "homeassistant": {
+      "tagline": "Smart home",
+      "description": "Sync your shopping list with the Home Assistant list.",
+      "urlLabel": "Instance URL",
+      "urlPlaceholder": "http://homeassistant.local:8123",
+      "tokenLabel": "Long-lived token",
+      "tokenPlaceholder": "eyJ… (from Profile > Security)",
+      "entityLabel": "Todo entity (optional)",
+      "entityPlaceholder": "todo.shopping_list"
+    },
+    "grocy": {
+      "tagline": "Household management",
+      "description": "Sync your shopping list and stock from Grocy.",
+      "urlLabel": "Instance URL",
+      "urlPlaceholder": "https://grocy.mydomain.com",
+      "keyLabel": "API key",
+      "keyPlaceholder": "From Grocy > Manage > API keys"
+    },
+    "nextcloud": {
+      "tagline": "Personal cloud",
+      "description": "Import your Nextcloud calendar events into your appointments.",
+      "urlLabel": "Nextcloud URL",
+      "urlPlaceholder": "https://cloud.mydomain.com",
+      "userLabel": "Username",
+      "userPlaceholder": "your.username",
+      "passwordLabel": "Password (or app password)",
+      "passwordPlaceholder": "****"
+    },
+    "immich": {
+      "tagline": "Photo library",
+      "description": "Show random photos from your self-hosted Immich library as the kiosk display background.",
+      "urlLabel": "Instance URL",
+      "urlPlaceholder": "https://immich.mydomain.com",
+      "keyLabel": "API key",
+      "keyPlaceholder": "From Immich > Account settings > API keys"
+    },
+    "whisper": {
+      "name": "Voice transcription (Whisper)",
+      "tagline": "Transcribed voice journal",
+      "description": "Transcribe journal voice notes with a self-hosted OpenAI-compatible Whisper service (speaches, faster-whisper-server).",
+      "urlLabel": "Service URL",
+      "urlPlaceholder": "http://localhost:8000",
+      "modelLabel": "Model (optional)",
+      "modelPlaceholder": "Systran/faster-whisper-small",
+      "languageLabel": "Language (optional)",
+      "languagePlaceholder": "en",
+      "keyLabel": "API key (optional)",
+      "keyPlaceholder": "Bearer key if your service requires one"
+    }
+  }
+}

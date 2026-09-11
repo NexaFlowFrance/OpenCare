@@ -1,0 +1,51 @@
+{
+  "title": "Contacts",
+  "subtitle": "Le carnet d'adresses du cercle",
+  "loading": "Chargement des contacts…",
+  "newContact": "Nouveau contact",
+  "filters": {
+    "all": "Tous"
+  },
+  "categories": {
+    "doctor": "Médecin",
+    "nurse": "Infirmière",
+    "aide": "Auxiliaire",
+    "physio": "Kiné",
+    "pharmacy": "Pharmacie",
+    "family": "Famille",
+    "neighbor": "Voisin",
+    "other": "Autre"
+  },
+  "hasKey": "A la clé",
+  "empty": {
+    "none": "Aucun contact pour le moment.",
+    "noMatch": "Aucun contact dans cette catégorie.",
+    "action": "Ajouter le premier contact"
+  },
+  "dialog": {
+    "createTitle": "Nouveau contact",
+    "editTitle": "Modifier le contact"
+  },
+  "form": {
+    "name": "Nom",
+    "namePlaceholder": "Ex : Dr Martin",
+    "category": "Catégorie",
+    "organization": "Organisation",
+    "organizationPlaceholder": "Ex : Cabinet médical des Lilas",
+    "phone": "Téléphone",
+    "phone2": "Téléphone secondaire",
+    "email": "Email",
+    "address": "Adresse",
+    "hasKey": "Cette personne a une clé du domicile",
+    "notes": "Notes",
+    "notesPlaceholder": "Ex : passe le mardi matin"
+  },
+  "confirm": {
+    "delete": "Supprimer ce contact ?"
+  },
+  "errors": {
+    "load": "Impossible de charger les contacts.",
+    "save": "Impossible d'enregistrer le contact.",
+    "delete": "Impossible de supprimer le contact."
+  }
+}
