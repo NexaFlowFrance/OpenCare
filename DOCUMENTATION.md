@@ -85,6 +85,7 @@ Trois planificateurs node-cron tournent dans le serveur :
 - `reminderScheduler` : rappels d'événements et génération des occurrences de prises de médicaments.
 - `digestScheduler` : synthèse hebdomadaire IA envoyée au cercle chaque dimanche.
 - `presenceMonitor` : règles de veille passive (« aucun signe de vie avant HH:MM »), cascade d'alertes.
+- `escalationScheduler` : escalade des prises en retard et des demandes d'aide sans prise en charge (chaque minute, cercles ayant activé les règles).
 
 ### IA multi-fournisseurs
 
@@ -204,6 +205,15 @@ Toutes les routes (sauf mention contraire) exigent un JWT (`Authorization: Beare
 ### Plan de soins (`/api/care-plan`)
 
 Une page qui rassemble ce qu'il faut savoir pour prendre soin du proche, sans dupliquer : huit **consignes** rédigées par la famille (routine du matin, repas, aide à la mobilité, toilette et soins personnels, communication, ce qui contrarie, ce qui apaise, en cas d'urgence ; table `care_plans`, 4 000 caractères par section, mise à jour partielle par `PUT /api/care-plan` pour admin et famille), puis la **routine médicamenteuse** calculée depuis les traitements actifs et leurs horaires (matin, midi, soir, coucher, plus « si besoin » ; omise pour le rôle voisin), les **professionnels réguliers** (contacts médecin, infirmier, aide à domicile, kiné, pharmacie) et la **semaine à venir** (agenda sur sept jours, occurrences récurrentes comprises). Chaque bloc renvoie vers sa page. La page s'imprime. Les consignes alimentent aussi le pack de relais (`content.care_plan`) et l'écran patient : un visiteur professionnel peut les lire pendant sa visite (`GET /api/kiosk/care-plan`, sections non vides seulement).
+
+### Alertes et escalade (`/api/escalation`)
+
+Chaque famille choisit son niveau de surveillance (Paramètres, section « Alertes et escalade », administrateurs ; table `escalation_rules`, désactivée par défaut).
+
+- **Prise de médicament en retard** : rappel au proche sur l'écran patient après N minutes (écran calme, lu à voix haute, un seul bouton « J'ai tout pris »), puis notification aux **aidants principaux**, puis aux **aidants de relais**. Chaque palier a son délai en minutes ; 0 désactive le palier. Au-delà de quatre heures la prise est marquée manquée et l'escalade s'arrête.
+- **Bouton « J'ai besoin d'aide »** : les aidants principaux sont prévenus immédiatement et la demande est tracée (table `help_requests`). Sans prise en charge (« Je m'en occupe » depuis le bloc « À traiter » du tableau de bord, `POST /api/escalation/help/:id/ack`), les aidants de relais sont prévenus après N minutes.
+- Sans sélection, les aidants principaux sont les **administrateurs** du cercle et les aidants de relais les membres **famille**.
+- Endpoints : `GET /api/escalation/rules` (tout membre), `PUT /api/escalation/rules` (admin), `GET /api/escalation/help`, `POST /api/escalation/help/:id/ack`.
 
 ### Divers
 

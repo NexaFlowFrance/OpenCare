@@ -74,6 +74,9 @@
     "tasks_overdue_one": "{{count}} tâche en retard",
     "tasks_overdue_other": "{{count}} tâches en retard",
     "visitor_present": "{{name}} est sur place depuis {{time}}",
-    "appointments": "Bientôt : {{title}} à {{time}}"
+    "appointments": "Bientôt : {{title}} à {{time}}",
+    "acknowledge": "Je m'en occupe",
+    "helpOpen_one": "{{count}} demande sans prise en charge",
+    "helpOpen_other": "{{count}} demandes sans prise en charge"
   }
 }

@@ -134,7 +134,7 @@ prn_id=$(echo "$prn" | jq -r '.data.id')
 dose=$(request POST "/api/medications/$prn_id/intakes" '{}')
 echo "$dose" | jq -e '.data.status == "taken" and .data.confirmed_source == "caregiver"' >/dev/null
 
-echo "[13/14] Patient device (pairing code, device token, visitor check-in, care plan, Ask me, PIN)"
+echo "[13/14] Patient device (pairing, visitor check-in, care plan, escalation rules, help request, Ask me, PIN)"
 pairing=$(request POST "/api/kiosk/devices/pairing" '{"kind":"kiosk","name":"Smoke tablet"}')
 assert_success "$pairing"
 code=$(echo "$pairing" | jq -r '.data.code')
@@ -160,6 +160,23 @@ out=$(curl -sS -X POST "$API_BASE/api/kiosk/visits/$visit_id/check-out" -H "Cont
 echo "$out" | jq -e '.data.checked_out_at != null' >/dev/null
 visits=$(request GET "/api/visits")
 echo "$visits" | jq -e '.data | length == 1 and .[0].visitor_name == "Camille"' >/dev/null
+esc=$(request GET "/api/escalation/rules")
+echo "$esc" | jq -e '.data.rules.enabled == false and .data.rules.med_primary_min == 30' >/dev/null
+rejected=$(curl -sS -o /dev/null -w "%{http_code}" -X PUT "$API_BASE/api/escalation/rules" -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -H "X-Circle-Id: $CIRCLE_ID" -d '{"med_primary_min":-1}')
+[[ "$rejected" == "400" ]]
+esc=$(request PUT "/api/escalation/rules" '{"enabled":true,"med_patient_min":15,"med_primary_min":30,"help_ack_min":5}')
+echo "$esc" | jq -e '.data.rules.enabled == true and .data.rules.help_ack_min == 5' >/dev/null
+help_before=$(request GET "/api/escalation/help")
+echo "$help_before" | jq -e '. | .data | length == 0' >/dev/null
+status=$(curl -sS -X POST "$API_BASE/api/kiosk/status" -H "Content-Type: application/json" -H "X-Kiosk-Token: $kiosk_token" -d '{"kind":"help"}')
+echo "$status" | jq -e '.success == true' >/dev/null
+help_after=$(request GET "/api/escalation/help")
+echo "$help_after" | jq -e '.data | length == 1 and (.[0].acknowledged_at == null)' >/dev/null
+help_id=$(echo "$help_after" | jq -r '.data[0].id')
+ack=$(request POST "/api/escalation/help/$help_id/ack")
+echo "$ack" | jq -e '.data.acknowledged_at != null' >/dev/null
+request GET "/api/escalation/help" | jq -e '.data | length == 0' >/dev/null
+request PUT "/api/escalation/rules" '{"enabled":false}' | jq -e '.data.rules.enabled == false' >/dev/null
 plan=$(request PUT "/api/care-plan" '{"sections":{"morning":"Lever vers 7 h 30","emergency":"Appeler Alice en premier","bogus":"ignore"}}')
 echo "$plan" | jq -e '.success == true and .data.sections.morning == "Lever vers 7 h 30" and (.data.sections | has("bogus") | not)' >/dev/null
 plan=$(request GET "/api/care-plan")

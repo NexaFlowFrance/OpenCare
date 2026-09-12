@@ -10,6 +10,7 @@ import { createNotification } from '../lib/notifications';
 import { applyIntakeStatus, fetchIntakeForUpdate, IntakeSource } from '../lib/intakes';
 import { loadTodaySnapshot } from '../lib/todaySnapshot';
 import { loadCarePlan, filledSections } from '../lib/carePlan';
+import { loadRules, createHelpRequest, resolveTargets } from '../lib/escalation';
 import { fetchImmichRandomPhoto } from '../services/integrations/immich';
 import { checkIn, checkOut, addVisitNote, VISITOR_TYPES, VisitorType } from '../lib/visits';
 import { assertSafeIntegrationUrl, UnsafeUrlError } from '../utils/urlGuard';
@@ -207,29 +208,31 @@ router.post('/status', kioskOrMember(), allowDeviceOr(...JOURNAL_WRITER_ROLES), 
         }
 
         if (kind === 'help') {
-            // Notify every member of the circle, each in their own language.
-            const membersResult = await query(
-                `SELECT m.user_id, u.language
-                 FROM circle_members m
-                 JOIN users u ON u.id = m.user_id
-                 WHERE m.circle_id = $1`,
-                [req.circleId]
-            );
-            await Promise.all(
-                (membersResult.rows as Array<{ user_id: string; language: string | null }>).map((member) => {
-                    const strings = STRINGS[pickLang(member.language)];
-                    return createNotification({
-                        userId: member.user_id,
-                        circleId: req.circleId,
-                        title: strings.helpTitle(firstName),
-                        message: strings.helpMessage(firstName),
-                        type: 'kiosk_help',
-                        relatedId: entry.id,
-                        url: '/journal',
-                        tag: 'kiosk_help',
-                    });
-                })
-            );
+            // Escalation rules (lib/escalation): the primary caregivers first
+            // (admins by default), the backup caregivers later if nobody takes
+            // charge. Without rules, every member is notified, as before.
+            const rules = await loadRules(req.circleId!);
+            await createHelpRequest(req.circleId!, entry.id, req.kioskDevice?.kind ?? 'kiosk');
+            const recipients: Array<{ user_id: string; language: string | null }> = rules.enabled
+                ? await resolveTargets(req.circleId!, rules.primary_member_ids, ['admin'])
+                : (await query(
+                    `SELECT m.user_id, u.language FROM circle_members m JOIN users u ON u.id = m.user_id WHERE m.circle_id = $1`,
+                    [req.circleId]
+                )).rows;
+            await Promise.all(recipients.map((member) => {
+                const strings = STRINGS[pickLang(member.language)];
+                return createNotification({
+                    userId: member.user_id,
+                    circleId: req.circleId,
+                    title: strings.helpTitle(firstName),
+                    message: strings.helpMessage(firstName),
+                    type: 'kiosk_help',
+                    relatedId: entry.id,
+                    url: '/',
+                    tag: 'kiosk_help',
+                });
+            }));
+            await broadcastToCircle(req.circleId!, { type: 'update', entity: 'help_requests', action: 'created' });
         }
 
         await broadcastToCircle(req.circleId!, { type: 'update', entity: 'journal', action: 'created' });

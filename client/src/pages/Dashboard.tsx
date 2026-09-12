@@ -301,7 +301,7 @@ const Dashboard: React.FC = () => {
             </div>
 
             {/* Ce qui demande l'attention d'un aidant, avant tout le reste */}
-            {view === 'single' && <AttentionCard items={data?.attention ?? []} />}
+            {view === 'single' && <AttentionCard items={data?.attention ?? []} onChanged={() => void load()} />}
 
             {(data?.unread_messages_count ?? 0) > 0 && (
                 <button

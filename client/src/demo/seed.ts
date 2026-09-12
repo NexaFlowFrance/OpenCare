@@ -58,6 +58,10 @@ export interface CircleData {
     visits: Json[];
     /** Plan de soins : consignes de la famille (sections texte). */
     carePlan: Json | null;
+    /** Regles d escalade des alertes (prise en retard, demande d aide). */
+    escalation: Json;
+    /** Demandes d aide du bouton "J ai besoin d aide", avec leur prise en charge. */
+    helpRequests: Json[];
     prescriptions: Json[];
     events: Json[];
     tasks: Json[];
@@ -537,6 +541,8 @@ export function createSeed(): DemoStore {
                         emergency: "Appeler Marie en premier, puis Paul. Médecin traitant : Dr Martin. Carte Vitale et ordonnances dans le tiroir du buffet.",
                     },
                 },
+                escalation: { enabled: false, med_patient_min: 15, med_primary_min: 30, med_secondary_min: 60, help_ack_min: 10, primary_member_ids: [], secondary_member_ids: [] },
+                helpRequests: [],
                 visits: [
                     { id: 'vis-1', circle_id: 'c-jeanne', visitor_type: 'caregiver', visitor_name: 'Nadia', member_id: null, device_id: null, checked_in_at: at(0, 8, 2), checked_out_at: at(0, 9, 5), note: 'Toilette faite, petit-déjeuner complet. Jeanne était de bonne humeur.', journal_entry_id: 'j-1', created_at: at(0, 8, 2) },
                     { id: 'vis-2', circle_id: 'c-jeanne', visitor_type: 'family', visitor_name: 'Paul', member_id: 'cm-paul', device_id: null, checked_in_at: at(-1, 17, 30), checked_out_at: at(-1, 18, 45), note: null, journal_entry_id: 'j-2', created_at: at(-1, 17, 30) },
@@ -665,6 +671,8 @@ export function createSeed(): DemoStore {
                 prnIntakes: [],
                 visits: [],
                 carePlan: null,
+                escalation: { enabled: false, med_patient_min: 15, med_primary_min: 30, med_secondary_min: 60, help_ack_min: 10, primary_member_ids: [], secondary_member_ids: [] },
+                helpRequests: [],
                 prescriptions: [],
                 events: [
                     {

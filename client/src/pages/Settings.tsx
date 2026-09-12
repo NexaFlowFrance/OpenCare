@@ -27,6 +27,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useCircle } from '../contexts/CircleContext';
 import { useTheme } from '../contexts/ThemeContext';
 import KioskDevicesCard from '../components/app/KioskDevicesCard';
+import EscalationCard from '../components/app/EscalationCard';
 import { refreshAiStatus } from '../lib/aiStatus';
 import { aiErrorKey } from '../components/app/MagicInput';
 
@@ -759,6 +760,9 @@ const Settings: React.FC = () => {
 
             {/* AI assistant: per-circle settings, circle admins only */}
             {isAdmin && <AiAssistantCard />}
+
+            {/* Alertes et escalade (admins) */}
+            {isAdmin && <EscalationCard />}
 
             {/* Export (per circle, admins only) */}
             {isAdmin && (

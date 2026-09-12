@@ -209,6 +209,33 @@ export const runMigrations = async () => {
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );`,
         `CREATE INDEX IF NOT EXISTS idx_visits_circle_in ON visits(circle_id, checked_in_at DESC);`,
+        // Escalade des alertes (cf. schema.sql).
+        `ALTER TABLE medication_intakes ADD COLUMN IF NOT EXISTS reminded_patient_at TIMESTAMP;`,
+        `ALTER TABLE medication_intakes ADD COLUMN IF NOT EXISTS escalated_primary_at TIMESTAMP;`,
+        `ALTER TABLE medication_intakes ADD COLUMN IF NOT EXISTS escalated_secondary_at TIMESTAMP;`,
+        `CREATE TABLE IF NOT EXISTS escalation_rules (
+            circle_id UUID PRIMARY KEY REFERENCES care_circles(id) ON DELETE CASCADE,
+            enabled BOOLEAN NOT NULL DEFAULT FALSE,
+            med_patient_min INTEGER NOT NULL DEFAULT 15,
+            med_primary_min INTEGER NOT NULL DEFAULT 30,
+            med_secondary_min INTEGER NOT NULL DEFAULT 60,
+            help_ack_min INTEGER NOT NULL DEFAULT 10,
+            primary_member_ids JSONB NOT NULL DEFAULT '[]',
+            secondary_member_ids JSONB NOT NULL DEFAULT '[]',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );`,
+        `CREATE TABLE IF NOT EXISTS help_requests (
+            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+            circle_id UUID NOT NULL REFERENCES care_circles(id) ON DELETE CASCADE,
+            journal_entry_id UUID REFERENCES journal_entries(id) ON DELETE SET NULL,
+            source VARCHAR(20) NOT NULL DEFAULT 'kiosk',
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            acknowledged_at TIMESTAMP,
+            acknowledged_by UUID REFERENCES users(id) ON DELETE SET NULL,
+            escalated_at TIMESTAMP
+        );`,
+        `CREATE INDEX IF NOT EXISTS idx_help_requests_circle_open ON help_requests(circle_id, created_at DESC);`,
         // Plan de soins (consignes de la famille, cf. schema.sql).
         `CREATE TABLE IF NOT EXISTS care_plans (
             circle_id UUID PRIMARY KEY REFERENCES care_circles(id) ON DELETE CASCADE,

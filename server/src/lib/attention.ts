@@ -37,6 +37,8 @@ export interface AttentionItem {
     /** presence : heure limite 'HH:MM' ; visitor_present : nom du visiteur. */
     time?: string | null;
     name?: string | null;
+    /** help : demandes d'aide sans prise en charge (bouton "je m'en occupe"). */
+    open_help?: Array<{ id: string; created_at: string }>;
 }
 
 const SEVERITY: Record<AttentionKind, AttentionSeverity> = {
@@ -66,7 +68,7 @@ export async function loadAttention(circleId: string, includeHealth: boolean, no
     const soon = new Date(now.getTime() + 2 * 60 * 60 * 1000);
     const none = Promise.resolve({ rows: [] as any[] });
 
-    const [incidents, presence, missed, prescriptions, tasks, visits, events] = await Promise.all([
+    const [incidents, presence, missed, prescriptions, tasks, visits, events, openHelp] = await Promise.all([
         query(
             `SELECT id, author_name, content, occurred_at
              FROM journal_entries
@@ -130,6 +132,12 @@ export async function loadAttention(circleId: string, includeHealth: boolean, no
              ORDER BY start_time`,
             [circleId, toLocalISO(dayStart), toLocalISO(dayEnd)]
         ),
+        query(
+            `SELECT id, created_at FROM help_requests
+             WHERE circle_id = $1 AND acknowledged_at IS NULL AND created_at >= NOW() - interval '24 hours'
+             ORDER BY created_at DESC`,
+            [circleId]
+        ),
     ]);
 
     const items: AttentionItem[] = [];
@@ -139,7 +147,7 @@ export async function loadAttention(circleId: string, includeHealth: boolean, no
 
     push('help', incidents.rows.length, '/journal', (incidents.rows as any[]).map((r) => ({
         id: r.id, label: String(r.content || '').slice(0, SNIPPET), when: stamp(r.occurred_at), extra: r.author_name ?? null,
-    })));
+    })), { open_help: (openHelp.rows as any[]).map((r) => ({ id: r.id, created_at: stamp(r.created_at) ?? '' })) });
 
     const before = (presence.rows[0] as { before: string } | undefined)?.before;
     push('presence', before ? 1 : 0, '/', [], { time: before ?? null });

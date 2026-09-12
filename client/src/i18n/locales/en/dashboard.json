@@ -74,6 +74,9 @@
     "tasks_overdue_one": "{{count}} overdue task",
     "tasks_overdue_other": "{{count}} overdue tasks",
     "visitor_present": "{{name}} has been here since {{time}}",
-    "appointments": "Soon: {{title}} at {{time}}"
+    "appointments": "Soon: {{title}} at {{time}}",
+    "acknowledge": "I am on it",
+    "helpOpen_one": "{{count}} request not taken in charge yet",
+    "helpOpen_other": "{{count}} requests not taken in charge yet"
   }
 }
