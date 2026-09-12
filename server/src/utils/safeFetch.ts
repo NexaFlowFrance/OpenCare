@@ -165,11 +165,11 @@ async function doSafeFetch(rawUrl: string, options: RequestInit, state: Internal
     try {
         url = new URL(rawUrl);
     } catch {
-        throw new UnsafeUrlError('URL invalide');
+        throw new UnsafeUrlError('URL invalide', 'invalid');
     }
 
     if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-        throw new UnsafeUrlError('Seuls les protocoles http et https sont autorisés');
+        throw new UnsafeUrlError('Seuls les protocoles http et https sont autorisés', 'protocol');
     }
 
     const hostname = url.hostname.replace(/^\[|\]$/g, '').toLowerCase();
@@ -226,7 +226,7 @@ async function doSafeFetch(rawUrl: string, options: RequestInit, state: Internal
         try {
             redirectUrl = new URL(location, url);
         } catch {
-            throw new UnsafeUrlError('SSRF_REDIRECT_BLOCKED: Location de redirection invalide');
+            throw new UnsafeUrlError('SSRF_REDIRECT_BLOCKED: Location de redirection invalide', 'redirect_invalid');
         }
 
         const sameHost =
@@ -236,11 +236,12 @@ async function doSafeFetch(rawUrl: string, options: RequestInit, state: Internal
 
         if (!sameHost) {
             throw new UnsafeUrlError(
-                'SSRF_REDIRECT_BLOCKED: redirection vers un hôte différent refusée'
+                'SSRF_REDIRECT_BLOCKED: redirection vers un hôte différent refusée',
+                'redirect'
             );
         }
         if (state.redirectsLeft <= 0) {
-            throw new UnsafeUrlError('SSRF_REDIRECT_BLOCKED: trop de redirections');
+            throw new UnsafeUrlError('SSRF_REDIRECT_BLOCKED: trop de redirections', 'too_many_redirects');
         }
 
         // Same-host redirect: re-validate + re-fetch WITHOUT sensitive headers.
@@ -292,10 +293,10 @@ export async function assertSafeWebSocketUrl(
     try {
         parsed = new URL(wsUrl);
     } catch {
-        throw new UnsafeUrlError('URL WebSocket invalide');
+        throw new UnsafeUrlError('URL WebSocket invalide', 'ws_invalid');
     }
     if (parsed.protocol !== 'ws:' && parsed.protocol !== 'wss:') {
-        throw new UnsafeUrlError('Seuls les protocoles ws et wss sont autorisés');
+        throw new UnsafeUrlError('Seuls les protocoles ws et wss sont autorisés', 'ws_protocol');
     }
     const blockPrivate = resolveBlockPrivate(guard);
     const hostname = parsed.hostname.replace(/^\[|\]$/g, '').toLowerCase();

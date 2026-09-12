@@ -179,6 +179,17 @@ const Login: React.FC = () => {
                                 required
                                 placeholder="••••••••"
                             />
+                            {isLogin && (
+                                <div className="text-right">
+                                    <button
+                                        type="button"
+                                        onClick={() => navigate('/forgot-password')}
+                                        className="text-caption text-primary hover:text-primary/80 transition-colors hover:underline underline-offset-4"
+                                    >
+                                        {t('auth:login.forgot')}
+                                    </button>
+                                </div>
+                            )}
                         </div>
 
                         {error && (

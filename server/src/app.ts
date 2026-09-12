@@ -5,6 +5,8 @@ import path from 'path';
 import rateLimit from 'express-rate-limit';
 import authRoutes from './routes/auth';
 import userSettingsRoutes from './routes/userSettings';
+import passwordResetRoutes from './routes/passwordReset';
+import visitsRoutes from './routes/visits';
 import circlesRoutes from './routes/circles';
 import circleInvitesRoutes from './routes/circleInvites';
 import shoppingRoutes from './routes/shopping';
@@ -28,6 +30,7 @@ import heatwaveRoutes from './routes/heatwave';
 import voiceRoutes from './routes/voice';
 import digestsRoutes from './routes/digests';
 import dashboardRoutes from './routes/dashboard';
+import carePlanRoutes from './routes/carePlan';
 import dataTransferRoutes from './routes/dataTransfer';
 import notificationsRoutes from './routes/notifications';
 import calendarRoutes from './routes/calendar';
@@ -68,6 +71,34 @@ const registerRateLimiter = rateLimit({
     message: {
         success: false,
         error: 'Too many sign-up attempts. Please try again later.'
+    }
+});
+
+// Mot de passe oublie : compte aussi les succes (chaque demande peut declencher
+// un e-mail ou une notification aux admins), plafond bas par IP.
+const forgotPasswordRateLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    max: 5,
+    standardHeaders: true,
+    legacyHeaders: false,
+    skipSuccessfulRequests: false,
+    message: {
+        success: false,
+        error: 'Too many password reset requests. Please try again later.'
+    }
+});
+
+// Appairage d'un appareil patient et verification du PIN aidant : peu d'essais
+// par IP, succes compris (un code ou un PIN ne se devinent pas en boucle).
+const kioskPairRateLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    skipSuccessfulRequests: false,
+    message: {
+        success: false,
+        error: 'Too many attempts. Please try again later.'
     }
 });
 
@@ -148,8 +179,12 @@ app.get('/health', (req, res) => {
 app.use('/api', apiRateLimiter);
 app.use('/api/auth/login', authRateLimiter);
 app.use('/api/auth/register', registerRateLimiter);
+app.use('/api/auth/forgot-password', forgotPasswordRateLimiter);
+app.use('/api/kiosk/pair', kioskPairRateLimiter);
+app.use('/api/kiosk/pin/verify', kioskPairRateLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/auth', userSettingsRoutes);
+app.use('/api/auth', passwordResetRoutes);
 app.use('/api/circles', circlesRoutes);
 app.use('/api/invites', circleInvitesRoutes);
 app.use('/api/journal', journalRoutes);
@@ -165,6 +200,7 @@ app.use('/api/contacts', contactsRoutes);
 app.use('/api/caregiver-links', caregiverLinksRoutes);
 app.use('/api/emergency', emergencyRoutes);
 app.use('/api/kiosk', kioskRoutes);
+app.use('/api/visits', visitsRoutes);
 app.use('/api/insights', insightsRoutes);
 app.use('/api/story', storyRoutes);
 app.use('/api/handover', handoverRoutes);
@@ -173,6 +209,7 @@ app.use('/api/heatwave', heatwaveRoutes);
 app.use('/api/voice', voiceRoutes);
 app.use('/api/digests', digestsRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/care-plan', carePlanRoutes);
 app.use('/api/data', dataTransferRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/calendar', calendarRoutes);

@@ -52,6 +52,12 @@ export interface CircleData {
     medications: Json[];
     /** Statuts forcés des prises (clé: id de prise générée). */
     intakeOverrides: Json;
+    /** Prises ponctuelles des médicaments "si besoin" (créées à la demande). */
+    prnIntakes: Json[];
+    /** Visites déclarées depuis l'écran patient (bouton « Visiteur »). */
+    visits: Json[];
+    /** Plan de soins : consignes de la famille (sections texte). */
+    carePlan: Json | null;
     prescriptions: Json[];
     events: Json[];
     tasks: Json[];
@@ -103,41 +109,72 @@ export function createSeed(): DemoStore {
     const sharingIds = [cmMarie.id, cmPaul.id];
 
     // ── Médicaments de Jeanne (3 traitements, horaires quotidiens) ────────────
+    // Photos de démonstration servies avec le client (client/public/demo).
+    const pill = (name: string) => `${import.meta.env.BASE_URL}demo/${name}.png`;
     const medications = [
         {
-            id: 'med-amlo', circle_id: 'c-jeanne', name: 'Amlodipine 5 mg', dosage: '1 comprimé', form: 'Comprimé',
-            instructions: 'À prendre le matin avec un grand verre d\'eau', photo_url: null, prescriber: 'Dr Martin',
+            id: 'med-amlo', circle_id: 'c-jeanne', name: 'Amlodipine', dosage: '5 mg', form: 'tablet',
+            instructions: 'Avec un grand verre d\'eau', photo_url: pill('pill-white'), prescriber: 'Dr Martin',
             start_date: dstr(-400), end_date: null, active: true,
+            prn: false, with_food: 'any', reason: 'Pour la tension', appearance: 'Petit comprimé blanc et rond',
             schedules: [
-                { id: 'sch-amlo-1', medication_id: 'med-amlo', time_of_day: '08:00', days_of_week: [1, 2, 3, 4, 5, 6, 7], label: 'Matin' },
+                { id: 'sch-amlo-1', medication_id: 'med-amlo', time_of_day: '08:00', days_of_week: [1, 2, 3, 4, 5, 6, 7], label: 'Matin', quantity: 1, unit: null },
             ],
         },
         {
-            id: 'med-karde', circle_id: 'c-jeanne', name: 'Kardégic 75 mg', dosage: '1 sachet', form: 'Poudre',
-            instructions: 'À diluer dans un demi-verre d\'eau, pendant le petit-déjeuner', photo_url: null, prescriber: 'Dr Martin',
+            id: 'med-karde', circle_id: 'c-jeanne', name: 'Kardégic', dosage: '75 mg', form: 'sachet',
+            instructions: 'À diluer dans un demi-verre d\'eau', photo_url: pill('pill-sachet'), prescriber: 'Dr Martin',
             start_date: dstr(-400), end_date: null, active: true,
+            prn: false, with_food: 'with', reason: 'Pour fluidifier le sang', appearance: 'Sachet de poudre',
             schedules: [
-                { id: 'sch-karde-1', medication_id: 'med-karde', time_of_day: '08:00', days_of_week: [1, 2, 3, 4, 5, 6, 7], label: 'Matin' },
+                { id: 'sch-karde-1', medication_id: 'med-karde', time_of_day: '08:00', days_of_week: [1, 2, 3, 4, 5, 6, 7], label: 'Matin', quantity: 1, unit: null },
             ],
         },
         {
-            id: 'med-doli', circle_id: 'c-jeanne', name: 'Doliprane 1000 mg', dosage: '1 comprimé', form: 'Comprimé',
-            instructions: 'Si douleurs (genoux), maximum 3 par jour', photo_url: null, prescriber: 'Dr Martin',
+            id: 'med-metfo', circle_id: 'c-jeanne', name: 'Metformine', dosage: '500 mg', form: 'tablet',
+            instructions: null, photo_url: pill('pill-pink'), prescriber: 'Dr Martin',
+            start_date: dstr(-300), end_date: null, active: true,
+            prn: false, with_food: 'with', reason: 'Pour le diabète', appearance: 'Comprimé rose ovale',
+            schedules: [
+                { id: 'sch-metfo-1', medication_id: 'med-metfo', time_of_day: '08:00', days_of_week: [1, 2, 3, 4, 5, 6, 7], label: 'Matin', quantity: 2, unit: null },
+                { id: 'sch-metfo-2', medication_id: 'med-metfo', time_of_day: '20:00', days_of_week: [1, 2, 3, 4, 5, 6, 7], label: 'Soir', quantity: 1, unit: null },
+            ],
+        },
+        {
+            id: 'med-vitd', circle_id: 'c-jeanne', name: 'Vitamine D3', dosage: '1 000 UI', form: 'capsule',
+            instructions: null, photo_url: pill('pill-yellow'), prescriber: 'Dr Martin',
+            start_date: dstr(-120), end_date: null, active: true,
+            prn: false, with_food: 'with', reason: 'Pour les os', appearance: 'Capsule jaune translucide',
+            schedules: [
+                { id: 'sch-vitd-1', medication_id: 'med-vitd', time_of_day: '08:00', days_of_week: [1, 2, 3, 4, 5, 6, 7], label: 'Matin', quantity: 1, unit: null },
+            ],
+        },
+        {
+            id: 'med-doli', circle_id: 'c-jeanne', name: 'Doliprane', dosage: '1000 mg', form: 'tablet',
+            instructions: 'Si douleurs (genoux), maximum 3 par jour, au moins 6 h entre deux prises', photo_url: null, prescriber: 'Dr Martin',
             start_date: dstr(-60), end_date: null, active: true,
-            schedules: [
-                { id: 'sch-doli-1', medication_id: 'med-doli', time_of_day: '08:00', days_of_week: [1, 2, 3, 4, 5, 6, 7], label: 'Matin' },
-                { id: 'sch-doli-2', medication_id: 'med-doli', time_of_day: '20:00', days_of_week: [1, 2, 3, 4, 5, 6, 7], label: 'Soir' },
-            ],
+            prn: true, with_food: 'any', reason: 'Contre la douleur', appearance: 'Grand comprimé blanc allongé',
+            schedules: [],
+        },
+    ];
+
+    // Prises ponctuelles des médicaments "si besoin" (Doliprane : une prise hier soir)
+    const prnIntakes: Json[] = [
+        {
+            id: 'prn-doli-1', circle_id: 'c-jeanne', medication_id: 'med-doli', schedule_id: null,
+            due_at: at(-1, 21, 30), status: 'taken', confirmed_at: at(-1, 21, 30), confirmed_source: 'caregiver',
+            quantity: 1, unit: null, journal_entry_id: null,
         },
     ];
 
     // Statuts des prises du jour (et quelques oublis passés pour les courbes
     // d'observance) : la clé reprend le format d'id généré par mockApi.
     const intakeOverrides: Json = {
-        [`in_med-amlo_sch-amlo-1_${dstr(0)}`]: { status: 'taken', confirmed_at: at(0, 8, 10), confirmed_by: 'Nadia', journal_entry_id: 'j-med-1' },
-        [`in_med-doli_sch-doli-1_${dstr(0)}`]: { status: 'taken', confirmed_at: at(0, 8, 12), confirmed_by: 'Nadia', journal_entry_id: null },
+        [`in_med-amlo_sch-amlo-1_${dstr(0)}`]: { status: 'taken', confirmed_at: at(0, 8, 10), confirmed_by: 'Nadia', confirmed_source: 'link', journal_entry_id: 'j-med-1' },
+        [`in_med-metfo_sch-metfo-1_${dstr(0)}`]: { status: 'taken', confirmed_at: at(0, 8, 12), confirmed_by: 'Jeanne', confirmed_source: 'kiosk', journal_entry_id: null },
+        [`in_med-vitd_sch-vitd-1_${dstr(0)}`]: { status: 'taken', confirmed_at: at(0, 8, 12), confirmed_by: 'Jeanne', confirmed_source: 'kiosk', journal_entry_id: null },
         [`in_med-karde_sch-karde-1_${dstr(0)}`]: { status: 'missed', confirmed_at: null, confirmed_by: null, journal_entry_id: null },
-        [`in_med-doli_sch-doli-2_${dstr(-3)}`]: { status: 'skipped', confirmed_at: at(-3, 20, 25), confirmed_by: 'Marie Dupont', journal_entry_id: null },
+        [`in_med-metfo_sch-metfo-2_${dstr(-3)}`]: { status: 'skipped', confirmed_at: at(-3, 20, 25), confirmed_by: 'Marie Dupont', confirmed_source: 'caregiver', journal_entry_id: null },
         [`in_med-karde_sch-karde-1_${dstr(-9)}`]: { status: 'missed', confirmed_at: null, confirmed_by: null, journal_entry_id: null },
         [`in_med-amlo_sch-amlo-1_${dstr(-16)}`]: { status: 'missed', confirmed_at: null, confirmed_by: null, journal_entry_id: null },
     };
@@ -485,6 +522,26 @@ export function createSeed(): DemoStore {
                 vitals,
                 medications,
                 intakeOverrides,
+                prnIntakes,
+                carePlan: {
+                    updated_at: at(-2, 10, 0),
+                    updated_by_name: 'Marie Dupont',
+                    sections: {
+                        morning: "Lever vers 7 h 30, elle aime prendre son temps. Ouvrir les volets, mettre la radio pendant le petit-déjeuner : thé léger, tartines beurre-confiture. Vérifier que les lunettes sont sur la table de nuit.",
+                        meals: "Déjeuner à 12 h 30, dîner à 19 h. Petites portions, viande coupée finement. Elle n'aime pas le poisson. Un verre d'eau à chaque repas et une compote au goûter.",
+                        mobility: "Déambulateur pour tout déplacement hors du fauteuil. Ne jamais la laisser prendre l'escalier seule. Se lever en deux temps (assise au bord du lit une minute) pour éviter les vertiges.",
+                        personal_care: "Toilette au lavabo le matin avec Nadia, douche le mercredi et le samedi. Crème hydratante sur les jambes après la toilette. Elle tient à choisir sa tenue elle-même.",
+                        communication: "Elle entend mal de l'oreille droite : se placer à sa gauche, parler lentement, phrases courtes. Lui laisser le temps de répondre. Ne pas parler d'elle à la troisième personne.",
+                        triggers: "La télévision trop forte, les visites imprévues en fin de journée, qu'on déplace ses affaires sans lui dire.",
+                        calming: "Georges Brassens, les photos du baptême de Léa, le chat de la voisine, un café au lait vers 16 h. Parler du jardin.",
+                        emergency: "Appeler Marie en premier, puis Paul. Médecin traitant : Dr Martin. Carte Vitale et ordonnances dans le tiroir du buffet.",
+                    },
+                },
+                visits: [
+                    { id: 'vis-1', circle_id: 'c-jeanne', visitor_type: 'caregiver', visitor_name: 'Nadia', member_id: null, device_id: null, checked_in_at: at(0, 8, 2), checked_out_at: at(0, 9, 5), note: 'Toilette faite, petit-déjeuner complet. Jeanne était de bonne humeur.', journal_entry_id: 'j-1', created_at: at(0, 8, 2) },
+                    { id: 'vis-2', circle_id: 'c-jeanne', visitor_type: 'family', visitor_name: 'Paul', member_id: 'cm-paul', device_id: null, checked_in_at: at(-1, 17, 30), checked_out_at: at(-1, 18, 45), note: null, journal_entry_id: 'j-2', created_at: at(-1, 17, 30) },
+                    { id: 'vis-3', circle_id: 'c-jeanne', visitor_type: 'nurse', visitor_name: 'Camille', member_id: null, device_id: null, checked_in_at: at(-3, 9, 0), checked_out_at: at(-3, 9, 25), note: 'Tension 13/8, pilulier préparé pour la semaine.', journal_entry_id: null, created_at: at(-3, 9, 0) },
+                ],
                 prescriptions: [
                     {
                         id: 'rx-1', circle_id: 'c-jeanne', title: 'Ordonnance traitement de fond',
@@ -605,6 +662,9 @@ export function createSeed(): DemoStore {
                 ],
                 medications: [],
                 intakeOverrides: {},
+                prnIntakes: [],
+                visits: [],
+                carePlan: null,
                 prescriptions: [],
                 events: [
                     {

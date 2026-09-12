@@ -3,13 +3,14 @@ import { query } from '../db';
 import { authMiddleware } from '../middleware/auth';
 import { circleMiddleware, requireAdmin, CircleRequest } from '../middleware/circle';
 import { encryptCredentials } from '../utils/crypto';
-import { assertSafeIntegrationUrl, UnsafeUrlError } from '../utils/urlGuard';
+import { assertSafeIntegrationUrl, UnsafeUrlError, unsafeUrlMessage } from '../utils/urlGuard';
 import { safeFetch } from '../utils/safeFetch';
 import { testHomeAssistantConnection, syncHomeAssistant } from '../services/integrations/homeassistant';
 import { testGrocyConnection, syncGrocy } from '../services/integrations/grocy';
 import { testNextcloudConnection, syncNextcloud } from '../services/integrations/nextcloud';
 import { testImmichConnection, syncImmich, fetchImmichRandomPhoto } from '../services/integrations/immich';
 import { broadcastToCircle } from '../lib/broadcaster';
+import { langFromRequest, t, type Lang } from '../lib/i18n';
 
 const router = Router();
 
@@ -21,7 +22,7 @@ const INTEGRATION_TYPES = ['homeassistant', 'grocy', 'nextcloud', 'immich', 'whi
 
 // Whisper (speaches / faster-whisper-server, API compatible OpenAI): un simple
 // GET /v1/models suffit à vérifier que le service répond (clé Bearer optionnelle).
-async function testWhisperConnection(baseUrl: string, apiKey?: string): Promise<{ success: boolean; message: string }> {
+async function testWhisperConnection(baseUrl: string, apiKey?: string, lang: Lang = 'fr'): Promise<{ success: boolean; message: string }> {
     const headers: Record<string, string> = {};
     if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
 
@@ -29,19 +30,19 @@ async function testWhisperConnection(baseUrl: string, apiKey?: string): Promise<
         // safeFetch validates + pins the target and applies the 10s timeout.
         const response = await safeFetch(`${baseUrl}/v1/models`, { headers }, { timeoutMs: 10_000 });
         if (response.status === 401 || response.status === 403) {
-            return { success: false, message: 'Clé API Whisper invalide' };
+            return { success: false, message: t(lang, 'integrations.whisperKeyInvalid') };
         }
         if (!response.ok) {
-            return { success: false, message: `Le service Whisper a répondu ${response.status}` };
+            return { success: false, message: t(lang, 'integrations.whisperStatus', { status: response.status }) };
         }
-        return { success: true, message: 'Connexion au service Whisper réussie' };
+        return { success: true, message: t(lang, 'integrations.whisperOk') };
     } catch (e) {
         if (e instanceof UnsafeUrlError) {
-            return { success: false, message: e.message };
+            return { success: false, message: unsafeUrlMessage(e, lang) };
         }
         const message = e instanceof Error && e.name === 'AbortError'
-            ? 'Le service Whisper ne répond pas (10s)'
-            : 'Service Whisper injoignable';
+            ? t(lang, 'integrations.whisperTimeout')
+            : t(lang, 'integrations.whisperUnreachable');
         return { success: false, message };
     }
 }
@@ -63,6 +64,7 @@ router.get('/', async (req: CircleRequest, res) => {
 // GET /api/integrations/immich/photo - proxy a random photo from the circle's
 // Immich instance (the Immich API key never reaches the browser).
 router.get('/immich/photo', async (req: CircleRequest, res) => {
+    const lang = langFromRequest(req);
     try {
         const result = await query(
             `SELECT base_url, encrypted_credentials FROM integrations
@@ -71,7 +73,7 @@ router.get('/immich/photo', async (req: CircleRequest, res) => {
         );
         const integ = result.rows[0] as { base_url: string; encrypted_credentials: string | null } | undefined;
         if (!integ || !integ.encrypted_credentials) {
-            return res.status(404).json({ success: false, error: 'Aucune integration Immich configuree' });
+            return res.status(404).json({ success: false, error: t(lang, 'integrations.immichNotConfigured') });
         }
 
         // Re-validate the stored URL at use time (DNS answers can change).
@@ -83,14 +85,15 @@ router.get('/immich/photo', async (req: CircleRequest, res) => {
         res.send(photo.buffer);
     } catch (e) {
         if (e instanceof UnsafeUrlError) {
-            return res.status(400).json({ success: false, error: e.message });
+            return res.status(400).json({ success: false, error: unsafeUrlMessage(e, lang) });
         }
-        res.status(502).json({ success: false, error: 'Immich indisponible' });
+        res.status(502).json({ success: false, error: t(lang, 'integrations.immichUnavailable') });
     }
 });
 
 // POST /api/integrations/test - test without saving (circle admins)
 router.post('/test', requireAdmin, async (req: CircleRequest, res) => {
+    const lang = langFromRequest(req);
     const { type, base_url, apiKey, token } = req.body as Record<string, string>;
     const cleanUrl = (base_url || '').replace(/\/$/, '');
 
@@ -99,28 +102,32 @@ router.post('/test', requireAdmin, async (req: CircleRequest, res) => {
 
         let result: { success: boolean; message: string };
         switch (type) {
-            case 'homeassistant': result = await testHomeAssistantConnection(cleanUrl, token); break;
-            case 'grocy':         result = await testGrocyConnection(cleanUrl, apiKey); break;
-            case 'nextcloud':     result = await testNextcloudConnection(cleanUrl, (req.body as Record<string, string>).username, (req.body as Record<string, string>).password); break;
-            case 'immich':        result = await testImmichConnection(cleanUrl, apiKey); break;
-            case 'whisper':       result = await testWhisperConnection(cleanUrl, apiKey); break;
-            default:              result = { success: false, message: "Type d'integration inconnu" };
+            case 'homeassistant': result = await testHomeAssistantConnection(cleanUrl, token, lang); break;
+            case 'grocy':         result = await testGrocyConnection(cleanUrl, apiKey, lang); break;
+            case 'nextcloud':     result = await testNextcloudConnection(cleanUrl, (req.body as Record<string, string>).username, (req.body as Record<string, string>).password, lang); break;
+            case 'immich':        result = await testImmichConnection(cleanUrl, apiKey, lang); break;
+            case 'whisper':       result = await testWhisperConnection(cleanUrl, apiKey, lang); break;
+            default:              result = { success: false, message: t(lang, 'integrations.unknownType') };
         }
         res.json(result);
     } catch (e) {
-        res.json({ success: false, message: e instanceof Error ? e.message : 'Erreur inconnue' });
+        const message = e instanceof UnsafeUrlError
+            ? unsafeUrlMessage(e, lang)
+            : e instanceof Error ? e.message : t(lang, 'integrations.unknownError');
+        res.json({ success: false, message });
     }
 });
 
 // POST /api/integrations - connect (circle admins)
 router.post('/', requireAdmin, async (req: CircleRequest, res) => {
+    const lang = langFromRequest(req);
     const { type, base_url, display_name, config: configFromBody, apiKey, token, username, password, ha_entity_id } = req.body as Record<string, string> & { config?: object };
 
     if (!type || !base_url) {
-        return res.status(400).json({ success: false, error: 'type et base_url sont requis' });
+        return res.status(400).json({ success: false, error: t(lang, 'integrations.typeAndUrlRequired') });
     }
     if (!(INTEGRATION_TYPES as readonly string[]).includes(type)) {
-        return res.status(400).json({ success: false, error: "Type d'integration inconnu" });
+        return res.status(400).json({ success: false, error: t(lang, 'integrations.unknownType') });
     }
 
     const credentials: Record<string, string> = {};
@@ -140,7 +147,7 @@ router.post('/', requireAdmin, async (req: CircleRequest, res) => {
     try {
         await assertSafeIntegrationUrl(cleanUrl);
     } catch (e) {
-        return res.status(400).json({ success: false, error: e instanceof UnsafeUrlError ? e.message : 'URL invalide' });
+        return res.status(400).json({ success: false, error: e instanceof UnsafeUrlError ? unsafeUrlMessage(e, lang) : t(lang, 'url.invalid') });
     }
 
     const encrypted = Object.keys(credentials).length > 0 ? encryptCredentials(credentials) : null;
@@ -169,13 +176,14 @@ router.post('/', requireAdmin, async (req: CircleRequest, res) => {
 
 // POST /api/integrations/:id/sync (circle admins)
 router.post('/:id/sync', requireAdmin, async (req: CircleRequest, res) => {
+    const lang = langFromRequest(req);
     try {
         const integResult = await query(
             'SELECT * FROM integrations WHERE id = $1 AND circle_id = $2',
             [req.params.id, req.circleId]
         );
         if (integResult.rows.length === 0) {
-            return res.status(404).json({ success: false, error: 'Integration introuvable' });
+            return res.status(404).json({ success: false, error: t(lang, 'integrations.notFound') });
         }
 
         const integ = integResult.rows[0] as {
@@ -192,7 +200,7 @@ router.post('/:id/sync', requireAdmin, async (req: CircleRequest, res) => {
             let syncResult: { imported: number; errors: number };
 
             switch (integ.type) {
-                case 'homeassistant': syncResult = await syncHomeAssistant(integ.id, req.circleId!, integ.base_url, integ.encrypted_credentials, integ.config || {}); break;
+                case 'homeassistant': syncResult = await syncHomeAssistant(integ.id, req.circleId!, integ.base_url, integ.encrypted_credentials, integ.config || {}, lang); break;
                 case 'grocy':         syncResult = await syncGrocy(integ.id, req.circleId!, integ.base_url, integ.encrypted_credentials); break;
                 case 'nextcloud':     syncResult = await syncNextcloud(integ.id, req.circleId!, integ.base_url, integ.encrypted_credentials, integ.config || {}); break;
                 case 'immich':        syncResult = await syncImmich(integ.id, req.circleId!, integ.base_url, integ.encrypted_credentials); break;
@@ -220,13 +228,14 @@ router.post('/:id/sync', requireAdmin, async (req: CircleRequest, res) => {
 
 // DELETE /api/integrations/:id (circle admins)
 router.delete('/:id', requireAdmin, async (req: CircleRequest, res) => {
+    const lang = langFromRequest(req);
     try {
         const result = await query(
             'DELETE FROM integrations WHERE id = $1 AND circle_id = $2 RETURNING id',
             [req.params.id, req.circleId]
         );
         if (result.rows.length === 0) {
-            return res.status(404).json({ success: false, error: 'Integration introuvable' });
+            return res.status(404).json({ success: false, error: t(lang, 'integrations.notFound') });
         }
         await broadcastToCircle(req.circleId!, { type: 'update', entity: 'integrations', action: 'deleted' });
         res.json({ success: true });

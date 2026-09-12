@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../lib/api';
 import {
@@ -13,7 +12,6 @@ import {
     Languages,
     Camera,
     Trash2,
-    MonitorPlay,
     Sparkles,
     Sun,
     Moon,
@@ -28,6 +26,7 @@ import { useNotifications } from '../hooks/useNotifications';
 import { useAuth } from '../contexts/AuthContext';
 import { useCircle } from '../contexts/CircleContext';
 import { useTheme } from '../contexts/ThemeContext';
+import KioskDevicesCard from '../components/app/KioskDevicesCard';
 import { refreshAiStatus } from '../lib/aiStatus';
 import { aiErrorKey } from '../components/app/MagicInput';
 
@@ -688,26 +687,8 @@ const Settings: React.FC = () => {
                 </CardContent>
             </Card>
 
-            {/* Kiosk display */}
-            <Card>
-                <CardContent className="p-6">
-                    <div className="flex items-start gap-4">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-card bg-primary-soft text-primary">
-                            <MonitorPlay className="h-5 w-5" />
-                        </div>
-                        <div className="flex-1">
-                            <h3 className="text-caption font-semibold text-foreground">{t('kiosk:settings.title')}</h3>
-                            <p className="mt-1 text-micro text-muted-foreground">{t('kiosk:settings.subtitle')}</p>
-                            <Link to="/kiosk">
-                                <Button variant="secondary" size="sm" className="mt-4">
-                                    <MonitorPlay className="mr-2 h-4 w-4" />
-                                    {t('kiosk:settings.open')}
-                                </Button>
-                            </Link>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
+            {/* Ecran patient : tablette murale, telephone du proche, appairage, code aidant */}
+            <KioskDevicesCard />
 
             {/* Push Notifications */}
             <Card>

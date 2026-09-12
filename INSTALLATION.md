@@ -180,6 +180,17 @@ docker-compose ps
 docker-compose down
 ```
 
+### Mot de passe oublié
+
+Le lien « Mot de passe oublié ? » de l'écran de connexion fonctionne dans les deux cas :
+
+- **Avec SMTP** (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` dans `.env`, et `APP_URL` pour construire le lien) : la personne reçoit un e-mail contenant un lien valable une heure.
+- **Sans SMTP** (par défaut) : les administrateurs des cercles de la personne reçoivent une notification. Sur leur page Cercle, un encart « Mots de passe oubliés » leur permet de copier le lien et de le transmettre de vive voix ou par un canal sûr.
+
+Dans les deux cas, le lien ne sert qu'une fois, et les sessions ouvertes sur d'autres appareils sont fermées une fois le mot de passe changé.
+
+Limite : une personne qui n'appartient à aucun cercle avec un autre administrateur (par exemple l'unique administrateur de l'instance) doit passer par l'opérateur de l'instance, qui peut activer un SMTP ou intervenir directement dans la base.
+
 ### `password authentication failed for user "opencare"`
 
 Cause fréquente : volume PostgreSQL initialisé avec un ancien mot de passe.

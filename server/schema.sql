@@ -196,18 +196,29 @@ CREATE TABLE medications (
     start_date DATE,
     end_date DATE,
     active BOOLEAN NOT NULL DEFAULT TRUE,
+    -- Si besoin (PRN): pas d'horaire, prises ponctuelles saisies a la demande
+    prn BOOLEAN NOT NULL DEFAULT FALSE,
+    -- Pendant / en dehors des repas / indifferent
+    with_food VARCHAR(10) CHECK (with_food IN ('with', 'without', 'any')),
+    -- Pourquoi ce traitement (en mots simples, montre a la personne aidee)
+    reason TEXT,
+    -- Aspect (couleur, forme) pour reconnaitre le medicament sans photo
+    appearance TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX idx_medications_circle ON medications(circle_id, active);
 
 -- Horaires de prise: time_of_day + jours de semaine (1=lundi ... 7=dimanche)
+-- quantity/unit: combien prendre a cet horaire ("2 comprimes"), distinct du dosage ("500 mg")
 CREATE TABLE medication_schedules (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     medication_id UUID NOT NULL REFERENCES medications(id) ON DELETE CASCADE,
     time_of_day TIME NOT NULL,
     days_of_week JSONB NOT NULL DEFAULT '[1,2,3,4,5,6,7]',
     label VARCHAR(50),
+    quantity NUMERIC(6,2) NOT NULL DEFAULT 1,
+    unit VARCHAR(20),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX idx_medication_schedules_med ON medication_schedules(medication_id);
@@ -224,6 +235,11 @@ CREATE TABLE medication_intakes (
     confirmed_by_user UUID REFERENCES users(id) ON DELETE SET NULL,
     confirmed_by_link UUID REFERENCES caregiver_links(id) ON DELETE SET NULL,
     confirmed_at TIMESTAMP,
+    -- D'ou vient la confirmation: aidant (app), kiosk, telephone patient, lien magique
+    confirmed_source VARCHAR(20) CHECK (confirmed_source IN ('caregiver', 'kiosk', 'phone', 'link')),
+    -- Quantite a prendre, copiee depuis l'horaire a la generation (survit a la re-edition des horaires)
+    quantity NUMERIC(6,2),
+    unit VARCHAR(20),
     journal_entry_id UUID REFERENCES journal_entries(id) ON DELETE SET NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(medication_id, schedule_id, due_at)
@@ -500,16 +516,66 @@ CREATE TABLE handover_packs (
 CREATE INDEX idx_handover_packs_circle ON handover_packs(circle_id);
 
 -- Tablettes kiosk chez le proche
+-- Appareils patient appaires : tablette murale (kiosk) ou telephone du proche
+-- (phone). Identite propre (token), sans session d'aidant : le token ne donne
+-- acces qu'aux ecrans patient (journee, medicaments a prendre, boutons, compagnon).
 CREATE TABLE kiosk_devices (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     circle_id UUID NOT NULL REFERENCES care_circles(id) ON DELETE CASCADE,
     token VARCHAR(64) UNIQUE NOT NULL,
     name VARCHAR(100) NOT NULL DEFAULT 'Tablette',
+    kind VARCHAR(10) NOT NULL DEFAULT 'kiosk' CHECK (kind IN ('kiosk', 'phone')),
     settings JSONB NOT NULL DEFAULT '{}',
+    created_by UUID REFERENCES users(id) ON DELETE SET NULL,
     last_seen_at TIMESTAMP,
+    revoked_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX idx_kiosk_devices_circle ON kiosk_devices(circle_id);
+
+-- Visites declarees sur l'ecran patient (bouton "Visiteur") : qui est la,
+-- depuis quand, jusqu'a quand. Un professionnel peut laisser une note de
+-- passage sans jamais voir le reste des donnees du cercle.
+CREATE TABLE visits (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    circle_id UUID NOT NULL REFERENCES care_circles(id) ON DELETE CASCADE,
+    visitor_type VARCHAR(20) NOT NULL DEFAULT 'other'
+        CHECK (visitor_type IN ('family', 'friend', 'caregiver', 'nurse', 'doctor', 'other')),
+    visitor_name VARCHAR(100) NOT NULL,
+    member_id UUID REFERENCES circle_members(id) ON DELETE SET NULL,
+    device_id UUID REFERENCES kiosk_devices(id) ON DELETE SET NULL,
+    checked_in_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    checked_out_at TIMESTAMP,
+    note TEXT,
+    journal_entry_id UUID REFERENCES journal_entries(id) ON DELETE SET NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_visits_circle_in ON visits(circle_id, checked_in_at DESC);
+
+-- Plan de soins : consignes redigees par la famille (routine, repas, mobilite,
+-- toilette, communication, ce qui contrarie, ce qui apaise, urgence)
+CREATE TABLE care_plans (
+    circle_id UUID PRIMARY KEY REFERENCES care_circles(id) ON DELETE CASCADE,
+    sections JSONB NOT NULL DEFAULT '{}',
+    updated_by UUID REFERENCES users(id) ON DELETE SET NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Codes d'appairage a usage unique (15 min) : l'aidant genere un code, la
+-- tablette ou le telephone le saisit et recoit son token d'appareil.
+CREATE TABLE kiosk_pairings (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    circle_id UUID NOT NULL REFERENCES care_circles(id) ON DELETE CASCADE,
+    code VARCHAR(8) UNIQUE NOT NULL,
+    kind VARCHAR(10) NOT NULL DEFAULT 'kiosk' CHECK (kind IN ('kiosk', 'phone')),
+    name VARCHAR(100) NOT NULL,
+    created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+    expires_at TIMESTAMP NOT NULL,
+    consumed_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_kiosk_pairings_circle ON kiosk_pairings(circle_id);
 
 -- ============================================================
 -- Infra par cercle: IA, integrations

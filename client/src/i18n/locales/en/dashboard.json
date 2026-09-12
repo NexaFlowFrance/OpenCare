@@ -59,5 +59,21 @@
   },
   "errors": {
     "load": "Unable to load the dashboard."
+  },
+  "attention": {
+    "title": "Needs attention",
+    "empty": "Nothing needs attention right now. All is in order.",
+    "help_one": "{{count}} alert signal in the last 24 h",
+    "help_other": "{{count}} alert signals in the last 24 h",
+    "presence": "No sign of life before {{time}}",
+    "presenceDetail": "Consider calling or stopping by to check that everything is fine.",
+    "missed_intakes_one": "{{count}} missed dose today",
+    "missed_intakes_other": "{{count}} missed doses today",
+    "prescriptions_one": "{{count}} prescription to renew",
+    "prescriptions_other": "{{count}} prescriptions to renew",
+    "tasks_overdue_one": "{{count}} overdue task",
+    "tasks_overdue_other": "{{count}} overdue tasks",
+    "visitor_present": "{{name}} has been here since {{time}}",
+    "appointments": "Soon: {{title}} at {{time}}"
   }
 }

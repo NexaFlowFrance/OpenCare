@@ -3,11 +3,13 @@ import React, {
     useContext,
     useEffect,
     useRef,
+    useState,
     useCallback,
     ReactNode,
 } from 'react';
 import { useAuth } from './AuthContext';
 import { api } from '../lib/api';
+import { getKioskToken, onPairedDeviceChange } from '../lib/kioskDevice';
 import { replay as replayWriteQueue } from '../lib/offlineQueue';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -29,7 +31,9 @@ export type WsEntity =
     | 'integrations'
     | 'notes'
     | 'presence'
-    | 'heatwave';
+    | 'heatwave'
+    | 'visits'
+    | 'care_plan';
 
 export type WsAction = 'created' | 'updated' | 'deleted' | 'synced';
 
@@ -75,6 +79,9 @@ const PING_INTERVAL_MS = 25_000;
 
 export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { user } = useAuth();
+    // Appareil patient appaire : il se connecte sans compte, avec son token.
+    const [kioskToken, setKioskToken] = useState<string | null>(() => getKioskToken());
+    useEffect(() => onPairedDeviceChange(() => setKioskToken(getKioskToken())), []);
 
     // Map entity → set of subscriber callbacks
     const subscribers = useRef<Map<WsEntity, Set<Subscriber>>>(new Map());
@@ -101,7 +108,7 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
     };
 
     const connect = useCallback(() => {
-        if (unmounted.current || !user || IS_DEMO) return;
+        if (unmounted.current || (!user && !kioskToken) || IS_DEMO) return;
 
         // Close any existing socket
         if (wsRef.current) {
@@ -115,8 +122,13 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
         ws.onopen = () => {
             reconnectDelay.current = RECONNECT_DELAY_MS;
 
-            // Authenticate with JWT; never send the raw userId
-            ws.send(JSON.stringify({ type: 'auth', token: api.getToken() }));
+            // Authenticate with JWT (never the raw userId), or with the device
+            // token when this browser is a paired patient screen without account.
+            if (user) {
+                ws.send(JSON.stringify({ type: 'auth', token: api.getToken() }));
+            } else {
+                ws.send(JSON.stringify({ type: 'auth', kioskToken }));
+            }
 
             // Le serveur est joignable: rejouer les écritures en attente.
             void replayWriteQueue();
@@ -165,13 +177,13 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
             // onclose will fire after onerror, reconnect handled there
             ws.close();
         };
-    }, [user, notify]);
+    }, [user, kioskToken, notify]);
 
-    // Connect when user is available, disconnect on logout
+    // Connect when a user (or a paired device) is available, disconnect on logout
     useEffect(() => {
         unmounted.current = false;
 
-        if (user) {
+        if (user || kioskToken) {
             connect();
         }
 

@@ -4,7 +4,8 @@ import jwt from 'jsonwebtoken';
 import app from './app';
 import pool, { runMigrations } from './db';
 import logger from './lib/logger';
-import { clients, broadcast } from './lib/broadcaster';
+import { clients, broadcast, registerDeviceSocket, unregisterDeviceSocket } from './lib/broadcaster';
+import { resolveKioskDevice } from './middleware/kioskDevice';
 import { startReminderScheduler } from './lib/reminderScheduler';
 import { startPresenceMonitor } from './lib/presenceMonitor';
 import { startDigestScheduler } from './lib/digestScheduler';
@@ -24,10 +25,32 @@ wss.on('connection', (ws: WebSocket) => {
     logger.info('ws.connection_open');
 
     let userId: string | null = null;
+    let deviceCircleId: string | null = null;
 
     ws.on('message', (message: string) => {
         try {
             const data = JSON.parse(message.toString());
+
+            // Appareil patient (tablette ou telephone appaire) : pas de compte,
+            // il rejoint le canal de son cercle pour rester synchronise.
+            if (data.type === 'auth' && typeof data.kioskToken === 'string') {
+                void resolveKioskDevice(data.kioskToken).then((device) => {
+                    if (!device) {
+                        logger.warn('ws.device_auth_failed');
+                        ws.send(JSON.stringify({ type: 'auth', success: false }));
+                        ws.close(4001, 'Unauthorized');
+                        return;
+                    }
+                    deviceCircleId = device.circle_id;
+                    registerDeviceSocket(device.circle_id, ws);
+                    logger.info('ws.device_authenticated', { deviceId: device.id, kind: device.kind });
+                    ws.send(JSON.stringify({ type: 'auth', success: true }));
+                }).catch(() => {
+                    ws.send(JSON.stringify({ type: 'auth', success: false }));
+                    ws.close(4001, 'Unauthorized');
+                });
+                return;
+            }
 
             if (data.type === 'auth' && typeof data.token === 'string') {
                 try {
@@ -56,6 +79,10 @@ wss.on('connection', (ws: WebSocket) => {
     });
 
     ws.on('close', () => {
+        if (deviceCircleId) {
+            unregisterDeviceSocket(deviceCircleId, ws);
+            logger.info('ws.device_connection_closed');
+        }
         if (userId && clients.has(userId)) {
             clients.get(userId)!.delete(ws);
             if (clients.get(userId)!.size === 0) {

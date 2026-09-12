@@ -3,7 +3,7 @@ import { query } from '../db';
 import { authMiddleware } from '../middleware/auth';
 import { circleMiddleware, requireAdmin, CircleRequest } from '../middleware/circle';
 import { encryptCredentials } from '../utils/crypto';
-import { assertSafeIntegrationUrl, UnsafeUrlError } from '../utils/urlGuard';
+import { assertSafeIntegrationUrl, UnsafeUrlError, unsafeUrlMessage } from '../utils/urlGuard';
 import {
     aiComplete,
     AiError,
@@ -21,6 +21,7 @@ import {
     type CircleMemberRef,
 } from '../services/ai/assistant';
 import logger from '../lib/logger';
+import { langFromRequest, t, type Lang } from '../lib/i18n';
 
 const router = Router();
 
@@ -37,19 +38,13 @@ const toAiSettings = (row: AiSettingsRow): AiSettings => ({
     model: row.model,
 });
 
-const handleAiError = (res: Response, error: unknown, context: string) => {
+const handleAiError = (res: Response, error: unknown, context: string, lang: Lang) => {
     if (error instanceof AiError) {
-        // The code is machine-readable (the client maps it to a localized message).
-        // The detailed `message` can leak an internal provider URL, so it is only
-        // surfaced outside production; in production we send a generic message.
-        const body: { success: false; error: string; message?: string } = {
-            success: false,
-            error: error.code,
-        };
-        if (process.env.NODE_ENV !== 'production') {
-            body.message = error.message;
-        }
-        return res.status(502).json(body);
+        // The code is machine-readable (the client maps it to a localized message)
+        // and `message` is a neutral text in the user's language. The detailed
+        // provider message can leak an internal URL, so it only goes to the logs.
+        logger.warn(`ai.${context}_provider_error`, { code: error.code, detail: error.message });
+        return res.status(502).json({ success: false, error: error.code, message: t(lang, `ai.${error.code}`) });
     }
     logger.error(`ai.${context}_error`, {
         error: error instanceof Error ? error.message : String(error),
@@ -85,6 +80,7 @@ router.get('/settings', async (req: CircleRequest, res) => {
 // PUT /api/ai/settings : circle admins only. Empty api_key keeps the stored one,
 // explicit null clears it; the key is encrypted at rest (AES-256-GCM).
 router.put('/settings', requireAdmin, async (req: CircleRequest, res) => {
+    const lang = langFromRequest(req);
     try {
         const { provider, base_url, api_key, model, enabled, companion_enabled } = req.body as {
             provider?: string;
@@ -100,7 +96,7 @@ router.put('/settings', requireAdmin, async (req: CircleRequest, res) => {
         }
         const cleanedModel = typeof model === 'string' ? model.trim().slice(0, 100) : '';
         if (!cleanedModel) {
-            return res.status(400).json({ success: false, error: 'model est requis' });
+            return res.status(400).json({ success: false, error: t(lang, 'ai.modelRequired') });
         }
 
         // Anthropic uses the official endpoint, so there is no base URL to store.
@@ -113,7 +109,7 @@ router.put('/settings', requireAdmin, async (req: CircleRequest, res) => {
                 } catch (e) {
                     return res.status(400).json({
                         success: false,
-                        error: e instanceof UnsafeUrlError ? e.message : 'URL invalide',
+                        error: e instanceof UnsafeUrlError ? unsafeUrlMessage(e, lang) : t(lang, 'url.invalid'),
                     });
                 }
                 cleanedBaseUrl = rawUrl;
@@ -177,6 +173,7 @@ router.put('/settings', requireAdmin, async (req: CircleRequest, res) => {
 // Body fields override the saved settings so "Tester" works before saving;
 // an empty api_key falls back to the stored (decrypted) one.
 router.post('/test', requireAdmin, async (req: CircleRequest, res) => {
+    const lang = langFromRequest(req);
     try {
         const row = await loadAiSettingsRow(req.circleId!);
         const body = req.body as { provider?: string; base_url?: string; api_key?: string; model?: string };
@@ -216,12 +213,12 @@ router.post('/test', requireAdmin, async (req: CircleRequest, res) => {
             return res.status(502).json({
                 success: false,
                 error: 'AI_INVALID_RESPONSE',
-                message: 'Le modèle a répondu, mais pas le JSON attendu',
+                message: t(lang, 'ai.testNotJson'),
             });
         }
         res.json({ success: true, message: 'OK' });
     } catch (error) {
-        handleAiError(res, error, 'test');
+        handleAiError(res, error, 'test', lang);
     }
 });
 
@@ -242,6 +239,7 @@ const requireConfiguredAi = async (req: CircleRequest, res: Response): Promise<A
 // POST /api/ai/parse : any circle member, natural-language note to validated proposals.
 // Nothing is saved: the client confirms then POSTs to the existing endpoints.
 router.post('/parse', async (req: CircleRequest, res) => {
+    const lang = langFromRequest(req);
     try {
         const settings = await requireConfiguredAi(req, res);
         if (!settings) return;
@@ -270,7 +268,7 @@ router.post('/parse', async (req: CircleRequest, res) => {
         const items = validateParsedItems(raw, members);
         res.json({ success: true, data: { items } });
     } catch (error) {
-        handleAiError(res, error, 'parse');
+        handleAiError(res, error, 'parse', lang);
     }
 });
 

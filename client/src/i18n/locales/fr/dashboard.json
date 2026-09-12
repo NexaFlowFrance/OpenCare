@@ -59,5 +59,21 @@
   },
   "errors": {
     "load": "Impossible de charger le tableau de bord."
+  },
+  "attention": {
+    "title": "À traiter",
+    "empty": "Rien à traiter pour le moment. Tout est en ordre.",
+    "help_one": "{{count}} signal d'alerte dans les dernières 24 h",
+    "help_other": "{{count}} signaux d'alerte dans les dernières 24 h",
+    "presence": "Aucun signe de vie avant {{time}}",
+    "presenceDetail": "Pensez à appeler ou à passer vérifier que tout va bien.",
+    "missed_intakes_one": "{{count}} prise manquée aujourd'hui",
+    "missed_intakes_other": "{{count}} prises manquées aujourd'hui",
+    "prescriptions_one": "{{count}} ordonnance à renouveler",
+    "prescriptions_other": "{{count}} ordonnances à renouveler",
+    "tasks_overdue_one": "{{count}} tâche en retard",
+    "tasks_overdue_other": "{{count}} tâches en retard",
+    "visitor_present": "{{name}} est sur place depuis {{time}}",
+    "appointments": "Bientôt : {{title}} à {{time}}"
   }
 }

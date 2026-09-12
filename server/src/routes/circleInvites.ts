@@ -5,6 +5,7 @@ import { authMiddleware, AuthRequest } from '../middleware/auth';
 import { circleMiddleware, requireAdmin, CircleRequest } from '../middleware/circle';
 import { broadcastToCircle } from '../lib/broadcaster';
 import { normalizeEmail } from '../lib/normalize';
+import { langFromRequest, t } from '../lib/i18n';
 
 const router = Router();
 
@@ -12,6 +13,7 @@ const VALID_ROLES = ['admin', 'family', 'professional', 'neighbor', 'viewer'];
 
 // Public preview of an invite (shown before signup). No auth.
 router.get('/info/:token', async (req, res) => {
+    const lang = langFromRequest(req);
     try {
         const result = await query(
             `SELECT i.role, i.invitee_email, i.expires_at,
@@ -27,7 +29,7 @@ router.get('/info/:token', async (req, res) => {
         );
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ success: false, error: 'Invitation invalide ou expirée' });
+            return res.status(404).json({ success: false, error: t(lang, 'invites.invalidOrExpired') });
         }
 
         res.json({ success: true, data: result.rows[0] });
@@ -39,6 +41,7 @@ router.get('/info/:token', async (req, res) => {
 
 // An existing, logged-in account accepts an invite and joins the circle.
 router.post('/accept/:token', authMiddleware, async (req: AuthRequest, res: Response) => {
+    const lang = langFromRequest(req);
     try {
         const result = await query(
             `SELECT id, circle_id, invitee_email, role FROM circle_invites
@@ -47,7 +50,7 @@ router.post('/accept/:token', authMiddleware, async (req: AuthRequest, res: Resp
         );
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ success: false, error: 'Invitation invalide ou expirée' });
+            return res.status(404).json({ success: false, error: t(lang, 'invites.invalidOrExpired') });
         }
 
         const invite = result.rows[0];
@@ -55,7 +58,7 @@ router.post('/accept/:token', authMiddleware, async (req: AuthRequest, res: Resp
         if (invite.invitee_email) {
             const me = await query('SELECT email FROM users WHERE id = $1', [req.userId]);
             if (normalizeEmail(me.rows[0]?.email ?? '') !== normalizeEmail(invite.invitee_email)) {
-                return res.status(403).json({ success: false, error: 'Cette invitation est réservée à une autre adresse e-mail' });
+                return res.status(403).json({ success: false, error: t(lang, 'invites.reservedForOtherEmail') });
             }
         }
 
@@ -64,7 +67,7 @@ router.post('/accept/:token', authMiddleware, async (req: AuthRequest, res: Resp
             [invite.circle_id, req.userId]
         );
         if (existing.rows.length > 0) {
-            return res.status(400).json({ success: false, error: 'Vous êtes déjà membre de ce cercle' });
+            return res.status(400).json({ success: false, error: t(lang, 'invites.alreadyMember') });
         }
 
         await query(

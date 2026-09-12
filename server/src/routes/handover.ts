@@ -5,6 +5,9 @@ import { authMiddleware } from '../middleware/auth';
 import { circleMiddleware, requireContentWriter, CircleRequest } from '../middleware/circle';
 import { expandEventOccurrences, toLocalISO } from './events';
 import { broadcastToCircle } from '../lib/broadcaster';
+import { langFromRequest, t } from '../lib/i18n';
+
+import { loadCarePlan, filledSections } from '../lib/carePlan';
 
 const router = Router();
 
@@ -49,6 +52,8 @@ const PACK_LIST_SELECT = `
 // the relief caregiver opens /relais/<token> from any device.
 // ============================================================
 router.get('/public/:token', async (req, res) => {
+    // Route publique (remplacant sans compte): la langue vient du navigateur.
+    const lang = langFromRequest(req);
     try {
         const result = await query(
             `SELECT p.starts_on, p.ends_on, p.content, p.created_at,
@@ -62,10 +67,10 @@ router.get('/public/:token', async (req, res) => {
 
         const pack = result.rows[0];
         if (!pack) {
-            return res.status(404).json({ success: false, error: 'Pack introuvable' });
+            return res.status(404).json({ success: false, error: t(lang, 'handover.notFound') });
         }
         if (pack.expired) {
-            return res.status(410).json({ success: false, error: 'Ce pack de relais a expiré' });
+            return res.status(410).json({ success: false, error: t(lang, 'handover.expired') });
         }
 
         res.json({
@@ -139,12 +144,14 @@ router.post('/', async (req: CircleRequest, res: Response) => {
                 [req.circleId]
             ),
             query(
-                `SELECT m.name, m.dosage, m.form, m.instructions,
+                `SELECT m.name, m.dosage, m.form, m.instructions, m.prn, m.with_food, m.reason, m.appearance,
                         COALESCE(
                             json_agg(json_build_object(
                                 'time', to_char(s.time_of_day, 'HH24:MI'),
                                 'label', s.label,
-                                'days_of_week', s.days_of_week
+                                'days_of_week', s.days_of_week,
+                                'quantity', s.quantity,
+                                'unit', s.unit
                             ) ORDER BY s.time_of_day) FILTER (WHERE s.id IS NOT NULL),
                             '[]'::json
                         ) AS schedules
@@ -189,8 +196,10 @@ router.post('/', async (req: CircleRequest, res: Response) => {
         }
         eventOccurrences.sort((a, b) => String(a.start_time).localeCompare(String(b.start_time)));
 
+        const carePlan = await loadCarePlan(req.circleId!);
         const content = {
             recipient: recipientResult.rows[0] ?? null,
+            care_plan: filledSections(carePlan.sections),
             instructions: cleanInstructions,
             medications_current: medsResult.rows,
             events: eventOccurrences,

@@ -1,6 +1,6 @@
 {
   "items": {
-    "today": "Aujourd'hui",
+    "today": "Tableau de bord",
     "journal": "Journal",
     "calendar": "Agenda",
     "medications": "Médicaments",
@@ -14,10 +14,17 @@
     "recipient": "Le proche",
     "circle": "Cercle de soin",
     "integrations": "Intégrations",
-    "settings": "Paramètres"
+    "settings": "Paramètres",
+    "visitors": "Visiteurs",
+    "carePlan": "Plan de soins"
   },
   "sections": {
-    "organisation": "Organisation"
+    "today": "Aujourd'hui",
+    "care": "Soins",
+    "organise": "Organiser",
+    "information": "Informations",
+    "team": "Équipe",
+    "more": "Plus"
   },
   "mobile": {
     "home": "Accueil",

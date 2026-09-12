@@ -1,6 +1,7 @@
 import { query } from '../../db';
 import { decryptCredentials } from '../../utils/crypto';
 import { safeFetch } from '../../utils/safeFetch';
+import { t, type Lang } from '../../lib/i18n';
 
 interface CalDAVEvent {
     uid: string;
@@ -85,10 +86,10 @@ async function discoverCalendars(baseUrl: string, username: string, authHeader: 
     }
 }
 
-export async function testNextcloudConnection(baseUrl: string, username: string, password: string): Promise<{ success: boolean; message: string }> {
+export async function testNextcloudConnection(baseUrl: string, username: string, password: string, lang: Lang = 'fr'): Promise<{ success: boolean; message: string }> {
     try {
         const statusResp = await safeFetch(`${baseUrl}/status.php`);
-        if (!statusResp.ok) return { success: false, message: `Serveur inaccessible (HTTP ${statusResp.status})` };
+        if (!statusResp.ok) return { success: false, message: t(lang, 'integrations.nextcloud.serverUnreachable', { status: statusResp.status }) };
         const status = await statusResp.json() as { versionstring?: string; version?: string };
 
         const authHeader = `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
@@ -97,18 +98,18 @@ export async function testNextcloudConnection(baseUrl: string, username: string,
             headers: { 'Authorization': authHeader, 'Depth': '0', 'Content-Type': 'application/xml' },
         });
 
-        if (davResp.status === 401) return { success: false, message: 'Identifiants incorrects. Si la double authentification est activée, utilisez un App Password.' };
-        if (davResp.status === 404) return { success: false, message: `Utilisateur "${username}" introuvable sur ce serveur.` };
-        if (!davResp.ok) return { success: false, message: `Erreur DAV ${davResp.status}` };
+        if (davResp.status === 401) return { success: false, message: t(lang, 'integrations.nextcloud.badCredentials') };
+        if (davResp.status === 404) return { success: false, message: t(lang, 'integrations.nextcloud.userNotFound', { username }) };
+        if (!davResp.ok) return { success: false, message: t(lang, 'integrations.nextcloud.davError', { status: davResp.status }) };
 
         const hrefs = await discoverCalendars(baseUrl, username, authHeader);
         const vstr = status.versionstring || status.version || '';
         return {
             success: true,
-            message: `Connecté a Nextcloud ${vstr} : ${hrefs.length} calendrier${hrefs.length > 1 ? 's' : ''} trouvé${hrefs.length > 1 ? 's' : ''}`.trim(),
+            message: t(lang, 'integrations.nextcloud.connected', { version: vstr, count: hrefs.length, s: hrefs.length > 1 ? 's' : '' }).trim(),
         };
     } catch (e) {
-        return { success: false, message: e instanceof Error ? e.message : 'Impossible de joindre le serveur' };
+        return { success: false, message: e instanceof Error ? e.message : t(lang, 'integrations.unreachable') };
     }
 }
 

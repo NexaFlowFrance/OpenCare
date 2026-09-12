@@ -4,6 +4,7 @@ import { query, getClient } from '../db';
 import { authMiddleware, AuthRequest } from '../middleware/auth';
 import { circleMiddleware, requireAdmin, CircleRequest } from '../middleware/circle';
 import { broadcastToCircle } from '../lib/broadcaster';
+import { langFromRequest, t } from '../lib/i18n';
 
 const router = Router();
 
@@ -52,13 +53,14 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 // existing circle the requester ADMINISTERS (e.g. the spouse). copy_members then
 // copies that circle's caregiver team so the family is not re-invited twice.
 router.post('/', async (req: AuthRequest, res: Response) => {
+    const lang = langFromRequest(req);
     const client = await getClient();
     try {
         const { name, recipient_first_name, recipient_last_name, recipient_birth_date, link_circle_id, copy_members } = req.body;
         const cleanedFirstName = typeof recipient_first_name === 'string' ? recipient_first_name.trim() : '';
 
         if (!cleanedFirstName) {
-            return res.status(400).json({ success: false, error: 'Le prénom du proche est requis' });
+            return res.status(400).json({ success: false, error: t(lang, 'circles.recipientFirstNameRequired') });
         }
 
         const circleName = (typeof name === 'string' && name.trim()) ? name.trim() : cleanedFirstName;
@@ -79,7 +81,7 @@ router.post('/', async (req: AuthRequest, res: Response) => {
             const linkRow = linkResult.rows[0] as { household_id: string | null; role: string } | undefined;
             if (!linkRow || linkRow.role !== 'admin') {
                 await client.query('ROLLBACK');
-                return res.status(403).json({ success: false, error: 'Vous devez être administrateur du cercle à lier' });
+                return res.status(403).json({ success: false, error: t(lang, 'circles.mustAdminLinked') });
             }
             householdId = linkRow.household_id ?? crypto.randomUUID();
             if (!linkRow.household_id) {
@@ -221,10 +223,11 @@ router.delete('/:circleId', circleMiddleware, requireAdmin, async (req: CircleRe
 // Requester must administer BOTH circles. Keeps the "one circle = one recipient"
 // invariant: only a shared household_id is set.
 router.post('/:circleId/link', circleMiddleware, requireAdmin, async (req: CircleRequest, res: Response) => {
+    const lang = langFromRequest(req);
     try {
         const targetId = typeof req.body?.target_circle_id === 'string' ? req.body.target_circle_id : '';
         if (!UUID_RE.test(targetId) || targetId === req.circleId) {
-            return res.status(400).json({ success: false, error: 'Cercle cible invalide' });
+            return res.status(400).json({ success: false, error: t(lang, 'circles.targetInvalid') });
         }
 
         const targetResult = await query(
@@ -236,7 +239,7 @@ router.post('/:circleId/link', circleMiddleware, requireAdmin, async (req: Circl
         );
         const target = targetResult.rows[0] as { household_id: string | null; role: string } | undefined;
         if (!target || target.role !== 'admin') {
-            return res.status(403).json({ success: false, error: 'Vous devez être administrateur des deux cercles' });
+            return res.status(403).json({ success: false, error: t(lang, 'circles.mustAdminBoth') });
         }
 
         const sourceResult = await query('SELECT household_id FROM care_circles WHERE id = $1', [req.circleId]);
@@ -244,7 +247,7 @@ router.post('/:circleId/link', circleMiddleware, requireAdmin, async (req: Circl
         const targetHousehold = target.household_id;
 
         if (sourceHousehold && targetHousehold && sourceHousehold !== targetHousehold) {
-            return res.status(400).json({ success: false, error: 'Un des cercles appartient déjà à un autre foyer' });
+            return res.status(400).json({ success: false, error: t(lang, 'circles.alreadyInHousehold') });
         }
 
         const householdId = sourceHousehold ?? targetHousehold ?? crypto.randomUUID();
@@ -315,13 +318,14 @@ router.delete('/:circleId/link', circleMiddleware, requireAdmin, async (req: Cir
 // Rename the household/foyer (admin). Creates the households row lazily (the
 // link flows only set a shared household_id; the name is added on demand).
 router.put('/:circleId/household', circleMiddleware, requireAdmin, async (req: CircleRequest, res: Response) => {
+    const lang = langFromRequest(req);
     try {
         const name = typeof req.body?.name === 'string' ? req.body.name.trim().slice(0, 255) : '';
 
         const current = await query('SELECT household_id FROM care_circles WHERE id = $1', [req.circleId]);
         const householdId = (current.rows[0]?.household_id as string | null) ?? null;
         if (!householdId) {
-            return res.status(400).json({ success: false, error: 'Ce cercle ne fait pas partie d\'un foyer' });
+            return res.status(400).json({ success: false, error: t(lang, 'circles.notInHousehold') });
         }
 
         const result = await query(
@@ -346,6 +350,7 @@ router.put('/:circleId/household', circleMiddleware, requireAdmin, async (req: C
 
 // Update a member's role or color (admin). The last admin cannot be demoted.
 router.put('/:circleId/members/:memberId', circleMiddleware, requireAdmin, async (req: CircleRequest, res: Response) => {
+    const lang = langFromRequest(req);
     try {
         const { role, color } = req.body;
         const validRoles = ['admin', 'family', 'professional', 'neighbor', 'viewer'];
@@ -372,7 +377,7 @@ router.put('/:circleId/members/:memberId', circleMiddleware, requireAdmin, async
                     [req.circleId]
                 );
                 if (admins.rows[0].count <= 1) {
-                    return res.status(400).json({ success: false, error: 'Le cercle doit garder au moins un administrateur' });
+                    return res.status(400).json({ success: false, error: t(lang, 'circles.keepOneAdmin') });
                 }
             }
             fields.push(`role = $${idx++}`);
@@ -404,6 +409,7 @@ router.put('/:circleId/members/:memberId', circleMiddleware, requireAdmin, async
 
 // Remove a member (admin), or leave the circle (any member removing themselves).
 router.delete('/:circleId/members/:memberId', circleMiddleware, async (req: CircleRequest, res: Response) => {
+    const lang = langFromRequest(req);
     try {
         const memberResult = await query(
             'SELECT id, user_id, role FROM circle_members WHERE id = $1 AND circle_id = $2',
@@ -426,7 +432,7 @@ router.delete('/:circleId/members/:memberId', circleMiddleware, async (req: Circ
                 [req.circleId]
             );
             if (admins.rows[0].count <= 1) {
-                return res.status(400).json({ success: false, error: 'Le cercle doit garder au moins un administrateur' });
+                return res.status(400).json({ success: false, error: t(lang, 'circles.keepOneAdmin') });
             }
         }
 
@@ -462,6 +468,7 @@ const RECIPIENT_UPDATABLE = [
 
 // Update the recipient profile (admin and family only: sensitive medical data)
 router.put('/:circleId/recipient', circleMiddleware, async (req: CircleRequest, res: Response) => {
+    const lang = langFromRequest(req);
     try {
         if (req.circleRole !== 'admin' && req.circleRole !== 'family') {
             return res.status(403).json({ success: false, error: 'Insufficient role' });
@@ -476,7 +483,7 @@ router.put('/:circleId/recipient', circleMiddleware, async (req: CircleRequest, 
                 const value = req.body[field];
                 if (field === 'first_name') {
                     if (typeof value !== 'string' || !value.trim()) {
-                        return res.status(400).json({ success: false, error: 'Le prénom est requis' });
+                        return res.status(400).json({ success: false, error: t(lang, 'circles.firstNameRequired') });
                     }
                     fields.push(`first_name = $${idx++}`);
                     values.push(value.trim());

@@ -9,6 +9,7 @@ import {
     CaregiverLinkRequest,
 } from '../middleware/circle';
 import { broadcastToCircle } from '../lib/broadcaster';
+import { ensureTodayIntakes, INTAKE_DISPLAY_COLUMNS, INTAKE_DISPLAY_FROM } from '../lib/intakes';
 
 const router = Router();
 
@@ -62,6 +63,9 @@ router.get('/link/:linkToken/today', caregiverLinkMiddleware, async (req: Caregi
         const link = req.caregiverLink!;
         const circleId = link.circle_id;
 
+        // Les prises du jour existent meme si personne n'a ouvert l'app aidant.
+        await ensureTodayIntakes(circleId);
+
         const [entriesResult, recipientResult, intakesResult] = await Promise.all([
             query(
                 `SELECT e.*, ph.photos
@@ -75,10 +79,8 @@ router.get('/link/:linkToken/today', caregiverLinkMiddleware, async (req: Caregi
             ),
             query('SELECT first_name FROM care_recipients WHERE circle_id = $1', [circleId]),
             query(
-                `SELECT i.id, i.medication_id, i.schedule_id, i.due_at, i.status, i.confirmed_at,
-                        m.name AS medication_name, m.dosage, m.form, m.instructions
-                 FROM medication_intakes i
-                 JOIN medications m ON m.id = i.medication_id
+                `SELECT ${INTAKE_DISPLAY_COLUMNS}
+                 ${INTAKE_DISPLAY_FROM}
                  WHERE i.circle_id = $1
                    AND i.due_at >= date_trunc('day', CURRENT_TIMESTAMP)
                    AND i.due_at < date_trunc('day', CURRENT_TIMESTAMP) + INTERVAL '1 day'

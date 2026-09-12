@@ -2,6 +2,7 @@ import WebSocket from 'ws';
 import { query } from '../../db';
 import { decryptCredentials } from '../../utils/crypto';
 import { safeFetch, assertSafeWebSocketUrl } from '../../utils/safeFetch';
+import { t, type Lang } from '../../lib/i18n';
 
 interface HAShoppingItem {
     name: string;
@@ -14,7 +15,7 @@ interface HATodoItem {
 }
 
 // HA WebSocket todo/item/list for modern HA (2023.6+)
-async function getTodoItemsViaWebSocket(baseUrl: string, token: string, entityId: string): Promise<HATodoItem[]> {
+async function getTodoItemsViaWebSocket(baseUrl: string, token: string, entityId: string, lang: Lang = 'fr'): Promise<HATodoItem[]> {
     const wsUrl = baseUrl.replace(/^https?/, (p) => (p === 'https' ? 'wss' : 'ws')) + '/api/websocket';
 
     // SSRF gate: resolve + validate the WebSocket target BEFORE opening the
@@ -33,7 +34,7 @@ async function getTodoItemsViaWebSocket(baseUrl: string, token: string, entityId
 
         const timeout = setTimeout(() => {
             ws.terminate();
-            reject(new Error('Timeout connexion WebSocket Home Assistant'));
+            reject(new Error(t(lang, 'integrations.ha.wsTimeout')));
         }, 10000);
 
         ws.on('message', (raw) => {
@@ -48,7 +49,7 @@ async function getTodoItemsViaWebSocket(baseUrl: string, token: string, entityId
                 } else if (msg.type === 'auth_invalid') {
                     clearTimeout(timeout);
                     ws.terminate();
-                    reject(new Error('Token Home Assistant invalide'));
+                    reject(new Error(t(lang, 'integrations.ha.wsTokenInvalid')));
                 } else if (msg.type === 'result' && msg.id === msgId) {
                     clearTimeout(timeout);
                     ws.terminate();
@@ -56,7 +57,7 @@ async function getTodoItemsViaWebSocket(baseUrl: string, token: string, entityId
                         const items = msg.result[entityId]?.items || [];
                         resolve(items);
                     } else {
-                        reject(new Error(msg.error?.message || `Entité "${entityId}" introuvable dans Home Assistant`));
+                        reject(new Error(msg.error?.message || t(lang, 'integrations.ha.entityNotFound', { entityId })));
                     }
                 }
             } catch {
@@ -67,7 +68,7 @@ async function getTodoItemsViaWebSocket(baseUrl: string, token: string, entityId
         ws.on('error', (err) => {
             clearTimeout(timeout);
             if (!authenticated) {
-                reject(new Error(`Impossible de se connecter au WebSocket HA : ${err.message}`));
+                reject(new Error(t(lang, 'integrations.ha.wsError', { detail: err.message })));
             }
         });
 
@@ -77,34 +78,34 @@ async function getTodoItemsViaWebSocket(baseUrl: string, token: string, entityId
     });
 }
 
-export async function testHomeAssistantConnection(baseUrl: string, token: string): Promise<{ success: boolean; message: string }> {
+export async function testHomeAssistantConnection(baseUrl: string, token: string, lang: Lang = 'fr'): Promise<{ success: boolean; message: string }> {
     try {
         const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
         const resp = await safeFetch(`${baseUrl}/api/`, { headers });
 
         if (!resp.ok) {
-            if (resp.status === 401) return { success: false, message: 'Token invalide ou expiré' };
-            return { success: false, message: `Erreur HTTP ${resp.status}` };
+            if (resp.status === 401) return { success: false, message: t(lang, 'integrations.ha.tokenInvalid') };
+            return { success: false, message: t(lang, 'integrations.httpError', { status: resp.status }) };
         }
 
         // Check which shopping API is available and warn accordingly
         const slResp = await safeFetch(`${baseUrl}/api/shopping_list`, { headers });
         if (slResp.ok) {
-            return { success: true, message: 'Connecté a Home Assistant (integration shopping_list détectée)' };
+            return { success: true, message: t(lang, 'integrations.ha.shoppingList') };
         }
 
         // Legacy not available -- check WebSocket todo
         try {
-            const items = await getTodoItemsViaWebSocket(baseUrl, token, 'todo.shopping_list');
-            return { success: true, message: `Connecté a Home Assistant (todo entity détectée, ${items.length} element${items.length > 1 ? 's' : ''})` };
+            const items = await getTodoItemsViaWebSocket(baseUrl, token, 'todo.shopping_list', lang);
+            return { success: true, message: t(lang, 'integrations.ha.todo', { count: items.length, s: items.length > 1 ? 's' : '' }) };
         } catch {
             return {
                 success: true,
-                message: 'Connecté a Home Assistant. Ni "shopping_list" ni "todo.shopping_list" détecté. Vérifiez que l\'une de ces intégrations est activée, ou renseignez l\'identifiant de votre entité todo.',
+                message: t(lang, 'integrations.ha.none'),
             };
         }
     } catch (e) {
-        return { success: false, message: e instanceof Error ? e.message : 'Impossible de joindre le serveur' };
+        return { success: false, message: e instanceof Error ? e.message : t(lang, 'integrations.unreachable') };
     }
 }
 
@@ -113,11 +114,12 @@ export async function syncHomeAssistant(
     circleId: string,
     baseUrl: string,
     encryptedCredentials: string,
-    config: Record<string, unknown>
+    config: Record<string, unknown>,
+    lang: Lang = 'fr'
 ): Promise<{ imported: number; errors: number }> {
     const creds = decryptCredentials(encryptedCredentials);
     const token = creds.token;
-    if (!token) throw new Error('Token manquant');
+    if (!token) throw new Error(t(lang, 'integrations.ha.tokenMissing'));
 
     const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
     let imported = 0;
@@ -149,7 +151,7 @@ export async function syncHomeAssistant(
     }
 
     // Strategy 2: modern todo entity via WebSocket
-    const todoItems = await getTodoItemsViaWebSocket(baseUrl, token, entityId);
+    const todoItems = await getTodoItemsViaWebSocket(baseUrl, token, entityId, lang);
     for (const item of todoItems) {
         if (item.status === 'completed') continue;
         try {

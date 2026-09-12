@@ -1,6 +1,6 @@
 {
-  "title": "A moment together",
-  "subtitle": "Tap the microphone and talk to me.",
+  "title": "Ask me",
+  "subtitle": "Tap the microphone and ask your question, or chat for a while.",
   "close": "Close",
   "you": "You",
   "companion": "Companion",
@@ -8,7 +8,8 @@
     "idle": "Tap to talk",
     "recording": "I am listening, tap to finish",
     "thinking": "One moment...",
-    "denied": "The microphone is not available. You can type below."
+    "denied": "The microphone is not available. You can type below.",
+    "unavailable": "Dictation is not available here. You can type below."
   },
   "textPlaceholder": "Type here if you prefer",
   "send": "Send",
@@ -18,7 +19,15 @@
     "Tell me a happy memory.",
     "Talk to me about my day."
   ],
-  "openingLine": "Hello {{name}}, I am glad to talk with you. How are you feeling today?",
-  "openingLineNoName": "Hello, I am glad to talk with you. How are you feeling today?",
-  "error": "Sorry, I could not reply. Shall we try again?"
+  "openingLine": "Hello {{name}}, I am listening. What would you like to know?",
+  "openingLineNoName": "Hello, I am listening. What would you like to know?",
+  "error": "Sorry, I could not reply. Shall we try again?",
+  "subtitleFacts": "Tap the microphone and ask your question.",
+  "quick": {
+    "meds": "What should I take?",
+    "visitors": "Who is coming today?",
+    "appointments": "My appointments?",
+    "date": "What day is it?",
+    "call": "Who can I call?"
+  }
 }

@@ -81,6 +81,8 @@ const Onboarding: React.FC = () => {
                         <span>{t('onboarding.hint')}</span>
                     </div>
 
+                    <p className="text-label text-muted-foreground">{t('onboarding.aboutTitle')}</p>
+
                     <div>
                         <label htmlFor="firstName" className="mb-1.5 block text-label text-foreground">
                             {t('onboarding.firstName')}

@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import {
-    Copy, Link2, Unlink, LogOut, Mail, Plus, RotateCcw, Ban, Trash2, UserMinus,
+    Copy, Link2, Unlink, LogOut, Mail, Plus, RotateCcw, Ban, Trash2, UserMinus, KeyRound,
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -13,6 +13,19 @@ import {
     Button, Input, Select, Dialog, Badge, useToast,
 } from '../components/ui';
 import { formatDate } from '../lib/utils';
+
+// Demande de reinitialisation de mot de passe en attente (instance sans SMTP :
+// l'administrateur transmet le lien a la personne).
+interface PendingReset {
+    id: string;
+    user_id: string;
+    name: string;
+    email: string;
+    circle_id: string;
+    expires_at: string;
+    created_at: string;
+    url: string | null;
+}
 
 const ROLES: CircleRole[] = ['admin', 'family', 'professional', 'neighbor', 'viewer'];
 const CURRENCIES = ['EUR', 'CHF', 'CAD', 'USD', 'GBP'];
@@ -268,6 +281,7 @@ const Circle: React.FC = () => {
     const [detail, setDetail] = useState<CircleDetail | null>(null);
     const [invites, setInvites] = useState<Invite[]>([]);
     const [links, setLinks] = useState<CaregiverLink[]>([]);
+    const [resets, setResets] = useState<PendingReset[]>([]);
     const [loading, setLoading] = useState(true);
 
     // Invite creation dialog
@@ -328,6 +342,17 @@ const Circle: React.FC = () => {
             }
             setInvites(invitesRes?.success ? invitesRes.data : []);
             setLinks(linksRes?.success ? linksRes.data : []);
+            if (isAdmin) {
+                try {
+                    const resetsRes = await api.get<{ success: boolean; data: PendingReset[] }>('/api/auth/password-resets');
+                    const list = resetsRes.success && Array.isArray(resetsRes.data) ? resetsRes.data : [];
+                    setResets(list.filter((r) => r.circle_id === circleId));
+                } catch {
+                    setResets([]);
+                }
+            } else {
+                setResets([]);
+            }
         } catch (error) {
             console.error('Circle load error:', error);
             showToast({ title: t('circle:errors.load') });
@@ -342,6 +367,8 @@ const Circle: React.FC = () => {
     }, [loadAll]);
 
     useWebSocketUpdates('circle', () => { void loadAll(); });
+    // Une demande de reinitialisation arrive sous forme de notification.
+    useWebSocketUpdates('notifications', () => { if (isAdmin) void loadAll(); });
 
     // Garde le champ "nom du foyer" aligné sur le cercle actif.
     useEffect(() => {
@@ -521,6 +548,27 @@ const Circle: React.FC = () => {
             onError(error);
         } finally {
             setSettingsSaving(false);
+        }
+    };
+
+    // ── Mot de passe oublie : remise du lien par l'administrateur ─────────────
+    const copyResetLink = async (reset: PendingReset) => {
+        if (!reset.url) return;
+        try {
+            await navigator.clipboard.writeText(window.location.origin + reset.url);
+            showToast({ title: t('circle:resets.copied') });
+        } catch (error) {
+            onError(error);
+        }
+    };
+
+    const cancelReset = async (reset: PendingReset) => {
+        try {
+            await api.delete(`/api/auth/password-resets/${reset.id}`);
+            showToast({ title: t('circle:resets.cancelled') });
+            await loadAll();
+        } catch (error) {
+            onError(error);
         }
     };
 
@@ -706,6 +754,47 @@ const Circle: React.FC = () => {
                     )}
                 </CardContent>
             </Card>
+
+            {/* Mot de passe oublie : liens a transmettre (instance sans e-mail) */}
+            {isAdmin && resets.length > 0 && (
+                <Card hover={false} className="border-primary/30">
+                    <CardHeader>
+                        <CardTitle className="font-serif">{t('circle:resets.title')}</CardTitle>
+                        <p className="text-caption text-muted-foreground">{t('circle:resets.subtitle')}</p>
+                    </CardHeader>
+                    <CardContent className="space-y-0 divide-y divide-border">
+                        {resets.map((reset) => (
+                            <div key={reset.id} className="flex flex-wrap items-center gap-3 py-3 first:pt-0 last:pb-0">
+                                <KeyRound className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
+                                <div className="min-w-0 flex-1">
+                                    <p className="truncate text-body font-medium text-foreground">{reset.name}</p>
+                                    <p className="truncate text-caption text-muted-foreground">
+                                        {t('circle:resets.expires', {
+                                            time: new Date(reset.expires_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }),
+                                        })}
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                    <Button variant="secondary" size="sm" disabled={!reset.url} onClick={() => void copyResetLink(reset)}>
+                                        <Copy className="mr-2 h-4 w-4" />
+                                        {t('circle:resets.copy')}
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-11 w-11 text-muted-foreground hover:text-danger md:h-10 md:w-10"
+                                        aria-label={`${t('circle:resets.cancel')}: ${reset.name}`}
+                                        title={t('circle:resets.cancel')}
+                                        onClick={() => void cancelReset(reset)}
+                                    >
+                                        <Ban className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
+            )}
 
             {/* Foyer (couple): relier deux cercles vivant sous le meme toit */}
             {isAdmin && (

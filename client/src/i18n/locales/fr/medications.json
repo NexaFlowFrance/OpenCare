@@ -34,7 +34,19 @@
     },
     "markTaken": "Pris",
     "markSkipped": "Sauté",
-    "undo": "Annuler"
+    "undo": "Annuler",
+    "take": "Prendre {{amount}}",
+    "prnTitle": "Si besoin",
+    "prnHint": "Ces médicaments n'ont pas d'horaire fixe : notez une prise quand elle a lieu.",
+    "logPrn": "Noter une prise",
+    "prnToday_one": "{{count}} prise aujourd'hui",
+    "prnToday_other": "{{count}} prises aujourd'hui",
+    "source": {
+      "caregiver": "confirmé par un aidant",
+      "kiosk": "confirmé sur le kiosk",
+      "phone": "confirmé sur le téléphone",
+      "link": "confirmé via un lien intervenant"
+    }
   },
   "treatments": {
     "add": "Ajouter un traitement",
@@ -50,7 +62,11 @@
     "fromDate": "à partir du {{date}}",
     "untilDate": "jusqu'au {{date}}",
     "photoAlt": "Photo de {{name}}",
-    "noSchedule": "Aucun horaire de prise défini"
+    "noSchedule": "Aucun horaire de prise défini",
+    "prn": "Si besoin",
+    "prnHint": "Pas d'horaire fixe : les prises sont notées à la demande depuis l'onglet Aujourd'hui.",
+    "reason": "Pourquoi : {{reason}}",
+    "appearance": "Aspect : {{appearance}}"
   },
   "forms": {
     "tablet": "Comprimé",
@@ -59,7 +75,10 @@
     "drops": "Gouttes",
     "patch": "Patch",
     "injection": "Injection",
-    "other": "Autre"
+    "other": "Autre",
+    "sachet": "Sachet",
+    "inhaler": "Inhalateur",
+    "cream": "Crème"
   },
   "form": {
     "createTitle": "Nouveau traitement",
@@ -91,7 +110,20 @@
     "labelPlaceholder": "Ex. avant le repas",
     "noSchedules": "Aucun horaire pour le moment. Ajoutez une ligne pour suivre les prises au quotidien.",
     "scheduleTimeError": "Renseignez une heure pour chaque horaire de prise.",
-    "scheduleDaysError": "Sélectionnez au moins un jour pour chaque horaire de prise."
+    "scheduleDaysError": "Sélectionnez au moins un jour pour chaque horaire de prise.",
+    "quantity": "Quantité",
+    "unit": "Unité",
+    "unitAuto": "Selon la forme",
+    "quantityError": "Indiquez une quantité valide pour chaque horaire (entre 0,25 et 99).",
+    "prn": "Si besoin (pas d'horaire fixe)",
+    "prnHint": "Antidouleur, laxatif... La prise est notée quand elle a lieu.",
+    "prnNoSchedule": "Médicament « si besoin » : aucun horaire à définir. Les prises se notent depuis l'onglet Aujourd'hui.",
+    "withFood": "Par rapport aux repas",
+    "withFoodPlaceholder": "Non précisé",
+    "reason": "Pourquoi ce traitement",
+    "reasonPlaceholder": "Ex. pour la tension",
+    "appearance": "Aspect du médicament",
+    "appearancePlaceholder": "Ex. petit comprimé blanc et rond"
   },
   "prescriptions": {
     "add": "Ajouter une ordonnance",
@@ -128,10 +160,38 @@
     "deletePrescription": "Impossible de supprimer l'ordonnance.",
     "archive": "Impossible de mettre à jour le traitement.",
     "photo": "Impossible de traiter la photo.",
-    "photoTooLarge": "La photo reste trop volumineuse après compression (1,5 Mo maximum)."
+    "photoTooLarge": "La photo reste trop volumineuse après compression (1,5 Mo maximum).",
+    "logPrn": "Impossible de noter cette prise."
   },
   "restricted": {
     "title": "Accès réservé",
     "description": "Les médicaments du proche sont visibles par la famille et les professionnels du cercle."
+  },
+  "units": {
+    "tablet_one": "comprimé",
+    "tablet_other": "comprimés",
+    "capsule_one": "gélule",
+    "capsule_other": "gélules",
+    "ml_one": "ml",
+    "ml_other": "ml",
+    "drop_one": "goutte",
+    "drop_other": "gouttes",
+    "sachet_one": "sachet",
+    "sachet_other": "sachets",
+    "patch_one": "patch",
+    "patch_other": "patchs",
+    "injection_one": "injection",
+    "injection_other": "injections",
+    "puff_one": "bouffée",
+    "puff_other": "bouffées",
+    "application_one": "application",
+    "application_other": "applications",
+    "dose_one": "dose",
+    "dose_other": "doses"
+  },
+  "withFood": {
+    "with": "Pendant le repas",
+    "without": "En dehors des repas",
+    "any": "Avec ou sans repas"
   }
 }

@@ -2,13 +2,14 @@
   "onboarding": {
     "title": "Bienvenue {{name}}",
     "titleAnother": "Suivre un autre proche",
-    "subtitle": "Créez le cercle de soin de la personne que vous accompagnez.",
+    "subtitle": "Créez le cercle de soin de la personne que vous accompagnez. Les informations ci-dessous la concernent, pas vous.",
     "hint": "Vous pourrez ensuite inviter la fratrie, les professionnels et les voisins dans ce cercle.",
-    "firstName": "Prénom du proche",
+    "aboutTitle": "À propos de votre proche",
+    "firstName": "Prénom de la personne aidée",
     "firstNamePlaceholder": "Par exemple : Jeanne",
-    "lastName": "Nom (facultatif)",
+    "lastName": "Son nom de famille (facultatif)",
     "lastNamePlaceholder": "Par exemple : Dupont",
-    "birthDate": "Date de naissance (facultatif)",
+    "birthDate": "Sa date de naissance (facultatif)",
     "submit": "Créer le cercle",
     "creating": "Création...",
     "error": "La création du cercle a échoué. Réessayez.",
@@ -179,5 +180,14 @@
   "errors": {
     "load": "Impossible de charger le cercle.",
     "action": "L'opération a échoué."
+  },
+  "resets": {
+    "title": "Mots de passe oubliés",
+    "subtitle": "Ces membres ont demandé une réinitialisation. Transmettez-leur le lien de vive voix ou par un canal sûr : il est valable une heure et ne sert qu'une fois.",
+    "expires": "Lien valable jusqu'à {{time}}",
+    "copy": "Copier le lien",
+    "copied": "Lien copié",
+    "cancel": "Annuler la demande",
+    "cancelled": "Demande annulée"
   }
 }

@@ -2,6 +2,7 @@ import React, { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
+import { useCircle } from '../../contexts/CircleContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import {
     Home,
@@ -27,6 +28,8 @@ import {
     WifiOff,
     Plug,
     RefreshCw,
+    DoorOpen,
+    ClipboardList,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { subscribe as subscribeToWriteQueue } from '../../lib/offlineQueue';
@@ -39,29 +42,51 @@ interface LayoutProps {
     children: ReactNode;
 }
 
-/* Navigation en deux groupes: le quotidien d'abord, l'organisation ensuite. */
-const navigationDaily = [
-    { labelKey: 'items.today', href: '/', icon: Home },
-    { labelKey: 'items.journal', href: '/journal', icon: BookOpen },
-    { labelKey: 'items.calendar', href: '/calendar', icon: CalendarIcon },
-    { labelKey: 'items.medications', href: '/medications', icon: Pill },
-    { labelKey: 'items.health', href: '/health', icon: Activity },
-    { labelKey: 'items.tasks', href: '/tasks', icon: CheckSquare },
-    { labelKey: 'items.shopping', href: '/shopping', icon: ShoppingCart },
-    { labelKey: 'items.messages', href: '/messages', icon: MessageCircle },
+/* Navigation en six groupes (revue produit) : Aujourd'hui, Soins, Organiser, Informations, Equipe, Plus. */
+interface NavItem {
+    labelKey: string;
+    href: string;
+    icon: React.ComponentType<{ className?: string }>;
+    /** Roles pour lesquels l'entree est masquee (le serveur refuse de toute facon). */
+    hideFor?: string[];
+}
+
+// Le role neighbor n'a pas acces aux donnees de sante ni aux documents (matrice docs/SPEC.md).
+const HEALTH_HIDDEN = ['neighbor'];
+
+const NAV_GROUPS: Array<{ key: string; items: NavItem[] }> = [
+    { key: 'today', items: [
+        { labelKey: 'items.today', href: '/', icon: Home },
+        { labelKey: 'items.journal', href: '/journal', icon: BookOpen },
+        { labelKey: 'items.calendar', href: '/calendar', icon: CalendarIcon },
+        { labelKey: 'items.messages', href: '/messages', icon: MessageCircle },
+    ] },
+    { key: 'care', items: [
+        { labelKey: 'items.carePlan', href: '/care-plan', icon: ClipboardList },
+        { labelKey: 'items.medications', href: '/medications', icon: Pill, hideFor: HEALTH_HIDDEN },
+        { labelKey: 'items.health', href: '/health', icon: Activity, hideFor: HEALTH_HIDDEN },
+        { labelKey: 'items.visitors', href: '/visitors', icon: DoorOpen },
+    ] },
+    { key: 'organise', items: [
+        { labelKey: 'items.tasks', href: '/tasks', icon: CheckSquare },
+        { labelKey: 'items.shopping', href: '/shopping', icon: ShoppingCart },
+        { labelKey: 'items.expenses', href: '/expenses', icon: Wallet },
+    ] },
+    { key: 'information', items: [
+        { labelKey: 'items.recipient', href: '/recipient', icon: HeartHandshake },
+        { labelKey: 'items.contacts', href: '/contacts', icon: BookUser },
+        { labelKey: 'items.documents', href: '/documents', icon: FolderOpen, hideFor: HEALTH_HIDDEN },
+    ] },
+    { key: 'team', items: [
+        { labelKey: 'items.circle', href: '/circle', icon: Users },
+    ] },
+    { key: 'more', items: [
+        { labelKey: 'items.integrations', href: '/integrations', icon: Plug },
+        { labelKey: 'items.settings', href: '/settings', icon: Settings },
+    ] },
 ];
 
-const navigationOrganisation = [
-    { labelKey: 'items.expenses', href: '/expenses', icon: Wallet },
-    { labelKey: 'items.documents', href: '/documents', icon: FolderOpen },
-    { labelKey: 'items.contacts', href: '/contacts', icon: BookUser },
-    { labelKey: 'items.recipient', href: '/recipient', icon: HeartHandshake },
-    { labelKey: 'items.circle', href: '/circle', icon: Users },
-    { labelKey: 'items.integrations', href: '/integrations', icon: Plug },
-    { labelKey: 'items.settings', href: '/settings', icon: Settings },
-];
-
-const allNavigation = [...navigationDaily, ...navigationOrganisation];
+const allNavigation: NavItem[] = NAV_GROUPS.flatMap((group) => group.items);
 
 const mobileTabs = [
     { labelKey: 'mobile.home', href: '/', icon: Home },
@@ -90,6 +115,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     const location = useLocation();
     const { t } = useTranslation('nav');
     const { user, logout } = useAuth();
+    const { myRole } = useCircle();
     const { setTheme, actualTheme } = useTheme();
     const [sidebarOpen, setSidebarOpen] = React.useState(false);
     const [quickActionsOpen, setQuickActionsOpen] = React.useState(false);
@@ -122,7 +148,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         setQuickActionsOpen(false);
     };
 
-    const renderNavItems = (items: typeof navigationDaily) =>
+    const renderNavItems = (items: NavItem[]) =>
         items.map((item) => {
             const Icon = item.icon;
             const active = isRouteActive(location.pathname, item.href);
@@ -186,11 +212,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     </div>
 
                     <nav className="flex-1 overflow-y-auto px-4 py-4 scrollbar-hide">
-                        <div className="space-y-0.5">{renderNavItems(navigationDaily)}</div>
-                        <p className="mb-1 mt-5 px-4 text-micro font-semibold uppercase tracking-wide text-muted-foreground">
-                            {t('sections.organisation')}
-                        </p>
-                        <div className="space-y-0.5">{renderNavItems(navigationOrganisation)}</div>
+                        {NAV_GROUPS.map((group, index) => {
+                            const items = group.items.filter((item) => !item.hideFor || !myRole || !item.hideFor.includes(myRole));
+                            if (items.length === 0) return null;
+                            return (
+                                <div key={group.key}>
+                                    <p className={cn('mb-1 px-4 text-micro font-semibold uppercase tracking-wide text-muted-foreground', index > 0 && 'mt-5')}>
+                                        {t(`sections.${group.key}`)}
+                                    </p>
+                                    <div className="space-y-0.5">{renderNavItems(items)}</div>
+                                </div>
+                            );
+                        })}
                     </nav>
 
                     <div className="border-t border-border bg-surface-2/60 p-4">

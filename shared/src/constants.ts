@@ -14,6 +14,36 @@ export type VitalType = typeof VITAL_TYPES[number];
 export const INTAKE_STATUSES = ['pending', 'taken', 'skipped', 'missed'] as const;
 export type IntakeStatus = typeof INTAKE_STATUSES[number];
 
+// Formes galeniques (la colonne reste un texte libre : anciennes valeurs tolerees)
+export const MEDICATION_FORMS = ['tablet', 'capsule', 'syrup', 'drops', 'patch', 'injection', 'sachet', 'inhaler', 'cream', 'other'] as const;
+export type MedicationForm = typeof MEDICATION_FORMS[number];
+
+// Unites de la quantite par prise ("2 comprimes", "5 ml", "1 bouffee")
+export const MEDICATION_UNITS = ['tablet', 'capsule', 'ml', 'drop', 'sachet', 'patch', 'injection', 'puff', 'application', 'dose'] as const;
+export type MedicationUnit = typeof MEDICATION_UNITS[number];
+
+// Unite par defaut deduite de la forme quand l'horaire n'en precise pas
+export const DEFAULT_UNIT_BY_FORM: Record<MedicationForm, MedicationUnit> = {
+    tablet: 'tablet',
+    capsule: 'capsule',
+    syrup: 'ml',
+    drops: 'drop',
+    patch: 'patch',
+    injection: 'injection',
+    sachet: 'sachet',
+    inhaler: 'puff',
+    cream: 'application',
+    other: 'dose',
+};
+
+// Prise par rapport aux repas
+export const WITH_FOOD_OPTIONS = ['with', 'without', 'any'] as const;
+export type WithFoodOption = typeof WITH_FOOD_OPTIONS[number];
+
+// D'ou vient la confirmation d'une prise
+export const INTAKE_SOURCES = ['caregiver', 'kiosk', 'phone', 'link'] as const;
+export type IntakeSource = typeof INTAKE_SOURCES[number];
+
 // Categories d'evenements du calendrier
 export const EVENT_CATEGORIES = ['visit', 'medical', 'nurse', 'aide', 'other'] as const;
 export type EventCategory = typeof EVENT_CATEGORIES[number];

@@ -30,7 +30,7 @@
     "providers": {
       "ollama": "Ollama (local)",
       "openai": "OpenAI-compatible API",
-      "anthropic": "Anthropic Claude"
+      "anthropic": "Anthropic"
     },
     "baseUrl": "Server URL",
     "apiKey": "API key",

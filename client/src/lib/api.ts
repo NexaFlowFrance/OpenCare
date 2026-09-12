@@ -6,6 +6,8 @@
 // faisait basculer le client sur localhost:3001 (d'où les « Failed to fetch »).
 import { mockRequest } from '../demo/mockApi';
 import { enqueue, getQueueSize, replay, type QueuedMethod } from './offlineQueue';
+import i18n from '../i18n';
+import { getKioskToken } from './kioskDevice';
 
 const IS_DEMO = Boolean(import.meta.env.VITE_DEMO);
 
@@ -108,6 +110,9 @@ class ApiClient {
 
         const headers: Record<string, string> = {
             'Content-Type': 'application/json',
+            // Langue courante de l'interface: le serveur en déduit la langue de
+            // ses messages d'erreur (validation, tests d'intégration...).
+            'Accept-Language': i18n.language || 'fr',
         };
 
         if (this.token) {
@@ -116,6 +121,13 @@ class ApiClient {
 
         if (this.circleId) {
             headers['X-Circle-Id'] = this.circleId;
+        }
+
+        // Appareil patient appaire (tablette, telephone) : son token identifie
+        // le cercle sans session d'aidant ; seules les routes patient l'acceptent.
+        const kioskToken = getKioskToken();
+        if (kioskToken) {
+            headers['X-Kiosk-Token'] = kioskToken;
         }
 
         const method = ((options.method as string) || 'GET').toUpperCase();
@@ -197,9 +209,11 @@ class ApiClient {
     async getBlob(endpoint: string): Promise<Blob> {
         if (IS_DEMO) throw new Error('Binary endpoints are not available in demo mode');
 
-        const headers: Record<string, string> = {};
+        const headers: Record<string, string> = { 'Accept-Language': i18n.language || 'fr' };
         if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
         if (this.circleId) headers['X-Circle-Id'] = this.circleId;
+        const kioskToken = getKioskToken();
+        if (kioskToken) headers['X-Kiosk-Token'] = kioskToken;
 
         const response = await fetch(`${this.baseURL}${endpoint}`, { headers });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);

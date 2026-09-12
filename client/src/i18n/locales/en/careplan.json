@@ -1,0 +1,46 @@
+{
+  "title": "Care plan",
+  "titleFor": "{{name}}'s care plan",
+  "theLovedOne": "your loved one",
+  "subtitle": "Everything you need to know to care for {{name}}, in one place: routines, medication, the team and the week.",
+  "updated": "Instructions updated {{when}} by {{name}}",
+  "neverUpdated": "The instructions have not been written yet.",
+  "readOnly": "Only administrators and family can edit them.",
+  "print": "Print",
+  "complete": "Fill in",
+  "saved": "Instructions saved.",
+  "sections": {
+    "morning": { "title": "Morning routine", "hint": "Getting up, breakfast, what helps the day start well." },
+    "meals": { "title": "Meals", "hint": "Times, preferences, textures, what to avoid, help needed." },
+    "mobility": { "title": "Mobility assistance", "hint": "Walker, transfers, stairs, fall risks, what not to do alone." },
+    "personal_care": { "title": "Personal care", "hint": "Washing, dressing, continence, products, modesty and habits." },
+    "communication": { "title": "Communication", "hint": "Hearing, sight, language, words to use, how to make sure you are understood." },
+    "triggers": { "title": "Behavioural triggers", "hint": "Situations, topics or moments that cause agitation or anxiety." },
+    "calming": { "title": "Things that calm", "hint": "Music, memories, objects, gestures, reassuring people." },
+    "emergency": { "title": "Emergency instructions", "hint": "Who to call first, where the papers are, allergies, the doctor's instructions." }
+  },
+  "medications": {
+    "title": "Medication routine",
+    "empty": "No current treatment.",
+    "nothing": "Nothing",
+    "prn": "As needed",
+    "slots": { "morning": "Morning", "midday": "Midday", "evening": "Evening", "night": "Bedtime" },
+    "withFood": { "with": "with food", "without": "away from food" },
+    "manage": "Manage medication"
+  },
+  "professionals": {
+    "title": "Regular professionals",
+    "empty": "No professional in the contacts (doctor, nurse, home aide, physio, pharmacy).",
+    "manage": "See contacts"
+  },
+  "week": {
+    "title": "Week ahead",
+    "empty": "Nothing planned.",
+    "recurring": "Recurring",
+    "manage": "Open the calendar"
+  },
+  "errors": {
+    "load": "Could not load the care plan.",
+    "save": "Could not save the instructions."
+  }
+}

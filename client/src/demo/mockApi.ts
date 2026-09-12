@@ -6,8 +6,18 @@
 // Le cercle actif est résolu depuis localStorage (la clé qu'utilise
 // ApiClient.setCircleId), faute d'en-tête X-Circle-Id dans le mock.
 import { createSeed, type CircleData, type DemoStore, type Json } from './seed';
+import { detectIntent, answerIntent, hasDistressSignal, distressHint, type CompanionFactsInput, type CompanionLang } from './companionAnswers';
 
 const store: DemoStore = createSeed();
+
+// Ecran patient (demo) : appareils appaires et code aidant, en memoire.
+const demoKiosk: { pinSet: boolean; pin: string; devices: Json[] } = {
+    pinSet: false,
+    pin: '',
+    devices: [
+        { id: 'dev-salon', name: 'Tablette du salon', kind: 'kiosk', last_seen_at: null, created_at: null },
+    ],
+};
 
 const ok = <T,>(data: T) => ({ success: true, data });
 const uid = () =>
@@ -97,7 +107,7 @@ function makeCircle(name: string, recipient: Json): CircleData {
             id: uid(), circle_id: id, user_id: store.user.id, role: 'admin', color: '#2563EB',
             created_at: naiveNow(), name: store.user.name, email: store.user.email, avatar_url: null,
         }],
-        invites: [], caregiverLinks: [], journal: [], vitals: [], medications: [], intakeOverrides: {},
+        invites: [], caregiverLinks: [], journal: [], vitals: [], medications: [], intakeOverrides: {}, prnIntakes: [], visits: [], carePlan: null,
         prescriptions: [], events: [], tasks: [], shopping: [], messages: [], documents: [], contacts: [],
         expenses: [], settlements: [], aids: [], notes: [],
         story: { id: uid(), circle_id: id, sections: [], updated_by: null, updated_at: naiveNow(), created_at: naiveNow() },
@@ -218,9 +228,21 @@ function buildIntake(c: CircleData, med: Json, sch: Json, dateStr: string): Json
     return {
         id, circle_id: c.id, medication_id: med.id, schedule_id: sch.id, due_at: dueAt, status,
         confirmed_by_user: null, confirmed_by_link: null, confirmed_at: confirmedAt,
+        confirmed_source: override ? override.confirmed_source ?? (status === 'taken' ? 'caregiver' : null) : (status === 'taken' ? 'caregiver' : null),
+        quantity: sch.quantity ?? 1, unit: sch.unit ?? null,
         journal_entry_id: override ? override.journal_entry_id ?? null : null,
-        medication_name: med.name, medication_dosage: med.dosage ?? null,
-        dosage: med.dosage ?? null, form: med.form ?? null, schedule_label: sch.label ?? null,
+        ...medicationDisplayFields(med),
+        schedule_label: sch.label ?? null,
+    };
+}
+
+/** Champs du medicament joints a chaque prise (meme liste que INTAKE_DISPLAY_COLUMNS cote serveur). */
+function medicationDisplayFields(med: Json): Json {
+    return {
+        medication_name: med.name, medication_dosage: med.dosage ?? null, dosage: med.dosage ?? null,
+        form: med.form ?? null, photo_url: med.photo_url ?? null, instructions: med.instructions ?? null,
+        with_food: med.with_food ?? null, reason: med.reason ?? null, appearance: med.appearance ?? null,
+        prn: Boolean(med.prn),
     };
 }
 
@@ -234,7 +256,7 @@ function intakesForRange(c: CircleData, fromStr: string, toStr: string, maxDays 
         const dateStr = isoDate(d);
         const dow = isoDow(d);
         for (const med of c.medications) {
-            if (med.active === false) continue;
+            if (med.active === false || med.prn) continue;
             if (med.start_date && dateStr < med.start_date) continue;
             if (med.end_date && dateStr > med.end_date) continue;
             for (const sch of (med.schedules as Json[]) || []) {
@@ -243,11 +265,54 @@ function intakesForRange(c: CircleData, fromStr: string, toStr: string, maxDays 
             }
         }
     }
+    // Prises ponctuelles ("si besoin") de la periode
+    const lastDay = isoDate(new Date(Math.min(to.getTime(), from.getTime() + (maxDays - 1) * 86400000)));
+    for (const prn of c.prnIntakes || []) {
+        const day = String(prn.due_at).slice(0, 10);
+        if (day < fromStr || day > lastDay) continue;
+        const med = c.medications.find((m) => m.id === prn.medication_id);
+        if (!med) continue;
+        out.push({ ...prn, ...medicationDisplayFields(med), schedule_label: null });
+    }
     out.sort((a, b) => String(a.due_at).localeCompare(String(b.due_at)));
     return out;
 }
 
-function setIntakeStatus(c: CircleData, intakeId: string, status: string): Json | null {
+/** Note une prise ponctuelle d'un medicament "si besoin" (statut pris, maintenant). */
+function logPrnIntake(c: CircleData, medId: string, source: string): Json | null {
+    const med = c.medications.find((m) => m.id === medId);
+    if (!med) return null;
+    const entryId = uid();
+    c.journal.unshift({
+        id: entryId, circle_id: c.id, author_user_id: store.user.id, caregiver_link_id: null,
+        author_name: store.user.name, type: 'medication',
+        content: med.dosage ? `${med.name} ${med.dosage}` : med.name,
+        data: { medication_id: med.id, status: 'taken', source },
+        occurred_at: naiveNow(), created_at: naiveNow(), photos: [],
+    });
+    const intake: Json = {
+        id: `prn-${uid()}`, circle_id: c.id, medication_id: med.id, schedule_id: null,
+        due_at: naiveNow(), status: 'taken', confirmed_at: naiveNow(), confirmed_source: source,
+        quantity: 1, unit: null, journal_entry_id: entryId,
+    };
+    c.prnIntakes.push(intake);
+    return { ...intake, ...medicationDisplayFields(med), schedule_label: null };
+}
+
+function setIntakeStatus(c: CircleData, intakeId: string, status: string, source = 'caregiver'): Json | null {
+    // Prise ponctuelle : on change le statut en place.
+    if (intakeId.startsWith('prn-')) {
+        const prn = (c.prnIntakes || []).find((p) => p.id === intakeId);
+        if (!prn) return null;
+        if (prn.journal_entry_id) removeFrom(c.journal, prn.journal_entry_id);
+        prn.status = status;
+        prn.confirmed_at = status === 'pending' ? null : naiveNow();
+        prn.confirmed_source = status === 'pending' ? null : source;
+        prn.journal_entry_id = null;
+        const med = c.medications.find((m) => m.id === prn.medication_id);
+        return med ? { ...prn, ...medicationDisplayFields(med), schedule_label: null } : prn;
+    }
+
     const [, medId, schId, dateStr] = intakeId.split('_');
     const med = c.medications.find((m) => m.id === medId);
     const sch = med ? ((med.schedules as Json[]) || []).find((s) => s.id === schId) : undefined;
@@ -259,20 +324,41 @@ function setIntakeStatus(c: CircleData, intakeId: string, status: string): Json 
     }
 
     if (status === 'pending') {
-        (c.intakeOverrides as Json)[intakeId] = { status: 'pending', confirmed_at: null, journal_entry_id: null };
+        (c.intakeOverrides as Json)[intakeId] = { status: 'pending', confirmed_at: null, confirmed_source: null, journal_entry_id: null };
         return buildIntake(c, med, sch, dateStr);
     }
 
     const entryId = uid();
     c.journal.unshift({
         id: entryId, circle_id: c.id, author_user_id: store.user.id, caregiver_link_id: null,
-        author_name: store.user.name, type: 'medication',
+        author_name: source === 'kiosk' || source === 'phone' ? (c.recipient?.first_name || store.user.name) : store.user.name, type: 'medication',
         content: med.dosage ? `${med.name} ${med.dosage}` : med.name,
-        data: { medication_id: med.id, intake_id: intakeId, status },
+        data: { medication_id: med.id, intake_id: intakeId, status, source },
         occurred_at: naiveNow(), created_at: naiveNow(), photos: [],
     });
-    (c.intakeOverrides as Json)[intakeId] = { status, confirmed_at: naiveNow(), journal_entry_id: entryId };
+    (c.intakeOverrides as Json)[intakeId] = { status, confirmed_at: naiveNow(), confirmed_source: source, journal_entry_id: entryId };
     return buildIntake(c, med, sch, dateStr);
+}
+
+/** Vue patient : uniquement ce qui est du maintenant (meme regle que server/src/lib/intakes.ts). */
+function splitForPatient(intakes: Json[], now = new Date()): Json {
+    const view: Json = { due_now: [], done: [], missed: [], upcoming_count: 0, next_due_at: null, taken_count: 0, total: intakes.length };
+    const nowMs = now.getTime();
+    for (const intake of intakes) {
+        const dueMs = new Date(String(intake.due_at)).getTime();
+        if (intake.status === 'taken' || intake.status === 'skipped') {
+            view.done.push(intake);
+            if (intake.status === 'taken') view.taken_count += 1;
+        } else if (intake.status === 'missed' || dueMs < nowMs - 4 * 3600 * 1000) {
+            view.missed.push(intake);
+        } else if (dueMs <= nowMs + 30 * 60 * 1000) {
+            view.due_now.push(intake);
+        } else {
+            view.upcoming_count += 1;
+            if (!view.next_due_at || String(intake.due_at) < String(view.next_due_at)) view.next_due_at = intake.due_at;
+        }
+    }
+    return view;
 }
 
 // ── Frais partagés : soldes façon Tricount ───────────────────────────────────
@@ -466,6 +552,67 @@ function dashboard(c: CircleData): Json {
             type: v.type, value: v.value, value2: v.value2, unit: v.unit, measured_at: v.measured_at,
         })),
         unread_messages_count: 0,
+        attention: attention(c),
+    };
+}
+
+// "A traiter" : meme logique que server/src/lib/attention.ts, sur la graine.
+function attention(c: CircleData): Json[] {
+    const now = new Date();
+    const today = isoDate(now);
+    const items: Json[] = [];
+    const dayAgo = now.getTime() - 24 * 3600 * 1000;
+    const incidents = journalDesc(c).filter((e) => e.type === 'incident' && new Date(String(e.occurred_at)).getTime() >= dayAgo);
+    if (incidents.length) items.push({ kind: 'help', severity: 'urgent', count: incidents.length, href: '/journal', details: incidents.slice(0, 5).map((e) => ({ id: e.id, label: String(e.content).slice(0, 140), when: e.occurred_at, extra: e.author_name })) });
+    const rule = c.presenceRule;
+    const hhmm = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    if (rule && rule.enabled && String(rule.no_activity_before).slice(0, 5) <= hhmm && !c.presenceSignals.some((sig) => String(sig.occurred_at).slice(0, 10) === today)) {
+        items.push({ kind: 'presence', severity: 'urgent', count: 1, href: '/', details: [], time: String(rule.no_activity_before).slice(0, 5) });
+    }
+    if (c.role !== 'neighbor') {
+        const missed = intakesForRange(c, today, today).filter((i) => i.status === 'missed');
+        if (missed.length) items.push({ kind: 'missed_intakes', severity: 'urgent', count: missed.length, href: '/medications', details: missed.slice(0, 5).map((i) => ({ id: i.id, label: i.medication_name, when: i.due_at })) });
+        const presc = c.prescriptions.filter((p) => p.renewal_date && new Date(`${String(p.renewal_date).slice(0, 10)}T12:00:00`).getTime() <= now.getTime() + (Number(p.reminder_days) || 7) * 86400000);
+        if (presc.length) items.push({ kind: 'prescriptions', severity: 'warn', count: presc.length, href: '/medications', details: presc.slice(0, 5).map((p) => ({ id: p.id, label: p.title, when: String(p.renewal_date).slice(0, 10) })) });
+    }
+    const overdue = c.tasks.filter((t) => !t.is_completed && t.due_date && new Date(String(t.due_date)).getTime() < now.getTime());
+    if (overdue.length) items.push({ kind: 'tasks_overdue', severity: 'warn', count: overdue.length, href: '/tasks', details: overdue.slice(0, 5).map((t) => ({ id: t.id, label: t.title, when: t.due_date })) });
+    const active = c.visits.filter((v) => !v.checked_out_at && String(v.checked_in_at).slice(0, 10) === today);
+    if (active.length) items.push({ kind: 'visitor_present', severity: 'info', count: active.length, href: '/visitors', details: active.map((v) => ({ id: v.id, label: v.visitor_name, when: v.checked_in_at, extra: v.visitor_type })), name: active[0].visitor_name });
+    const soon = now.getTime() + 2 * 3600 * 1000;
+    const upcoming = expandEvents(c, startOfDay(now), new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59))
+        .filter((e) => { const at = new Date(String(e.start_time)).getTime(); return at >= now.getTime() && at <= soon; });
+    if (upcoming.length) items.push({ kind: 'appointments', severity: 'info', count: upcoming.length, href: '/calendar', details: upcoming.slice(0, 5).map((e) => ({ id: e.id, label: e.title, when: e.start_time, extra: e.location ?? null })) });
+    return items;
+}
+
+function carePlan(c: CircleData): Json {
+    const now = new Date();
+    const from = startOfDay(now);
+    const to = new Date(from.getTime() + 7 * 86400000 - 1000);
+    const occurrences = expandEvents(c, from, to);
+    const membersById = new Map(c.members.map((m) => [m.id as string, m]));
+    const days: Json[] = [];
+    for (let i = 0; i < 7; i += 1) {
+        const date = isoDate(new Date(from.getTime() + i * 86400000));
+        days.push({
+            date,
+            items: occurrences.filter((e) => String(e.start_time).slice(0, 10) === date).map((e) => ({
+                id: e.id, title: e.title, category: e.category, location: e.location ?? null, start_time: e.start_time, end_time: e.end_time ?? null,
+                members: ((e.member_ids as string[]) || []).map((id) => membersById.get(id)?.name).filter(Boolean), recurring: Boolean(e.rrule),
+            })),
+        });
+    }
+    return {
+        sections: c.carePlan?.sections ?? {}, updated_at: c.carePlan?.updated_at ?? null, updated_by_name: c.carePlan?.updated_by_name ?? null,
+        medications: c.role === 'neighbor' ? null : c.medications.filter((m) => m.active !== false).map((m) => ({
+            id: m.id, name: m.name, dosage: m.dosage ?? null, form: m.form ?? null, instructions: m.instructions ?? null, prn: Boolean(m.prn),
+            with_food: m.with_food ?? null, reason: m.reason ?? null, appearance: m.appearance ?? null,
+            schedules: ((m.schedules as Json[]) || []).map((s) => ({ time: s.time_of_day, label: s.label ?? null, days_of_week: s.days_of_week, quantity: s.quantity, unit: s.unit ?? null })),
+        })),
+        professionals: c.contacts.filter((k) => ['doctor', 'nurse', 'aide', 'physio', 'pharmacy'].includes(String(k.category)))
+            .map((k) => ({ id: k.id, name: k.name, category: k.category, organization: k.organization ?? null, phone: k.phone ?? null, phone2: k.phone2 ?? null, email: k.email ?? null })),
+        week: { from: isoDate(from), to: isoDate(to), days },
     };
 }
 
@@ -518,10 +665,17 @@ function kioskToday(c: CircleData): Json {
                 .filter(Boolean)
                 .map((m) => ({ id: m!.id, name: m!.name, avatar_url: m!.avatar_url })),
         })),
-        intakes_today: intakesForRange(c, isoDate(now), isoDate(now)).map((i) => ({
-            id: i.id, due_at: i.due_at, status: i.status, confirmed_at: i.confirmed_at,
-            medication_name: i.medication_name, dosage: i.dosage, form: i.form,
-        })),
+        intakes_today: intakesForRange(c, isoDate(now), isoDate(now)),
+        medications: splitForPatient(intakesForRange(c, isoDate(now), isoDate(now)), now),
+        contacts_key: c.contacts
+            .filter((k) => ['doctor', 'nurse', 'pharmacy', 'aide', 'physio'].includes(String(k.category)))
+            .slice(0, 8)
+            .map((k) => ({ id: k.id, name: k.name, category: k.category, phone: k.phone ?? null, organization: k.organization ?? null })),
+        pin_required: demoKiosk.pinSet,
+        device: null,
+        members: c.members.map((m) => ({ id: m.id, name: m.name, avatar_url: m.avatar_url ?? null, role: m.role })),
+        visits_today: c.visits.filter((v) => String(v.checked_in_at).slice(0, 10) === isoDate(now)),
+        active_visit: c.visits.find((v) => !v.checked_out_at) ?? null,
         photos_enabled: false,
         heatwave: (() => {
             const h = heatwaveOf(c);
@@ -653,6 +807,12 @@ async function route(method: string, path: string, q: Record<string, string>, bo
         if ('avatar_url' in body) store.user.avatar_url = body.avatar_url ?? null;
         return ok({ user: store.user });
     }
+    // Mot de passe oublie : la demo n'envoie rien, elle montre le parcours
+    // "sans e-mail" (remise du lien par un administrateur du cercle).
+    if (path === '/api/auth/forgot-password') return ok({ delivery: 'admin' });
+    if (path === '/api/auth/reset-password') return ok({});
+    if (seg[1] === 'auth' && seg[2] === 'reset-password' && seg[3]) return ok({ valid: true, name: store.user.name });
+    if (path === '/api/auth/password-resets') return ok([]);
     if (path === '/api/auth/language') {
         if (body.language !== 'fr' && body.language !== 'en') throw new Error('Invalid language'); // 400 du serveur
         store.user.language = body.language;
@@ -923,14 +1083,21 @@ async function route(method: string, path: string, q: Record<string, string>, bo
             instructions: body.instructions || null, photo_url: body.photo_url || null,
             prescriber: body.prescriber || null, start_date: body.start_date || null, end_date: body.end_date || null,
             active: true, created_at: naiveNow(),
+            prn: Boolean(body.prn), with_food: body.with_food || null, reason: body.reason || null, appearance: body.appearance || null,
             schedules: (Array.isArray(body.schedules) ? body.schedules : []).map((s: Json) => ({
                 id: uid(), medication_id: medId, time_of_day: s.time_of_day,
                 days_of_week: Array.isArray(s.days_of_week) && s.days_of_week.length > 0 ? s.days_of_week : [1, 2, 3, 4, 5, 6, 7],
-                label: s.label || null,
+                label: s.label || null, quantity: Number(s.quantity) > 0 ? Number(s.quantity) : 1, unit: s.unit || null,
             })),
         };
         c.medications.push(med);
         return ok(med);
+    }
+    // Prise ponctuelle d'un medicament "si besoin"
+    if (seg[1] === 'medications' && seg.length === 4 && seg[3] === 'intakes' && method === 'POST') {
+        const created = logPrnIntake(c, seg[2], 'caregiver');
+        if (!created) throw new Error('Medication not found');
+        return ok(created);
     }
     if (seg[1] === 'medications' && seg.length === 3) {
         if (method === 'PUT') {
@@ -939,7 +1106,7 @@ async function route(method: string, path: string, q: Record<string, string>, bo
                 patch.schedules = body.schedules.map((s: Json) => ({
                     id: s.id || uid(), medication_id: seg[2], time_of_day: s.time_of_day,
                     days_of_week: Array.isArray(s.days_of_week) && s.days_of_week.length > 0 ? s.days_of_week : [1, 2, 3, 4, 5, 6, 7],
-                    label: s.label || null,
+                    label: s.label || null, quantity: Number(s.quantity) > 0 ? Number(s.quantity) : 1, unit: s.unit || null,
                 }));
             }
             return ok(updateIn(c.medications, seg[2], patch));
@@ -1427,6 +1594,81 @@ async function route(method: string, path: string, q: Record<string, string>, bo
 
     // ── Kiosk ────────────────────────────────────────────────────────────────
     if (path === '/api/kiosk/today') return ok(kioskToday(c));
+    if (path === '/api/kiosk/care-plan') return ok({ sections: Object.fromEntries(Object.entries((c.carePlan?.sections ?? {}) as Record<string, string>).filter(([, v]) => v)), updated_at: c.carePlan?.updated_at ?? null });
+    // Plan de soins : consignes (texte) + routine medicamenteuse + professionnels + semaine
+    if (path === '/api/care-plan' && method === 'GET') return ok(carePlan(c));
+    if (path === '/api/care-plan' && method === 'PUT') {
+        const next: Record<string, string> = { ...((c.carePlan?.sections ?? {}) as Record<string, string>) };
+        for (const [k, v] of Object.entries((body.sections ?? {}) as Record<string, unknown>)) if (typeof v === 'string') next[k] = v.trim().slice(0, 4000);
+        c.carePlan = { sections: next, updated_at: naiveNow(), updated_by_name: store.user.name };
+        return ok({ sections: next, updated_at: c.carePlan.updated_at, updated_by_name: store.user.name });
+    }
+    // Visiteurs : arrivee, note de passage, depart (ecran patient) et liste (aidants)
+    if (path === '/api/kiosk/visits/check-in' && method === 'POST') {
+        const visit: Json = {
+            id: uid(), circle_id: c.id, visitor_type: body.visitor_type || 'other', visitor_name: String(body.visitor_name || '').trim() || 'Visiteur',
+            member_id: body.member_id || null, device_id: null, checked_in_at: naiveNow(), checked_out_at: null, note: null, journal_entry_id: null, created_at: naiveNow(),
+        };
+        const entryId = uid();
+        c.journal.unshift({ id: entryId, circle_id: c.id, author_user_id: null, caregiver_link_id: null, author_name: visit.visitor_name, type: 'visit', content: `${visit.visitor_name} est arrivé(e) chez ${c.recipient?.first_name ?? ''}`.trim(), data: { source: 'kiosk_visitor', visit_id: visit.id }, occurred_at: naiveNow(), created_at: naiveNow(), photos: [] });
+        visit.journal_entry_id = entryId;
+        c.visits.unshift(visit);
+        return ok(visit);
+    }
+    if (seg[1] === 'kiosk' && seg[2] === 'visits' && seg.length === 5 && method === 'POST') {
+        const visit = c.visits.find((v) => v.id === seg[3]);
+        if (!visit) throw new Error('Not found');
+        if (seg[4] === 'check-out') { visit.checked_out_at = naiveNow(); return ok(visit); }
+        if (seg[4] === 'note') {
+            const content = String(body.content || '').trim();
+            visit.note = visit.note ? `${visit.note}\n${content}` : content;
+            c.journal.unshift({ id: uid(), circle_id: c.id, author_user_id: null, caregiver_link_id: null, author_name: visit.visitor_name, type: 'visit', content, data: { source: 'kiosk_visitor', visit_id: visit.id, note: true }, occurred_at: naiveNow(), created_at: naiveNow(), photos: [] });
+            return ok(visit);
+        }
+    }
+    if (path === '/api/visits' && method === 'GET') {
+        const from = q.from ? `${q.from}T00:00:00` : '0000';
+        const to = q.to ? `${q.to}T23:59:59` : '9999';
+        return ok(c.visits.filter((v) => String(v.checked_in_at) >= from && String(v.checked_in_at) <= to).sort((a, b) => String(b.checked_in_at).localeCompare(String(a.checked_in_at))));
+    }
+    if (seg[1] === 'visits' && seg.length === 3 && method === 'DELETE') { removeFrom(c.visits, seg[2]); return ok({}); }
+    // Appareils patient, appairage et code aidant (tout en memoire pour la demo)
+    if (path === '/api/kiosk/devices' && method === 'GET') return ok({ devices: demoKiosk.devices, pin_configured: demoKiosk.pinSet });
+    if (path === '/api/kiosk/devices/pairing' && method === 'POST') {
+        const kind = body.kind === 'phone' ? 'phone' : 'kiosk';
+        const name = typeof body.name === 'string' && body.name.trim() ? body.name.trim() : (kind === 'phone' ? 'Téléphone' : 'Tablette');
+        // Le code de demo est accepte tel quel par /api/kiosk/pair : l'appareil apparait dans la liste.
+        const expires = new Date(Date.now() + 15 * 60000);
+        demoKiosk.devices.push({ id: uid(), name, kind, last_seen_at: null, created_at: naiveNow() });
+        return ok({ code: 'DEMO24', kind, name, expires_at: toLocalISO(expires) });
+    }
+    if (seg[1] === 'kiosk' && seg[2] === 'devices' && seg.length === 4 && method === 'DELETE') {
+        removeFrom(demoKiosk.devices, seg[3]);
+        return ok({});
+    }
+    if (path === '/api/kiosk/pin' && method === 'PUT') {
+        if (!/^\d{4,8}$/.test(String(body.pin ?? ''))) throw new Error('PIN_INVALID');
+        demoKiosk.pin = String(body.pin); demoKiosk.pinSet = true;
+        return ok({ pin_configured: true });
+    }
+    if (path === '/api/kiosk/pin' && method === 'DELETE') { demoKiosk.pin = ''; demoKiosk.pinSet = false; return ok({ pin_configured: false }); }
+    if (path === '/api/kiosk/pin/verify' && method === 'POST') {
+        return ok({ ok: !demoKiosk.pinSet || String(body.pin ?? '') === demoKiosk.pin, configured: demoKiosk.pinSet });
+    }
+    if (path === '/api/kiosk/pair' && method === 'POST') {
+        const device = { id: uid(), name: 'Tablette (démo)', kind: 'kiosk', settings: {} };
+        return ok({ token: 'demo-kiosk-token', circle_id: c.id, device, recipient_first_name: c.recipient?.first_name ?? null });
+    }
+    if (path === '/api/kiosk/device/settings' && method === 'PUT') return ok({ id: 'demo', name: 'Tablette (démo)', kind: 'kiosk', settings: body });
+    if (path === '/api/kiosk/device/unpair' && method === 'POST') return ok({});
+    // "J'ai tout pris" : toutes les prises listees passent a "pris", source kiosk ou telephone.
+    if (path === '/api/kiosk/intakes/confirm' && method === 'POST') {
+        const ids: string[] = Array.isArray(body.intake_ids) ? body.intake_ids : [];
+        const source = body.source === 'phone' ? 'phone' : 'kiosk';
+        let confirmed = 0;
+        for (const id of ids) { if (setIntakeStatus(c, id, 'taken', source)) confirmed++; }
+        return ok({ confirmed });
+    }
     if (path === '/api/kiosk/status' && method === 'POST') {
         const kind = body.kind === 'help' ? 'help' : body.kind === 'hydration' ? 'hydration' : 'ok';
         const firstName = c.recipient ? c.recipient.first_name : 'Kiosk';
@@ -1487,13 +1729,30 @@ async function route(method: string, path: string, q: Record<string, string>, bo
         });
     }
     if (path === '/api/companion/message' && method === 'POST') {
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        // Comme le serveur : les questions pratiques sont repondues depuis les
+        // donnees du cercle (sans IA), le reste simule un compagnon.
+        await new Promise((resolve) => setTimeout(resolve, 400));
         const msgs = Array.isArray(body.messages) ? (body.messages as Array<{ role: string; content: string }>) : [];
         const last = msgs.length > 0 ? String(msgs[msgs.length - 1]?.content || '') : '';
-        const reply = last
-            ? `C'est gentil de me raconter ça. Et qu'est-ce que ça t'évoque comme souvenir ?`
-            : `Je suis là pour discuter avec toi. De quoi as-tu envie de parler ?`;
-        return ok({ reply, flagged: false });
+        const lang: CompanionLang = store.user.language === 'en' ? 'en' : 'fr';
+        const today = kioskToday(c);
+        const facts: CompanionFactsInput = {
+            recipientFirstName: c.recipient?.first_name ?? '',
+            medications: today.medications,
+            events_today: today.events_today,
+            visits_today: today.visits_today,
+            contacts_key: today.contacts_key,
+            heatwave: today.heatwave,
+        };
+        const intent = detectIntent(last);
+        if (intent) {
+            const hint = intent !== 'help' && hasDistressSignal(last) ? distressHint(lang) : '';
+            return ok({ reply: answerIntent(intent, facts, lang) + hint, flagged: intent === 'help', source: 'facts', intent });
+        }
+        const reply = lang === 'en'
+            ? 'That is kind of you to tell me. What memory does it bring back?'
+            : "C'est gentil de me raconter ça. Et qu'est-ce que ça t'évoque comme souvenir ?";
+        return ok({ reply, flagged: false, source: 'ai', intent: null });
     }
     if (path === '/api/ai/test' && method === 'POST') {
         await new Promise((resolve) => setTimeout(resolve, 600));

@@ -12,8 +12,23 @@ import {
     CaregiverLinkRequest,
 } from '../middleware/circle';
 import { broadcastToCircle } from '../lib/broadcaster';
+import {
+    applyIntakeStatus,
+    fetchIntakeForUpdate,
+    generateIntakes,
+    markMissed,
+    toDateString,
+    INTAKE_DISPLAY_COLUMNS,
+    INTAKE_DISPLAY_FROM,
+} from '../lib/intakes';
+import { langFromRequest, t, type Lang } from '../lib/i18n';
 
 const router = Router();
+
+// Unites et options de prise (memes listes que shared/src/constants.ts)
+const MEDICATION_UNITS = ['tablet', 'capsule', 'ml', 'drop', 'sachet', 'patch', 'injection', 'puff', 'application', 'dose'];
+const WITH_FOOD_OPTIONS = ['with', 'without', 'any'];
+const MAX_QUANTITY = 99;
 
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -35,27 +50,52 @@ interface ScheduleInput {
     time_of_day: string;
     days_of_week: number[];
     label: string | null;
+    /** Combien prendre a cet horaire (1 par defaut) */
+    quantity: number;
+    /** Unite de la quantite, ou null (deduite de la forme a l'affichage) */
+    unit: string | null;
 }
 
+/** Quantite par prise : nombre strictement positif, 2 decimales max, 99 max. */
+const parseQuantity = (raw: unknown): number | null => {
+    if (raw === undefined || raw === null || raw === '') return 1;
+    const value = typeof raw === 'number' ? raw : Number(String(raw).replace(',', '.'));
+    if (!Number.isFinite(value) || value <= 0 || value > MAX_QUANTITY) return null;
+    return Math.round(value * 100) / 100;
+};
+
+const parseUnit = (raw: unknown): string | null | undefined => {
+    if (raw === undefined || raw === null || raw === '') return null;
+    return typeof raw === 'string' && MEDICATION_UNITS.includes(raw) ? raw : undefined;
+};
+
 /** Validate and normalize the schedules array from the request body. */
-const parseSchedules = (raw: unknown): { schedules?: ScheduleInput[]; error?: string } => {
+const parseSchedules = (raw: unknown, lang: Lang): { schedules?: ScheduleInput[]; error?: string } => {
     if (!Array.isArray(raw)) {
-        return { error: 'schedules doit être un tableau' };
+        return { error: t(lang, 'medications.schedulesArray') };
     }
     const schedules: ScheduleInput[] = [];
     for (const item of raw) {
         if (!item || typeof item !== 'object') {
-            return { error: 'Horaire de prise invalide' };
+            return { error: t(lang, 'medications.scheduleInvalid') };
         }
-        const { time_of_day, days_of_week, label } = item as Record<string, unknown>;
+        const { time_of_day, days_of_week, label, quantity, unit } = item as Record<string, unknown>;
         if (typeof time_of_day !== 'string' || !TIME_RE.test(time_of_day)) {
-            return { error: 'Heure de prise invalide (format HH:MM attendu)' };
+            return { error: t(lang, 'medications.timeInvalid') };
+        }
+        const parsedQuantity = parseQuantity(quantity);
+        if (parsedQuantity === null) {
+            return { error: t(lang, 'medications.quantityInvalid') };
+        }
+        const parsedUnit = parseUnit(unit);
+        if (parsedUnit === undefined) {
+            return { error: t(lang, 'medications.unitInvalid') };
         }
         let days: number[] = [1, 2, 3, 4, 5, 6, 7];
         if (days_of_week !== undefined && days_of_week !== null) {
             if (!Array.isArray(days_of_week) || days_of_week.length === 0
                 || !days_of_week.every((d) => Number.isInteger(d) && d >= 1 && d <= 7)) {
-                return { error: 'Jours de prise invalides (entiers de 1 à 7 attendus)' };
+                return { error: t(lang, 'medications.daysInvalid') };
             }
             days = [...new Set(days_of_week as number[])].sort((a, b) => a - b);
         }
@@ -63,40 +103,62 @@ const parseSchedules = (raw: unknown): { schedules?: ScheduleInput[]; error?: st
             time_of_day,
             days_of_week: days,
             label: typeof label === 'string' && label.trim() ? label.trim().slice(0, 50) : null,
+            quantity: parsedQuantity,
+            unit: parsedUnit,
         });
     }
     return { schedules };
 };
 
 /** photo_url: only a raster image data URL (max 1.5 MB decoded) or null is accepted. */
-const parsePhotoUrl = (raw: unknown): { value?: string | null; error?: string } => {
+const parsePhotoUrl = (raw: unknown, lang: Lang): { value?: string | null; error?: string } => {
     if (raw === null || raw === undefined || raw === '') {
         return { value: null };
     }
     const match = typeof raw === 'string' ? raw.match(DATA_URL_IMAGE_RE) : null;
     if (!match) {
-        return { error: 'photo_url doit être une data URL image' };
+        return { error: t(lang, 'medications.photoDataUrl') };
     }
     if (base64ByteSize(match[1]) > MAX_PHOTO_BYTES) {
-        return { error: 'Photo trop volumineuse (1.5 Mo maximum)' };
+        return { error: t(lang, 'medications.photoTooLarge') };
     }
     // match implies raw is a string (the ternary above only matches on strings).
     return { value: raw as string };
 };
 
-const parseDateField = (raw: unknown, field: string): { value?: string | null; error?: string } => {
+const parseDateField = (raw: unknown, field: string, lang: Lang): { value?: string | null; error?: string } => {
     if (raw === null || raw === undefined || raw === '') {
         return { value: null };
     }
     if (typeof raw !== 'string' || !DATE_RE.test(raw)) {
-        return { error: `${field} doit être une date au format YYYY-MM-DD` };
+        return { error: t(lang, 'medications.dateFormat', { field }) };
     }
     return { value: raw };
 };
 
-const toDateString = (d: Date): string => {
-    const pad = (n: number) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+/** Champs optionnels du medicament : { valeur } ou { error }. */
+const parseMedicationExtras = (body: Record<string, unknown>, lang: Lang): {
+    values?: { prn?: boolean; with_food?: string | null; reason?: string | null; appearance?: string | null };
+    error?: string;
+} => {
+    const values: { prn?: boolean; with_food?: string | null; reason?: string | null; appearance?: string | null } = {};
+    if ('prn' in body) {
+        if (typeof body.prn !== 'boolean') return { error: t(lang, 'medications.prnBoolean') };
+        values.prn = body.prn;
+    }
+    if ('with_food' in body) {
+        const raw = body.with_food;
+        if (raw === null || raw === '' || raw === undefined) values.with_food = null;
+        else if (typeof raw === 'string' && WITH_FOOD_OPTIONS.includes(raw)) values.with_food = raw;
+        else return { error: t(lang, 'medications.withFoodInvalid') };
+    }
+    for (const field of ['reason', 'appearance'] as const) {
+        if (field in body) {
+            const raw = body[field];
+            values[field] = typeof raw === 'string' && raw.trim() ? raw.trim().slice(0, 500) : null;
+        }
+    }
+    return { values };
 };
 
 const MEDICATION_WITH_SCHEDULES = `
@@ -108,7 +170,9 @@ const MEDICATION_WITH_SCHEDULES = `
                        'medication_id', s.medication_id,
                        'time_of_day', to_char(s.time_of_day, 'HH24:MI'),
                        'days_of_week', s.days_of_week,
-                       'label', s.label
+                       'label', s.label,
+                       'quantity', s.quantity,
+                       'unit', s.unit
                    ) ORDER BY s.time_of_day
                ) FILTER (WHERE s.id IS NOT NULL),
                '[]'
@@ -124,89 +188,22 @@ const fetchMedicationWithSchedules = async (client: PoolClient, medicationId: st
     return result.rows[0];
 };
 
-/**
- * Apply a status change to an intake and keep the journal in sync.
- * taken/skipped: stamp the confirmation and create a journal entry.
- * pending: clear the confirmation and remove the linked journal entry.
- * Runs inside the caller's transaction. Returns the updated intake row.
- */
-const applyIntakeStatus = async (
-    client: PoolClient,
-    intake: { id: string; circle_id: string; medication_id: string; journal_entry_id: string | null; medication_name: string; medication_dosage: string | null },
-    status: 'taken' | 'skipped' | 'pending',
-    author: { userId?: string; linkId?: string; name: string }
-) => {
-    // The previous journal entry (if any) no longer reflects the new state.
-    if (intake.journal_entry_id) {
-        await client.query('DELETE FROM journal_entries WHERE id = $1', [intake.journal_entry_id]);
-    }
-
-    if (status === 'pending') {
-        const result = await client.query(
-            `UPDATE medication_intakes
-             SET status = 'pending', confirmed_by_user = NULL, confirmed_by_link = NULL,
-                 confirmed_at = NULL, journal_entry_id = NULL
-             WHERE id = $1
-             RETURNING *`,
-            [intake.id]
-        );
-        return result.rows[0];
-    }
-
-    const content = intake.medication_dosage
-        ? `${intake.medication_name} ${intake.medication_dosage}`
-        : intake.medication_name;
-
-    const entryResult = await client.query(
-        `INSERT INTO journal_entries (circle_id, author_user_id, caregiver_link_id, author_name, type, content, data)
-         VALUES ($1, $2, $3, $4, 'medication', $5, $6)
-         RETURNING id`,
-        [
-            intake.circle_id,
-            author.userId ?? null,
-            author.linkId ?? null,
-            author.name,
-            content,
-            JSON.stringify({ medication_id: intake.medication_id, intake_id: intake.id, status }),
-        ]
-    );
-
-    const result = await client.query(
-        `UPDATE medication_intakes
-         SET status = $1, confirmed_by_user = $2, confirmed_by_link = $3,
-             confirmed_at = NOW(), journal_entry_id = $4
-         WHERE id = $5
-         RETURNING *`,
-        [status, author.userId ?? null, author.linkId ?? null, entryResult.rows[0].id, intake.id]
-    );
-    return result.rows[0];
-};
-
-const fetchIntakeForUpdate = async (client: PoolClient, intakeId: string, circleId: string) => {
-    const result = await client.query(
-        `SELECT i.id, i.circle_id, i.medication_id, i.journal_entry_id,
-                m.name AS medication_name, m.dosage AS medication_dosage
-         FROM medication_intakes i
-         JOIN medications m ON m.id = i.medication_id
-         WHERE i.id = $1 AND i.circle_id = $2
-         FOR UPDATE OF i`,
-        [intakeId, circleId]
-    );
-    return result.rows[0];
-};
+// applyIntakeStatus / fetchIntakeForUpdate live in ../lib/intakes (shared with
+// the kiosk and the patient phone).
 
 // ============================================================
 // Magic link (no account): confirm an intake through a caregiver link.
 // Declared before the auth middleware so it stays public.
 // ============================================================
 router.put('/link/:linkToken/intakes/:id', caregiverLinkMiddleware, async (req: CaregiverLinkRequest, res: Response) => {
+    const lang = langFromRequest(req);
     const client = await getClient();
     try {
         const link = req.caregiverLink!;
         const { status } = req.body;
 
         if (!INTAKE_STATUSES.includes(status)) {
-            return res.status(400).json({ success: false, error: 'Statut invalide' });
+            return res.status(400).json({ success: false, error: t(lang, 'medications.statusInvalid') });
         }
 
         await client.query('BEGIN');
@@ -215,13 +212,13 @@ router.put('/link/:linkToken/intakes/:id', caregiverLinkMiddleware, async (req: 
         const intake = await fetchIntakeForUpdate(client, req.params.id, link.circle_id);
         if (!intake) {
             await client.query('ROLLBACK');
-            return res.status(404).json({ success: false, error: 'Prise introuvable' });
+            return res.status(404).json({ success: false, error: t(lang, 'medications.intakeNotFound') });
         }
 
         const updated = await applyIntakeStatus(client, intake, status, {
             linkId: link.id,
             name: link.display_name,
-        });
+        }, 'link');
 
         await client.query('COMMIT');
 
@@ -248,10 +245,11 @@ router.use(authMiddleware, circleMiddleware, requireRole('admin', 'family', 'pro
 
 // List the circle's medications with their schedules. ?active=true|false|all (default true)
 router.get('/', async (req: CircleRequest, res: Response) => {
+    const lang = langFromRequest(req);
     try {
         const active = typeof req.query.active === 'string' ? req.query.active : 'true';
         if (!['true', 'false', 'all'].includes(active)) {
-            return res.status(400).json({ success: false, error: 'Paramètre active invalide (true, false ou all)' });
+            return res.status(400).json({ success: false, error: t(lang, 'medications.activeParam') });
         }
 
         const conditions = ['m.circle_id = $1'];
@@ -277,30 +275,37 @@ router.get('/', async (req: CircleRequest, res: Response) => {
 
 // Create a medication with its schedules (admin and family)
 router.post('/', requireContentWriter, async (req: CircleRequest, res: Response) => {
+    const lang = langFromRequest(req);
     const client = await getClient();
     try {
         const { name, dosage, form, instructions, prescriber, schedules } = req.body;
 
         if (typeof name !== 'string' || !name.trim()) {
-            return res.status(400).json({ success: false, error: 'Le nom du médicament est requis' });
+            return res.status(400).json({ success: false, error: t(lang, 'medications.nameRequired') });
         }
 
-        const photo = parsePhotoUrl(req.body.photo_url);
+        const photo = parsePhotoUrl(req.body.photo_url, lang);
         if (photo.error) {
             return res.status(400).json({ success: false, error: photo.error });
         }
-        const startDate = parseDateField(req.body.start_date, 'start_date');
+        const startDate = parseDateField(req.body.start_date, 'start_date', lang);
         if (startDate.error) {
             return res.status(400).json({ success: false, error: startDate.error });
         }
-        const endDate = parseDateField(req.body.end_date, 'end_date');
+        const endDate = parseDateField(req.body.end_date, 'end_date', lang);
         if (endDate.error) {
             return res.status(400).json({ success: false, error: endDate.error });
         }
+        const extras = parseMedicationExtras(req.body as Record<string, unknown>, lang);
+        if (extras.error) {
+            return res.status(400).json({ success: false, error: extras.error });
+        }
+        const prn = extras.values?.prn === true;
 
+        // "Si besoin" medications have no schedule: occurrences are logged on demand.
         let parsedSchedules: ScheduleInput[] = [];
-        if (schedules !== undefined && schedules !== null) {
-            const parsed = parseSchedules(schedules);
+        if (!prn && schedules !== undefined && schedules !== null) {
+            const parsed = parseSchedules(schedules, lang);
             if (parsed.error) {
                 return res.status(400).json({ success: false, error: parsed.error });
             }
@@ -310,8 +315,9 @@ router.post('/', requireContentWriter, async (req: CircleRequest, res: Response)
         await client.query('BEGIN');
 
         const medResult = await client.query(
-            `INSERT INTO medications (circle_id, name, dosage, form, instructions, photo_url, prescriber, start_date, end_date)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            `INSERT INTO medications (circle_id, name, dosage, form, instructions, photo_url, prescriber, start_date, end_date,
+                                      prn, with_food, reason, appearance)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
              RETURNING id`,
             [
                 req.circleId,
@@ -323,15 +329,19 @@ router.post('/', requireContentWriter, async (req: CircleRequest, res: Response)
                 typeof prescriber === 'string' && prescriber.trim() ? prescriber.trim() : null,
                 startDate.value,
                 endDate.value,
+                prn,
+                extras.values?.with_food ?? null,
+                extras.values?.reason ?? null,
+                extras.values?.appearance ?? null,
             ]
         );
         const medicationId = medResult.rows[0].id;
 
         for (const schedule of parsedSchedules) {
             await client.query(
-                `INSERT INTO medication_schedules (medication_id, time_of_day, days_of_week, label)
-                 VALUES ($1, $2, $3, $4)`,
-                [medicationId, schedule.time_of_day, JSON.stringify(schedule.days_of_week), schedule.label]
+                `INSERT INTO medication_schedules (medication_id, time_of_day, days_of_week, label, quantity, unit)
+                 VALUES ($1, $2, $3, $4, $5, $6)`,
+                [medicationId, schedule.time_of_day, JSON.stringify(schedule.days_of_week), schedule.label, schedule.quantity, schedule.unit]
             );
         }
 
@@ -351,6 +361,7 @@ router.post('/', requireContentWriter, async (req: CircleRequest, res: Response)
 
 // Update a medication; if schedules is provided, replace them all (admin and family)
 router.put('/:id', requireContentWriter, async (req: CircleRequest, res: Response) => {
+    const lang = langFromRequest(req);
     const client = await getClient();
     try {
         const { schedules } = req.body;
@@ -360,7 +371,7 @@ router.put('/:id', requireContentWriter, async (req: CircleRequest, res: Respons
 
         if ('name' in req.body) {
             if (typeof req.body.name !== 'string' || !req.body.name.trim()) {
-                return res.status(400).json({ success: false, error: 'Le nom du médicament est requis' });
+                return res.status(400).json({ success: false, error: t(lang, 'medications.nameRequired') });
             }
             fields.push(`name = $${idx++}`);
             values.push(req.body.name.trim());
@@ -373,7 +384,7 @@ router.put('/:id', requireContentWriter, async (req: CircleRequest, res: Respons
             }
         }
         if ('photo_url' in req.body) {
-            const photo = parsePhotoUrl(req.body.photo_url);
+            const photo = parsePhotoUrl(req.body.photo_url, lang);
             if (photo.error) {
                 return res.status(400).json({ success: false, error: photo.error });
             }
@@ -382,7 +393,7 @@ router.put('/:id', requireContentWriter, async (req: CircleRequest, res: Respons
         }
         for (const field of ['start_date', 'end_date'] as const) {
             if (field in req.body) {
-                const parsed = parseDateField(req.body[field], field);
+                const parsed = parseDateField(req.body[field], field, lang);
                 if (parsed.error) {
                     return res.status(400).json({ success: false, error: parsed.error });
                 }
@@ -392,15 +403,26 @@ router.put('/:id', requireContentWriter, async (req: CircleRequest, res: Respons
         }
         if ('active' in req.body) {
             if (typeof req.body.active !== 'boolean') {
-                return res.status(400).json({ success: false, error: 'active doit être un booléen' });
+                return res.status(400).json({ success: false, error: t(lang, 'medications.activeBoolean') });
             }
             fields.push(`active = $${idx++}`);
             values.push(req.body.active);
         }
+        const extras = parseMedicationExtras(req.body as Record<string, unknown>, lang);
+        if (extras.error) {
+            return res.status(400).json({ success: false, error: extras.error });
+        }
+        for (const [field, value] of Object.entries(extras.values ?? {})) {
+            fields.push(`${field} = $${idx++}`);
+            values.push(value);
+        }
 
         let parsedSchedules: ScheduleInput[] | null = null;
-        if (schedules !== undefined && schedules !== null) {
-            const parsed = parseSchedules(schedules);
+        if (extras.values?.prn === true) {
+            // Switching to "as needed" drops the fixed schedule.
+            parsedSchedules = [];
+        } else if (schedules !== undefined && schedules !== null) {
+            const parsed = parseSchedules(schedules, lang);
             if (parsed.error) {
                 return res.status(400).json({ success: false, error: parsed.error });
             }
@@ -419,7 +441,7 @@ router.put('/:id', requireContentWriter, async (req: CircleRequest, res: Respons
         );
         if (existing.rows.length === 0) {
             await client.query('ROLLBACK');
-            return res.status(404).json({ success: false, error: 'Médicament introuvable' });
+            return res.status(404).json({ success: false, error: t(lang, 'medications.notFound') });
         }
 
         if (fields.length > 0) {
@@ -434,11 +456,18 @@ router.put('/:id', requireContentWriter, async (req: CircleRequest, res: Respons
             await client.query('DELETE FROM medication_schedules WHERE medication_id = $1', [req.params.id]);
             for (const schedule of parsedSchedules) {
                 await client.query(
-                    `INSERT INTO medication_schedules (medication_id, time_of_day, days_of_week, label)
-                     VALUES ($1, $2, $3, $4)`,
-                    [req.params.id, schedule.time_of_day, JSON.stringify(schedule.days_of_week), schedule.label]
+                    `INSERT INTO medication_schedules (medication_id, time_of_day, days_of_week, label, quantity, unit)
+                     VALUES ($1, $2, $3, $4, $5, $6)`,
+                    [req.params.id, schedule.time_of_day, JSON.stringify(schedule.days_of_week), schedule.label, schedule.quantity, schedule.unit]
                 );
             }
+            // Pending occurrences of today and later no longer match the new
+            // schedule: drop them so they are regenerated (confirmed ones stay).
+            await client.query(
+                `DELETE FROM medication_intakes
+                 WHERE medication_id = $1 AND status = 'pending' AND due_at >= date_trunc('day', NOW())`,
+                [req.params.id]
+            );
         }
 
         const medication = await fetchMedicationWithSchedules(client, req.params.id);
@@ -457,13 +486,14 @@ router.put('/:id', requireContentWriter, async (req: CircleRequest, res: Respons
 
 // Delete a medication (admin and family). Cascades to schedules and intakes.
 router.delete('/:id', requireContentWriter, async (req: CircleRequest, res: Response) => {
+    const lang = langFromRequest(req);
     try {
         const result = await query(
             'DELETE FROM medications WHERE id = $1 AND circle_id = $2 RETURNING id',
             [req.params.id, req.circleId]
         );
         if (result.rows.length === 0) {
-            return res.status(404).json({ success: false, error: 'Médicament introuvable' });
+            return res.status(404).json({ success: false, error: t(lang, 'medications.notFound') });
         }
 
         await broadcastToCircle(req.circleId!, { type: 'update', entity: 'medications', action: 'deleted' });
@@ -481,19 +511,20 @@ router.delete('/:id', requireContentWriter, async (req: CircleRequest, res: Resp
 // List intakes between from and to (default: today), lazily generating
 // the missing occurrences of the period from the active medications' schedules.
 router.get('/intakes', async (req: CircleRequest, res: Response) => {
+    const lang = langFromRequest(req);
     try {
         const today = toDateString(new Date());
         const from = typeof req.query.from === 'string' && req.query.from ? req.query.from : today;
         let to = typeof req.query.to === 'string' && req.query.to ? req.query.to : from;
 
         if (!DATE_RE.test(from) || !DATE_RE.test(to)) {
-            return res.status(400).json({ success: false, error: 'Dates invalides (format YYYY-MM-DD attendu)' });
+            return res.status(400).json({ success: false, error: t(lang, 'medications.datesInvalid') });
         }
 
         const fromDate = new Date(`${from}T00:00:00`);
         const toDate = new Date(`${to}T00:00:00`);
         if (toDate < fromDate) {
-            return res.status(400).json({ success: false, error: 'La date de fin doit suivre la date de début' });
+            return res.status(400).json({ success: false, error: t(lang, 'medications.endBeforeStart') });
         }
 
         // Cap the period at 14 days to keep lazy generation bounded.
@@ -504,40 +535,14 @@ router.get('/intakes', async (req: CircleRequest, res: Response) => {
             to = toDateString(capped);
         }
 
-        // Generate the missing occurrences of the period (idempotent thanks to the
-        // unique constraint). Respects the medication start/end dates and the
-        // schedule's days of week (ISO: 1 = Monday ... 7 = Sunday).
-        await query(
-            `INSERT INTO medication_intakes (circle_id, medication_id, schedule_id, due_at)
-             SELECT m.circle_id, m.id, s.id, d::date + s.time_of_day
-             FROM medications m
-             JOIN medication_schedules s ON s.medication_id = m.id
-             CROSS JOIN generate_series($2::date, $3::date, interval '1 day') AS d
-             WHERE m.circle_id = $1
-               AND m.active = TRUE
-               AND (m.start_date IS NULL OR d::date >= m.start_date)
-               AND (m.end_date IS NULL OR d::date <= m.end_date)
-               AND s.days_of_week @> to_jsonb(EXTRACT(ISODOW FROM d)::int)
-             ON CONFLICT (medication_id, schedule_id, due_at) DO NOTHING`,
-            [req.circleId, from, to]
-        );
-
-        // Pending occurrences more than 4 hours overdue become missed.
-        await query(
-            `UPDATE medication_intakes
-             SET status = 'missed'
-             WHERE circle_id = $1 AND status = 'pending' AND due_at < NOW() - interval '4 hours'`,
-            [req.circleId]
-        );
+        // Generate the missing occurrences of the period (idempotent), then flag
+        // the overdue ones (shared with the kiosk: ../lib/intakes).
+        await generateIntakes(req.circleId!, from, to);
+        await markMissed(req.circleId!);
 
         const result = await query(
-            `SELECT i.id, i.circle_id, i.medication_id, i.schedule_id, i.due_at, i.status,
-                    i.confirmed_by_user, i.confirmed_by_link, i.confirmed_at, i.journal_entry_id,
-                    m.name AS medication_name, m.dosage AS medication_dosage,
-                    s.label AS schedule_label
-             FROM medication_intakes i
-             JOIN medications m ON m.id = i.medication_id
-             LEFT JOIN medication_schedules s ON s.id = i.schedule_id
+            `SELECT ${INTAKE_DISPLAY_COLUMNS}
+             ${INTAKE_DISPLAY_FROM}
              WHERE i.circle_id = $1
                AND i.due_at >= $2::date
                AND i.due_at < $3::date + interval '1 day'
@@ -553,11 +558,12 @@ router.get('/intakes', async (req: CircleRequest, res: Response) => {
 
 // Confirm, skip or reset an intake (everyone except viewers)
 router.put('/intakes/:id', requireJournalWriter, async (req: CircleRequest, res: Response) => {
+    const lang = langFromRequest(req);
     const client = await getClient();
     try {
         const { status } = req.body;
         if (!INTAKE_STATUSES.includes(status)) {
-            return res.status(400).json({ success: false, error: 'Statut invalide' });
+            return res.status(400).json({ success: false, error: t(lang, 'medications.statusInvalid') });
         }
 
         await client.query('BEGIN');
@@ -565,7 +571,7 @@ router.put('/intakes/:id', requireJournalWriter, async (req: CircleRequest, res:
         const intake = await fetchIntakeForUpdate(client, req.params.id, req.circleId!);
         if (!intake) {
             await client.query('ROLLBACK');
-            return res.status(404).json({ success: false, error: 'Prise introuvable' });
+            return res.status(404).json({ success: false, error: t(lang, 'medications.intakeNotFound') });
         }
 
         const userResult = await client.query('SELECT name FROM users WHERE id = $1', [req.userId]);
@@ -574,7 +580,7 @@ router.put('/intakes/:id', requireJournalWriter, async (req: CircleRequest, res:
         const updated = await applyIntakeStatus(client, intake, status, {
             userId: req.userId,
             name: authorName,
-        });
+        }, 'caregiver');
 
         await client.query('COMMIT');
 
@@ -584,6 +590,54 @@ router.put('/intakes/:id', requireJournalWriter, async (req: CircleRequest, res:
     } catch (error) {
         await client.query('ROLLBACK');
         console.error('Update intake error:', error);
+        res.status(500).json({ success: false, error: 'Internal server error' });
+    } finally {
+        client.release();
+    }
+});
+
+// Log an ad-hoc dose of an "as needed" medication (no schedule): creates a
+// taken intake dated now. Body { quantity?: number }.
+router.post('/:id/intakes', requireJournalWriter, async (req: CircleRequest, res: Response) => {
+    const client = await getClient();
+    const lang = langFromRequest(req);
+    try {
+        const quantity = parseQuantity(req.body?.quantity);
+        if (quantity === null) {
+            return res.status(400).json({ success: false, error: t(lang, 'medications.quantityInvalid') });
+        }
+
+        await client.query('BEGIN');
+        const medResult = await client.query(
+            `SELECT id, name, dosage, form, prn, active FROM medications WHERE id = $1 AND circle_id = $2 FOR UPDATE`,
+            [req.params.id, req.circleId]
+        );
+        const med = medResult.rows[0];
+        if (!med) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ success: false, error: t(lang, 'medications.notFound') });
+        }
+
+        const inserted = await client.query(
+            `INSERT INTO medication_intakes (circle_id, medication_id, schedule_id, due_at, status, quantity)
+             VALUES ($1, $2, NULL, NOW(), 'pending', $3)
+             RETURNING id`,
+            [req.circleId, med.id, quantity]
+        );
+        const intake = await fetchIntakeForUpdate(client, inserted.rows[0].id, req.circleId!);
+        const userResult = await client.query('SELECT name FROM users WHERE id = $1', [req.userId]);
+        const updated = await applyIntakeStatus(client, intake!, 'taken', {
+            userId: req.userId,
+            name: userResult.rows[0]?.name ?? 'Aidant',
+        }, 'caregiver');
+        await client.query('COMMIT');
+
+        await broadcastToCircle(req.circleId!, { type: 'update', entity: 'intakes', action: 'created' });
+        await broadcastToCircle(req.circleId!, { type: 'update', entity: 'journal', action: 'created' });
+        res.json({ success: true, data: updated });
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Log intake error:', error);
         res.status(500).json({ success: false, error: 'Internal server error' });
     } finally {
         client.release();
@@ -616,23 +670,24 @@ router.get('/prescriptions', async (req: CircleRequest, res: Response) => {
 
 // Create a prescription (admin and family)
 router.post('/prescriptions', requireContentWriter, async (req: CircleRequest, res: Response) => {
+    const lang = langFromRequest(req);
     try {
         const { title, prescribed_by, reminder_days, document_id, notes } = req.body;
 
         if (typeof title !== 'string' || !title.trim()) {
-            return res.status(400).json({ success: false, error: 'Le titre de l\'ordonnance est requis' });
+            return res.status(400).json({ success: false, error: t(lang, 'medications.prescriptionTitleRequired') });
         }
-        const issuedDate = parseDateField(req.body.issued_date, 'issued_date');
+        const issuedDate = parseDateField(req.body.issued_date, 'issued_date', lang);
         if (issuedDate.error) {
             return res.status(400).json({ success: false, error: issuedDate.error });
         }
-        const renewalDate = parseDateField(req.body.renewal_date, 'renewal_date');
+        const renewalDate = parseDateField(req.body.renewal_date, 'renewal_date', lang);
         if (renewalDate.error) {
             return res.status(400).json({ success: false, error: renewalDate.error });
         }
         if (reminder_days !== undefined && reminder_days !== null
             && (!Number.isInteger(reminder_days) || reminder_days < 0)) {
-            return res.status(400).json({ success: false, error: 'reminder_days doit être un entier positif' });
+            return res.status(400).json({ success: false, error: t(lang, 'medications.reminderDays') });
         }
 
         const result = await query(
@@ -661,6 +716,7 @@ router.post('/prescriptions', requireContentWriter, async (req: CircleRequest, r
 
 // Update a prescription (admin and family)
 router.put('/prescriptions/:id', requireContentWriter, async (req: CircleRequest, res: Response) => {
+    const lang = langFromRequest(req);
     try {
         const fields: string[] = [];
         const values: unknown[] = [];
@@ -668,7 +724,7 @@ router.put('/prescriptions/:id', requireContentWriter, async (req: CircleRequest
 
         if ('title' in req.body) {
             if (typeof req.body.title !== 'string' || !req.body.title.trim()) {
-                return res.status(400).json({ success: false, error: 'Le titre de l\'ordonnance est requis' });
+                return res.status(400).json({ success: false, error: t(lang, 'medications.prescriptionTitleRequired') });
             }
             fields.push(`title = $${idx++}`);
             values.push(req.body.title.trim());
@@ -682,7 +738,7 @@ router.put('/prescriptions/:id', requireContentWriter, async (req: CircleRequest
         }
         for (const field of ['issued_date', 'renewal_date'] as const) {
             if (field in req.body) {
-                const parsed = parseDateField(req.body[field], field);
+                const parsed = parseDateField(req.body[field], field, lang);
                 if (parsed.error) {
                     return res.status(400).json({ success: false, error: parsed.error });
                 }
@@ -692,7 +748,7 @@ router.put('/prescriptions/:id', requireContentWriter, async (req: CircleRequest
         }
         if ('reminder_days' in req.body) {
             if (!Number.isInteger(req.body.reminder_days) || req.body.reminder_days < 0) {
-                return res.status(400).json({ success: false, error: 'reminder_days doit être un entier positif' });
+                return res.status(400).json({ success: false, error: t(lang, 'medications.reminderDays') });
             }
             fields.push(`reminder_days = $${idx++}`);
             values.push(req.body.reminder_days);
@@ -715,7 +771,7 @@ router.put('/prescriptions/:id', requireContentWriter, async (req: CircleRequest
         );
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ success: false, error: 'Ordonnance introuvable' });
+            return res.status(404).json({ success: false, error: t(lang, 'medications.prescriptionNotFound') });
         }
 
         await broadcastToCircle(req.circleId!, { type: 'update', entity: 'medications', action: 'updated' });
@@ -728,13 +784,14 @@ router.put('/prescriptions/:id', requireContentWriter, async (req: CircleRequest
 
 // Delete a prescription (admin and family)
 router.delete('/prescriptions/:id', requireContentWriter, async (req: CircleRequest, res: Response) => {
+    const lang = langFromRequest(req);
     try {
         const result = await query(
             'DELETE FROM prescriptions WHERE id = $1 AND circle_id = $2 RETURNING id',
             [req.params.id, req.circleId]
         );
         if (result.rows.length === 0) {
-            return res.status(404).json({ success: false, error: 'Ordonnance introuvable' });
+            return res.status(404).json({ success: false, error: t(lang, 'medications.prescriptionNotFound') });
         }
 
         await broadcastToCircle(req.circleId!, { type: 'update', entity: 'medications', action: 'deleted' });

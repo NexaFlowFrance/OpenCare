@@ -167,6 +167,13 @@ export interface Medication extends BaseEntity {
     start_date?: string;
     end_date?: string;
     active: boolean;
+    /** Si besoin (PRN) : pas d'horaire, prises ponctuelles */
+    prn: boolean;
+    with_food?: 'with' | 'without' | 'any';
+    /** Pourquoi ce traitement, en mots simples */
+    reason?: string;
+    /** Couleur, forme : pour reconnaitre le medicament */
+    appearance?: string;
     schedules?: MedicationSchedule[];
 }
 
@@ -176,6 +183,10 @@ export interface MedicationSchedule {
     time_of_day: string;
     days_of_week: number[];
     label?: string;
+    /** Combien prendre a cet horaire (2 = "2 comprimes") */
+    quantity: number;
+    /** Unite de la quantite ; a defaut, deduite de la forme */
+    unit?: string;
     created_at: Date;
 }
 
@@ -189,6 +200,9 @@ export interface MedicationIntake {
     confirmed_by_user?: string;
     confirmed_by_link?: string;
     confirmed_at?: Date;
+    confirmed_source?: 'caregiver' | 'kiosk' | 'phone' | 'link';
+    quantity?: number;
+    unit?: string;
     journal_entry_id?: string;
     created_at: Date;
     // Joint pour l'affichage

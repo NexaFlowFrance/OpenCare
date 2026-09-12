@@ -1,5 +1,6 @@
 import { decryptCredentials } from '../../utils/crypto';
 import { safeFetch } from '../../utils/safeFetch';
+import { t, type Lang } from '../../lib/i18n';
 
 interface ImmichStats {
     photos: number;
@@ -7,14 +8,14 @@ interface ImmichStats {
     usage: number;
 }
 
-export async function testImmichConnection(baseUrl: string, apiKey: string): Promise<{ success: boolean; message: string; stats?: ImmichStats }> {
+export async function testImmichConnection(baseUrl: string, apiKey: string, lang: Lang = 'fr'): Promise<{ success: boolean; message: string; stats?: ImmichStats }> {
     try {
         const resp = await safeFetch(`${baseUrl}/api/server/version`, {
             headers: { 'x-api-key': apiKey },
         });
         if (!resp.ok) {
-            if (resp.status === 401) return { success: false, message: 'Cle API incorrecte' };
-            return { success: false, message: `Erreur HTTP ${resp.status}` };
+            if (resp.status === 401) return { success: false, message: t(lang, 'integrations.immich.keyInvalid') };
+            return { success: false, message: t(lang, 'integrations.httpError', { status: resp.status }) };
         }
         const version = await resp.json() as { major?: number; minor?: number; patch?: number };
         const vstr = version.major != null ? `${version.major}.${version.minor}.${version.patch}` : '';
@@ -27,14 +28,14 @@ export async function testImmichConnection(baseUrl: string, apiKey: string): Pro
             const stats = await statsResp.json() as { photos?: number; videos?: number; usage?: number };
             return {
                 success: true,
-                message: `Connecte a Immich ${vstr}`.trim(),
+                message: t(lang, 'integrations.immich.connected', { version: vstr }).trim(),
                 stats: { photos: stats.photos || 0, videos: stats.videos || 0, usage: stats.usage || 0 },
             };
         }
 
-        return { success: true, message: `Connecte a Immich ${vstr}`.trim() };
+        return { success: true, message: t(lang, 'integrations.immich.connected', { version: vstr }).trim() };
     } catch (e) {
-        return { success: false, message: e instanceof Error ? e.message : 'Impossible de joindre le serveur' };
+        return { success: false, message: e instanceof Error ? e.message : t(lang, 'integrations.unreachable') };
     }
 }
 

@@ -1,9 +1,9 @@
 import { Router, Response } from 'express';
 import { query, getClient } from '../db';
-import { authMiddleware } from '../middleware/auth';
-import { circleMiddleware, requireJournalWriter, CircleRequest } from '../middleware/circle';
+import { requireJournalWriter, JOURNAL_WRITER_ROLES, CircleRequest } from '../middleware/circle';
+import { kioskOrMember, allowDeviceOr } from '../middleware/kioskDevice';
 import { decryptCredentials } from '../utils/crypto';
-import { UnsafeUrlError } from '../utils/urlGuard';
+import { UnsafeUrlError, unsafeUrlMessage } from '../utils/urlGuard';
 import { safeFetch } from '../utils/safeFetch';
 import { aiComplete, getAiSettings } from '../services/ai';
 import {
@@ -14,6 +14,7 @@ import {
 } from '../services/ai/assistant';
 import { broadcastToCircle } from '../lib/broadcaster';
 import logger from '../lib/logger';
+import { langFromRequest, t } from '../lib/i18n';
 
 // Journal vocal: l'aidant dicte une note, le serveur la transcrit via un
 // service Whisper auto-hébergé compatible OpenAI (speaches, faster-whisper-server)
@@ -22,8 +23,9 @@ import logger from '../lib/logger';
 
 const router = Router();
 
-router.use(authMiddleware);
-router.use(circleMiddleware);
+// Un appareil patient appaire (tablette, telephone) peut transcrire pour le
+// compagnon ; le journal vocal (/journal) reste reserve aux membres.
+router.use(kioskOrMember());
 
 // data URL audio: type MIME de base + paramètres optionnels (;codecs=opus) + base64
 const AUDIO_DATA_URL_REGEX = /^data:(audio\/[a-z0-9.+-]+)((?:;[a-zA-Z0-9.+=_-]+)*);base64,([A-Za-z0-9+/]+={0,2})$/;
@@ -67,7 +69,8 @@ async function loadWhisperIntegration(circleId: string): Promise<WhisperIntegrat
 // POST /api/voice/transcribe : { audio: data URL } -> { text }
 // Sent as multipart/form-data to <base_url>/v1/audio/transcriptions
 // (OpenAI-compatible Whisper endpoint). Node 20: FormData/Blob globals.
-router.post('/transcribe', requireJournalWriter, async (req: CircleRequest, res: Response) => {
+router.post('/transcribe', allowDeviceOr(...JOURNAL_WRITER_ROLES), async (req: CircleRequest, res: Response) => {
+    const lang = langFromRequest(req);
     try {
         const audio = typeof req.body?.audio === 'string' ? req.body.audio : '';
         const match = audio.match(AUDIO_DATA_URL_REGEX);
@@ -139,8 +142,8 @@ router.post('/transcribe', requireJournalWriter, async (req: CircleRequest, res:
             // a 400 by the outer handler, so let UnsafeUrlError propagate.
             if (fetchError instanceof UnsafeUrlError) throw fetchError;
             const detail = fetchError instanceof Error && fetchError.name === 'AbortError'
-                ? `Le service Whisper n'a pas répondu en ${TRANSCRIBE_TIMEOUT_MS / 1000}s`
-                : 'Service Whisper injoignable';
+                ? t(lang, 'voice.whisperTimeout', { seconds: TRANSCRIBE_TIMEOUT_MS / 1000 })
+                : t(lang, 'integrations.whisperUnreachable');
             return res.status(502).json({ success: false, error: 'WHISPER_UNAVAILABLE', message: detail });
         }
 
@@ -151,7 +154,7 @@ router.post('/transcribe', requireJournalWriter, async (req: CircleRequest, res:
             return res.status(502).json({
                 success: false,
                 error: 'WHISPER_UNAVAILABLE',
-                message: `Le service Whisper a répondu ${response.status}`,
+                message: t(lang, 'integrations.whisperStatus', { status: response.status }),
             });
         }
 
@@ -160,7 +163,7 @@ router.post('/transcribe', requireJournalWriter, async (req: CircleRequest, res:
         res.json({ success: true, data: { text } });
     } catch (error) {
         if (error instanceof UnsafeUrlError) {
-            return res.status(400).json({ success: false, error: error.message });
+            return res.status(400).json({ success: false, error: unsafeUrlMessage(error, lang) });
         }
         logger.error('voice.transcribe_error', {
             error: error instanceof Error ? error.message : String(error),

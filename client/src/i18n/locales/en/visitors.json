@@ -1,0 +1,29 @@
+{
+  "title": "Visitors",
+  "subtitle": "Who came to see your loved one, as declared on the patient screen.",
+  "empty": "No visit declared over this period.",
+  "emptyHint": "On the patient screen, the \"Visitor\" button lets anyone who comes by check in with two taps.",
+  "range": {
+    "week": "Last 7 days",
+    "month": "Last 30 days",
+    "quarter": "Last 3 months"
+  },
+  "present": "Here now",
+  "arrived": "Arrived at {{time}}",
+  "left": "Left at {{time}}",
+  "duration": "{{minutes}} min",
+  "note": "Visit note",
+  "delete": "Delete this visit",
+  "deleted": "Visit deleted",
+  "types": {
+    "family": "Family",
+    "friend": "Friend or neighbor",
+    "caregiver": "Home aide",
+    "nurse": "Nurse",
+    "doctor": "Doctor",
+    "other": "Other"
+  },
+  "errors": {
+    "load": "Could not load the visits."
+  }
+}

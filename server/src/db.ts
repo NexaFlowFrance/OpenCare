@@ -128,6 +128,95 @@ export const runMigrations = async () => {
     // OpenCare repart d'un schema neuf (schema.sql). Les migrations futures
     // s'ajoutent ici, idempotentes, dans l'ordre chronologique.
     const migrations: string[] = [
+        // Mot de passe oublie : jetons de reinitialisation (hache SHA-256 pour la
+        // verification, copie chiffree uniquement en remise par un admin du cercle)
+        // et horodatage du dernier changement pour invalider les sessions ouvertes.
+        `CREATE TABLE IF NOT EXISTS password_resets (
+            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+            user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            token_hash VARCHAR(64) NOT NULL UNIQUE,
+            token_encrypted TEXT,
+            delivery VARCHAR(20) NOT NULL DEFAULT 'email'
+                CHECK (delivery IN ('email', 'admin')),
+            expires_at TIMESTAMP NOT NULL,
+            used_at TIMESTAMP,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );`,
+        `CREATE INDEX IF NOT EXISTS idx_password_resets_user ON password_resets(user_id);`,
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS password_changed_at TIMESTAMP;`,
+        // Medicaments pour l'experience patient (cf. schema.sql) : quantite et unite
+        // par horaire, medicaments "si besoin", repas, motif, aspect, source de
+        // confirmation. Les prises existantes recuperent la quantite de leur horaire.
+        `ALTER TABLE medications ADD COLUMN IF NOT EXISTS prn BOOLEAN NOT NULL DEFAULT FALSE;`,
+        `ALTER TABLE medications ADD COLUMN IF NOT EXISTS with_food VARCHAR(10);`,
+        `ALTER TABLE medications ADD COLUMN IF NOT EXISTS reason TEXT;`,
+        `ALTER TABLE medications ADD COLUMN IF NOT EXISTS appearance TEXT;`,
+        `DO $$ BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'medications_with_food_check') THEN
+                ALTER TABLE medications ADD CONSTRAINT medications_with_food_check
+                    CHECK (with_food IN ('with', 'without', 'any'));
+            END IF;
+        END $$;`,
+        `ALTER TABLE medication_schedules ADD COLUMN IF NOT EXISTS quantity NUMERIC(6,2) NOT NULL DEFAULT 1;`,
+        `ALTER TABLE medication_schedules ADD COLUMN IF NOT EXISTS unit VARCHAR(20);`,
+        `ALTER TABLE medication_intakes ADD COLUMN IF NOT EXISTS confirmed_source VARCHAR(20);`,
+        `ALTER TABLE medication_intakes ADD COLUMN IF NOT EXISTS quantity NUMERIC(6,2);`,
+        `ALTER TABLE medication_intakes ADD COLUMN IF NOT EXISTS unit VARCHAR(20);`,
+        `DO $$ BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'medication_intakes_confirmed_source_check') THEN
+                ALTER TABLE medication_intakes ADD CONSTRAINT medication_intakes_confirmed_source_check
+                    CHECK (confirmed_source IN ('caregiver', 'kiosk', 'phone', 'link'));
+            END IF;
+        END $$;`,
+        `UPDATE medication_intakes i SET quantity = s.quantity, unit = s.unit
+         FROM medication_schedules s
+         WHERE i.schedule_id = s.id AND i.quantity IS NULL;`,
+        // Appareils patient (kiosk ou telephone) avec identite propre, et codes
+        // d'appairage a usage unique (cf. schema.sql).
+        `ALTER TABLE kiosk_devices ADD COLUMN IF NOT EXISTS kind VARCHAR(10) NOT NULL DEFAULT 'kiosk';`,
+        `ALTER TABLE kiosk_devices ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES users(id) ON DELETE SET NULL;`,
+        `ALTER TABLE kiosk_devices ADD COLUMN IF NOT EXISTS revoked_at TIMESTAMP;`,
+        `DO $$ BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'kiosk_devices_kind_check') THEN
+                ALTER TABLE kiosk_devices ADD CONSTRAINT kiosk_devices_kind_check CHECK (kind IN ('kiosk', 'phone'));
+            END IF;
+        END $$;`,
+        `CREATE TABLE IF NOT EXISTS kiosk_pairings (
+            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+            circle_id UUID NOT NULL REFERENCES care_circles(id) ON DELETE CASCADE,
+            code VARCHAR(8) UNIQUE NOT NULL,
+            kind VARCHAR(10) NOT NULL DEFAULT 'kiosk' CHECK (kind IN ('kiosk', 'phone')),
+            name VARCHAR(100) NOT NULL,
+            created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+            expires_at TIMESTAMP NOT NULL,
+            consumed_at TIMESTAMP,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );`,
+        `CREATE INDEX IF NOT EXISTS idx_kiosk_pairings_circle ON kiosk_pairings(circle_id);`,
+        // Visites declarees depuis l'ecran patient (bouton "Visiteur", cf. schema.sql).
+        `CREATE TABLE IF NOT EXISTS visits (
+            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+            circle_id UUID NOT NULL REFERENCES care_circles(id) ON DELETE CASCADE,
+            visitor_type VARCHAR(20) NOT NULL DEFAULT 'other'
+                CHECK (visitor_type IN ('family', 'friend', 'caregiver', 'nurse', 'doctor', 'other')),
+            visitor_name VARCHAR(100) NOT NULL,
+            member_id UUID REFERENCES circle_members(id) ON DELETE SET NULL,
+            device_id UUID REFERENCES kiosk_devices(id) ON DELETE SET NULL,
+            checked_in_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            checked_out_at TIMESTAMP,
+            note TEXT,
+            journal_entry_id UUID REFERENCES journal_entries(id) ON DELETE SET NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );`,
+        `CREATE INDEX IF NOT EXISTS idx_visits_circle_in ON visits(circle_id, checked_in_at DESC);`,
+        // Plan de soins (consignes de la famille, cf. schema.sql).
+        `CREATE TABLE IF NOT EXISTS care_plans (
+            circle_id UUID PRIMARY KEY REFERENCES care_circles(id) ON DELETE CASCADE,
+            sections JSONB NOT NULL DEFAULT '{}',
+            updated_by UUID REFERENCES users(id) ON DELETE SET NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );`,
         // Suivi canicule / fortes chaleurs (cf. schema.sql). Idempotent: la table
         // existe deja sur une installation neuve (bootstrapSchema), absente sur
         // une mise a jour. Le trigger est garde par une recherche pg_trigger.

@@ -11,9 +11,12 @@ import {
     Archive,
     ArchiveRestore,
     FileText,
+    Clock,
+    PlusCircle,
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { cn } from '../lib/utils';
+import { MEDICATION_FORMS, MEDICATION_UNITS, formatAmount } from '../lib/medications';
 import { useCircle } from '../contexts/CircleContext';
 import { useWebSocketUpdates } from '../hooks/useWebSocketUpdates';
 import { dateLocale } from '../i18n/format';
@@ -35,11 +38,18 @@ import {
 type IntakeStatus = 'pending' | 'taken' | 'skipped' | 'missed';
 type Moment = 'morning' | 'noon' | 'evening' | 'night';
 
+type WithFood = 'with' | 'without' | 'any';
+type IntakeSource = 'caregiver' | 'kiosk' | 'phone' | 'link';
+
 interface MedicationSchedule {
     id?: string;
     time_of_day: string;
     days_of_week: number[];
     label: string | null;
+    /** Combien prendre a cet horaire (2 = "2 comprimes") */
+    quantity: number;
+    /** Unite ; null = deduite de la forme */
+    unit: string | null;
 }
 
 interface Medication {
@@ -53,17 +63,29 @@ interface Medication {
     start_date: string | null;
     end_date: string | null;
     active: boolean;
+    /** Si besoin : pas d'horaire, prises ponctuelles */
+    prn: boolean;
+    with_food: WithFood | null;
+    reason: string | null;
+    appearance: string | null;
     schedules: MedicationSchedule[];
 }
 
 interface Intake {
     id: string;
     medication_id: string;
+    schedule_id: string | null;
     due_at: string;
     status: IntakeStatus;
     confirmed_at: string | null;
+    confirmed_source: IntakeSource | null;
+    quantity: number | string | null;
+    unit: string | null;
     medication_name: string;
     medication_dosage: string | null;
+    form: string | null;
+    photo_url: string | null;
+    prn: boolean;
     schedule_label: string | null;
 }
 
@@ -81,13 +103,24 @@ interface ScheduleRow {
     time_of_day: string;
     days_of_week: number[];
     label: string;
+    /** Saisie libre ("1", "2", "0.5"), validee a l'envoi */
+    quantity: string;
+    /** '' = unite deduite de la forme */
+    unit: string;
 }
 
 // ─── Constants and helpers ────────────────────────────────────────────────────
 
 const MOMENTS: Moment[] = ['morning', 'noon', 'evening', 'night'];
 const ISO_DAYS = [1, 2, 3, 4, 5, 6, 7];
-const FORM_VALUES = ['tablet', 'capsule', 'syrup', 'drops', 'patch', 'injection', 'other'];
+const FORM_VALUES = [...MEDICATION_FORMS];
+const UNIT_VALUES = [...MEDICATION_UNITS];
+const WITH_FOOD_VALUES: WithFood[] = ['with', 'without', 'any'];
+const parseQuantity = (raw: string): number | null => {
+    const value = Number(String(raw).replace(',', '.'));
+    if (!Number.isFinite(value) || value <= 0 || value > 99) return null;
+    return Math.round(value * 100) / 100;
+};
 // Same limit as the server: the raw data URL string must stay under 1.5 MB.
 const MAX_PHOTO_CHARS = 1.5 * 1024 * 1024;
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -137,6 +170,8 @@ const emptyScheduleRow = (): ScheduleRow => ({
     time_of_day: '08:00',
     days_of_week: [...ISO_DAYS],
     label: '',
+    quantity: '1',
+    unit: '',
 });
 
 const emptyMedForm = () => ({
@@ -148,6 +183,10 @@ const emptyMedForm = () => ({
     start_date: '',
     end_date: '',
     photo_url: '',
+    prn: false,
+    with_food: '' as '' | WithFood,
+    reason: '',
+    appearance: '',
     schedules: [emptyScheduleRow()],
 });
 
@@ -199,6 +238,22 @@ const Medications: React.FC = () => {
     }));
     const formLabel = (value: string) =>
         t(`medications:forms.${value}`, { defaultValue: value });
+
+    const unitOptions = UNIT_VALUES.map((value) => ({
+        value,
+        label: t(`medications:units.${value}`, { count: 2 }),
+    }));
+    const withFoodOptions = WITH_FOOD_VALUES.map((value) => ({
+        value,
+        label: t(`medications:withFood.${value}`),
+    }));
+
+    /** "2 comprimés", "5 ml", "1 gélule" : la quantite a prendre, en mots. */
+    const amountLabel = (quantity: number | string | null | undefined, unit: string | null | undefined, form: string | null | undefined) =>
+        formatAmount(t, quantity, unit, form);
+
+    const sourceLabel = (source: IntakeSource | null) =>
+        source ? t(`medications:today.source.${source}`) : null;
 
     const fmtDate = (value: string) =>
         format(parseISO(value.slice(0, 10)), 'd MMM yyyy', { locale: dateLocale() });
@@ -288,6 +343,25 @@ const Medications: React.FC = () => {
         }
     };
 
+    // "Si besoin" medications have no schedule: a dose is logged when it happens.
+    const [prnBusy, setPrnBusy] = useState<string | null>(null);
+    const logPrnIntake = async (med: Medication) => {
+        setError('');
+        setPrnBusy(med.id);
+        try {
+            await api.post(`/api/medications/${med.id}/intakes`, {});
+            await loadIntakes();
+        } catch (err) {
+            console.error('Failed to log intake:', err);
+            setError(err instanceof Error ? err.message : t('medications:errors.logPrn'));
+        } finally {
+            setPrnBusy(null);
+        }
+    };
+    const prnMedications = medications.filter((m) => m.active && m.prn);
+    const prnIntakesToday = (medId: string) =>
+        intakes.filter((i) => i.medication_id === medId && i.status === 'taken').length;
+
     const renderIntakeStatus = (intake: Intake) => {
         if (intake.status === 'taken') {
             return (
@@ -376,6 +450,13 @@ const Medications: React.FC = () => {
                                             key={intake.id}
                                             className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center"
                                         >
+                                            {intake.photo_url ? (
+                                                <img
+                                                    src={intake.photo_url}
+                                                    alt=""
+                                                    className="h-12 w-12 flex-shrink-0 rounded-input border border-border object-cover"
+                                                />
+                                            ) : null}
                                             <div className="min-w-0 flex-1">
                                                 <p className="text-body font-medium text-foreground">
                                                     {intake.medication_name}
@@ -385,10 +466,20 @@ const Medications: React.FC = () => {
                                                         </span>
                                                     ) : null}
                                                 </p>
+                                                <p className="text-caption text-foreground">
+                                                    {t('medications:today.take', {
+                                                        amount: amountLabel(intake.quantity, intake.unit, intake.form),
+                                                    })}
+                                                </p>
                                                 <p className="text-caption text-muted-foreground">
                                                     {format(parseISO(intake.due_at), 'HH:mm')}
                                                     {intake.schedule_label
                                                         ? ` · ${intake.schedule_label}`
+                                                        : intake.prn
+                                                          ? ` · ${t('medications:today.prnTitle')}`
+                                                          : ''}
+                                                    {intake.status === 'taken' && intake.confirmed_source
+                                                        ? ` · ${sourceLabel(intake.confirmed_source)}`
                                                         : ''}
                                                 </p>
                                             </div>
@@ -405,6 +496,47 @@ const Medications: React.FC = () => {
                         </section>
                     );
                 })
+            )}
+
+            {prnMedications.length > 0 && (
+                <section>
+                    <h2 className="mb-2 text-label font-medium uppercase tracking-wide text-muted-foreground">
+                        {t('medications:today.prnTitle')}
+                    </h2>
+                    <Card>
+                        <CardContent className="divide-y divide-border p-0">
+                            <p className="px-4 pt-3 text-micro text-muted-foreground">{t('medications:today.prnHint')}</p>
+                            {prnMedications.map((med) => {
+                                const count = prnIntakesToday(med.id);
+                                return (
+                                    <div key={med.id} className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center">
+                                        {med.photo_url ? (
+                                            <img src={med.photo_url} alt="" className="h-12 w-12 flex-shrink-0 rounded-input border border-border object-cover" />
+                                        ) : (
+                                            <Clock className="h-6 w-6 flex-shrink-0 text-muted-foreground" aria-hidden="true" />
+                                        )}
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-body font-medium text-foreground">
+                                                {med.name}
+                                                {med.dosage ? <span className="ml-2 font-normal text-muted-foreground">{med.dosage}</span> : null}
+                                            </p>
+                                            <p className="text-caption text-muted-foreground">
+                                                {med.instructions || med.reason || ''}
+                                                {count > 0 ? `${med.instructions || med.reason ? ' · ' : ''}${t('medications:today.prnToday', { count })}` : ''}
+                                            </p>
+                                        </div>
+                                        {canWriteJournal && (
+                                            <Button variant="secondary" size="sm" disabled={prnBusy === med.id} onClick={() => void logPrnIntake(med)}>
+                                                <PlusCircle className="mr-1.5 h-4 w-4" />
+                                                {t('medications:today.logPrn')}
+                                            </Button>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </CardContent>
+                    </Card>
+                </section>
             )}
         </div>
     );
@@ -429,10 +561,16 @@ const Medications: React.FC = () => {
             start_date: med.start_date ? med.start_date.slice(0, 10) : '',
             end_date: med.end_date ? med.end_date.slice(0, 10) : '',
             photo_url: med.photo_url || '',
+            prn: Boolean(med.prn),
+            with_food: med.with_food || '',
+            reason: med.reason || '',
+            appearance: med.appearance || '',
             schedules: med.schedules.map((s) => ({
                 time_of_day: s.time_of_day,
                 days_of_week: [...s.days_of_week],
                 label: s.label || '',
+                quantity: String(Number(s.quantity) || 1),
+                unit: s.unit || '',
             })),
         });
         setMedFormError('');
@@ -486,13 +624,18 @@ const Medications: React.FC = () => {
         event.preventDefault();
         setMedFormError('');
 
-        for (const row of medForm.schedules) {
+        const rows = medForm.prn ? [] : medForm.schedules;
+        for (const row of rows) {
             if (!TIME_RE.test(row.time_of_day)) {
                 setMedFormError(t('medications:form.scheduleTimeError'));
                 return;
             }
             if (row.days_of_week.length === 0) {
                 setMedFormError(t('medications:form.scheduleDaysError'));
+                return;
+            }
+            if (parseQuantity(row.quantity) === null) {
+                setMedFormError(t('medications:form.quantityError'));
                 return;
             }
         }
@@ -506,10 +649,16 @@ const Medications: React.FC = () => {
             start_date: medForm.start_date || null,
             end_date: medForm.end_date || null,
             photo_url: medForm.photo_url || null,
-            schedules: medForm.schedules.map((row) => ({
+            prn: medForm.prn,
+            with_food: medForm.with_food || null,
+            reason: medForm.reason.trim() || null,
+            appearance: medForm.appearance.trim() || null,
+            schedules: rows.map((row) => ({
                 time_of_day: row.time_of_day,
                 days_of_week: row.days_of_week,
                 label: row.label.trim() || null,
+                quantity: parseQuantity(row.quantity) ?? 1,
+                unit: row.unit || null,
             })),
         };
 
@@ -541,14 +690,14 @@ const Medications: React.FC = () => {
         }
     };
 
-    const scheduleLine = (schedule: MedicationSchedule) => {
+    const scheduleLine = (schedule: MedicationSchedule, form: string | null) => {
         const hour = parseInt(schedule.time_of_day.slice(0, 2), 10);
         const name = schedule.label || t(`medications:moments.${momentOf(hour)}`);
         const days =
             schedule.days_of_week.length === 7
                 ? t('medications:treatments.everyDay')
                 : schedule.days_of_week.map((d) => daysShort[d - 1]).join(', ');
-        return `${name} ${schedule.time_of_day}, ${days}`;
+        return `${name} ${schedule.time_of_day}, ${days} : ${amountLabel(schedule.quantity, schedule.unit, form)}`;
     };
 
     const treatmentsSection = (
@@ -607,6 +756,9 @@ const Medications: React.FC = () => {
                                             {med.form && (
                                                 <Badge variant="secondary">{formLabel(med.form)}</Badge>
                                             )}
+                                            {med.prn && (
+                                                <Badge variant="default">{t('medications:treatments.prn')}</Badge>
+                                            )}
                                             {!med.active && (
                                                 <Badge variant="default">
                                                     {t('medications:treatments.archived')}
@@ -614,7 +766,11 @@ const Medications: React.FC = () => {
                                             )}
                                         </div>
                                         <div className="mt-1.5 space-y-0.5">
-                                            {med.schedules.length === 0 ? (
+                                            {med.prn ? (
+                                                <p className="text-caption text-muted-foreground">
+                                                    {t('medications:treatments.prnHint')}
+                                                </p>
+                                            ) : med.schedules.length === 0 ? (
                                                 <p className="text-caption text-muted-foreground">
                                                     {t('medications:treatments.noSchedule')}
                                                 </p>
@@ -624,11 +780,22 @@ const Medications: React.FC = () => {
                                                         key={schedule.id || index}
                                                         className="text-caption text-foreground"
                                                     >
-                                                        {scheduleLine(schedule)}
+                                                        {scheduleLine(schedule, med.form)}
                                                     </p>
                                                 ))
                                             )}
                                         </div>
+                                        {(med.with_food || med.reason || med.appearance) && (
+                                            <p className="mt-1.5 text-caption text-muted-foreground">
+                                                {[
+                                                    med.with_food ? t(`medications:withFood.${med.with_food}`) : null,
+                                                    med.reason ? t('medications:treatments.reason', { reason: med.reason }) : null,
+                                                    med.appearance ? t('medications:treatments.appearance', { appearance: med.appearance }) : null,
+                                                ]
+                                                    .filter(Boolean)
+                                                    .join(' · ')}
+                                            </p>
+                                        )}
                                         {med.instructions && (
                                             <p className="mt-1.5 text-caption text-muted-foreground">
                                                 {med.instructions}
@@ -981,6 +1148,48 @@ const Medications: React.FC = () => {
                             />
                         </div>
                     </div>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <Input
+                            label={t('medications:form.reason')}
+                            value={medForm.reason}
+                            onChange={(e) => setMedForm({ ...medForm, reason: e.target.value })}
+                            placeholder={t('medications:form.reasonPlaceholder')}
+                        />
+                        <Input
+                            label={t('medications:form.appearance')}
+                            value={medForm.appearance}
+                            onChange={(e) => setMedForm({ ...medForm, appearance: e.target.value })}
+                            placeholder={t('medications:form.appearancePlaceholder')}
+                        />
+                    </div>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                            <label className="mb-1.5 block text-caption font-medium text-foreground">
+                                {t('medications:form.withFood')}
+                            </label>
+                            <Select
+                                value={medForm.with_food}
+                                onValueChange={(value) => setMedForm({ ...medForm, with_food: value as '' | WithFood })}
+                                placeholder={t('medications:form.withFoodPlaceholder')}
+                                options={[
+                                    { value: '', label: t('medications:form.withFoodPlaceholder') },
+                                    ...withFoodOptions,
+                                ]}
+                            />
+                        </div>
+                        <label className="flex min-h-[44px] cursor-pointer items-start gap-2.5 sm:pt-7">
+                            <input
+                                type="checkbox"
+                                checked={medForm.prn}
+                                onChange={(e) => setMedForm({ ...medForm, prn: e.target.checked })}
+                                className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                            />
+                            <span>
+                                <span className="block text-caption font-medium text-foreground">{t('medications:form.prn')}</span>
+                                <span className="block text-micro text-muted-foreground">{t('medications:form.prnHint')}</span>
+                            </span>
+                        </label>
+                    </div>
                     <Textarea
                         label={t('medications:form.instructions')}
                         value={medForm.instructions}
@@ -1053,7 +1262,12 @@ const Medications: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Schedule editor */}
+                    {/* Schedule editor (hidden for "as needed" medications) */}
+                    {medForm.prn ? (
+                        <p className="rounded-input border border-dashed border-border px-3 py-4 text-center text-caption text-muted-foreground">
+                            {t('medications:form.prnNoSchedule')}
+                        </p>
+                    ) : (
                     <div>
                         <span className="mb-1 block text-caption font-medium text-foreground">
                             {t('medications:form.schedules')}
@@ -1072,7 +1286,7 @@ const Medications: React.FC = () => {
                                         key={index}
                                         className="space-y-3 rounded-input border border-border bg-surface-2/40 p-3"
                                     >
-                                        <div className="flex items-end gap-3">
+                                        <div className="flex flex-wrap items-end gap-3">
                                             <div className="w-32 flex-shrink-0">
                                                 <DatePicker
                                                     type="time"
@@ -1083,7 +1297,35 @@ const Medications: React.FC = () => {
                                                     }
                                                 />
                                             </div>
-                                            <div className="min-w-0 flex-1">
+                                            <div className="w-24 flex-shrink-0">
+                                                <Input
+                                                    label={t('medications:form.quantity')}
+                                                    type="number"
+                                                    inputMode="decimal"
+                                                    min={0.25}
+                                                    max={99}
+                                                    step={0.25}
+                                                    value={row.quantity}
+                                                    onChange={(e) =>
+                                                        updateScheduleRow(index, { quantity: e.target.value })
+                                                    }
+                                                />
+                                            </div>
+                                            <div className="w-40 flex-shrink-0">
+                                                <label className="mb-1.5 block text-caption font-medium text-foreground">
+                                                    {t('medications:form.unit')}
+                                                </label>
+                                                <Select
+                                                    value={row.unit}
+                                                    onValueChange={(value) => updateScheduleRow(index, { unit: value })}
+                                                    placeholder={t('medications:form.unitAuto')}
+                                                    options={[
+                                                        { value: '', label: t('medications:form.unitAuto') },
+                                                        ...unitOptions,
+                                                    ]}
+                                                />
+                                            </div>
+                                            <div className="min-w-[10rem] flex-1">
                                                 <Input
                                                     label={t('medications:form.label')}
                                                     value={row.label}
@@ -1154,6 +1396,7 @@ const Medications: React.FC = () => {
                             </Button>
                         </div>
                     </div>
+                    )}
 
                     <div className="flex justify-end gap-3 pt-4">
                         <Button

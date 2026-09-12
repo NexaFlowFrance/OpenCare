@@ -172,12 +172,15 @@ router.get('/consultation', async (req: CircleRequest, res: Response) => {
             ),
             query(
                 `SELECT m.id, m.name, m.dosage, m.form, m.instructions, m.prescriber,
+                        m.prn, m.with_food, m.reason,
                         COALESCE(
                             json_agg(
                                 json_build_object(
                                     'time_of_day', to_char(s.time_of_day, 'HH24:MI'),
                                     'days_of_week', s.days_of_week,
-                                    'label', s.label
+                                    'label', s.label,
+                                    'quantity', s.quantity,
+                                    'unit', s.unit
                                 ) ORDER BY s.time_of_day
                             ) FILTER (WHERE s.id IS NOT NULL),
                             '[]'

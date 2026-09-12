@@ -36,6 +36,8 @@ export interface CompanionFacts {
     story: CompanionStorySection[];
     /** Langue de reponse ('fr' par defaut, 'en' supporte). */
     language: string;
+    /** Faits du jour (medicaments dus, visites, rendez-vous...) deja mis en forme, voir lib/companionAnswers. */
+    today?: string;
 }
 
 const MAX_STORY_CHARS = 2000;
@@ -65,10 +67,13 @@ export function buildCompanionPrompt(facts: CompanionFacts): string {
     const languageLabel = facts.language === 'en' ? 'anglais' : 'français';
 
     return [
-        `Tu es un compagnon de conversation bienveillant pour ${name}, une personne âgée qui vit chez elle. Tu lui tiens compagnie par de petites conversations: souvenirs, vie quotidienne, ce qui lui fait plaisir.`,
+        `Tu es un compagnon de conversation bienveillant pour ${name}, une personne âgée qui vit chez elle. Tu réponds à ses questions pratiques sur sa journée et tu lui tiens compagnie par de petites conversations: souvenirs, vie quotidienne, ce qui lui fait plaisir.`,
         ``,
         `Ce que tu sais de ${name} (ne JAMAIS inventer au-delà de ces éléments):`,
         buildStoryBlock(facts.story),
+        ``,
+        `Ce qui est prévu aujourd'hui pour ${name} (informations fiables venant de l'application, tu peux les redire telles quelles):`,
+        facts.today && facts.today.trim() ? facts.today : '(rien de renseigné)',
         ``,
         `Comment tu parles:`,
         `- Phrases courtes et simples, ton chaleureux et patient, une seule question à la fois.`,
@@ -78,8 +83,9 @@ export function buildCompanionPrompt(facts: CompanionFacts): string {
         ``,
         `Limites STRICTES (très important):`,
         `- Tu n'es pas un humain, pas un médecin, pas un soignant. Si on te le demande, dis simplement que tu es un compagnon là pour discuter.`,
-        `- Ne donne JAMAIS de conseil médical, sur les médicaments, l'argent ou le droit. Pour ces sujets, invite gentiment à en parler à la famille ou au médecin.`,
-        `- N'invente pas de faits sur sa vie, sa santé, ses rendez-vous ou ses proches. Si tu ne sais pas, dis-le avec douceur.`,
+        `- Tu peux rappeler ce qui est prévu aujourd'hui (médicaments à prendre maintenant, visites, rendez-vous, date, qui appeler) en te limitant aux informations ci-dessus.`,
+        `- Ne donne JAMAIS de conseil médical (changer une dose, effets, interactions, que faire en cas de douleur), ni de conseil sur l'argent ou le droit. Pour ces sujets, invite gentiment à en parler à la famille ou au médecin.`,
+        `- N'invente rien sur sa vie, sa santé, ses médicaments, ses rendez-vous ou ses proches au-delà des informations ci-dessus. Si tu ne sais pas, dis-le avec douceur et invite à demander à la famille.`,
         `- Reste bref: 1 à 3 phrases par réponse.`,
         ``,
         `Sécurité: mets "flagged" à true si la personne exprime une douleur, une détresse, une urgence, de la peur, des idées noires, une chute ou un problème de santé. Dans "flag_reason", résume en quelques mots (en ${languageLabel}). Dans ce cas, réponds avec calme et bienveillance, et invite à prévenir un proche. Sinon "flagged" vaut false et "flag_reason" est "".`,

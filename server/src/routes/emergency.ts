@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { query } from '../db';
 import { authMiddleware } from '../middleware/auth';
 import { circleMiddleware, requireContentWriter, CircleRequest } from '../middleware/circle';
+import { langFromRequest, t } from '../lib/i18n';
 
 const router = Router();
 
@@ -65,6 +66,7 @@ const buildEmergencyData = async (circleId: string) => {
 
 // Lecture publique par token (mode LIVE, instances exposees). Pas d'auth.
 router.get('/public/:token', async (req, res) => {
+    const lang = langFromRequest(req);
     try {
         const sheetResult = await query(
             `SELECT s.circle_id, s.extra_notes, s.updated_at
@@ -75,7 +77,7 @@ router.get('/public/:token', async (req, res) => {
 
         const sheet = sheetResult.rows[0];
         if (!sheet) {
-            return res.status(404).json({ success: false, error: 'Fiche introuvable' });
+            return res.status(404).json({ success: false, error: t(lang, 'emergency.notFound') });
         }
 
         const data = await buildEmergencyData(sheet.circle_id);

@@ -1,10 +1,15 @@
 {
-  "greeting": "Bonjour {{name}}",
-  "greetingEvening": "Bonsoir {{name}}",
+  "greeting": "Bonjour, {{name}} !",
+  "greetingEvening": "Bonsoir, {{name}} !",
+  "greetingNoName": "Bonjour !",
   "exit": "Quitter",
   "fullscreen": "Plein écran",
   "exitFullscreen": "Quitter le plein écran",
   "and": "et",
+  "hero": {
+    "tagline": "Prenons soin de ta journée",
+    "cheer": "Tu te débrouilles très bien !"
+  },
   "today": {
     "title": "Aujourd'hui",
     "empty": "Pas de visite prévue aujourd'hui."
@@ -17,15 +22,52 @@
     "medical": "Rendez-vous à {{time}} : {{title}}",
     "other": "{{title}} à {{time}}"
   },
+  "visitors": {
+    "title": "Qui vient aujourd'hui",
+    "empty": "Personne de prévu aujourd'hui.",
+    "nurse": "Infirmier(ère)",
+    "aide": "Aide à domicile",
+    "someone": "Quelqu'un passe",
+    "roles": {
+      "admin": "Famille",
+      "family": "Famille",
+      "professional": "Professionnel(le)",
+      "neighbor": "Voisin(e)",
+      "viewer": "Proche"
+    }
+  },
+  "appointments": {
+    "title": "Rendez-vous du jour",
+    "empty": "Pas de rendez-vous aujourd'hui."
+  },
   "meds": {
     "title": "Tes médicaments",
+    "timeTitle": "C'est l'heure de tes médicaments",
     "empty": "Pas de médicament aujourd'hui.",
     "at": "à {{time}}",
-    "taken": "C'est pris, bravo"
+    "taken": "C'est pris, bravo",
+    "take": "Prends {{amount}}",
+    "takeAll": "J'ai tout pris",
+    "takeAllHint": "Bravo ! C'est enregistré.",
+    "confirmed": "C'est noté, bravo !",
+    "nothingTitle": "Rien à prendre pour l'instant",
+    "nextAt": "Prochaine prise à {{time}}",
+    "allDone": "Tous tes médicaments du jour sont pris",
+    "someDone": "{{taken}} prise(s) sur {{total}} faites aujourd'hui"
+  },
+  "actions": {
+    "ask": "Demandez-moi",
+    "askHint": "Médicaments, visites, rendez-vous",
+    "info": "Mes informations",
+    "infoHint": "Adresse, médecin, contacts",
+    "settings": "Réglages",
+    "settingsHint": "Texte, météo, photos"
   },
   "status": {
     "ok": "Tout va bien",
+    "okHint": "Je vais bien aujourd'hui",
     "help": "J'ai besoin d'aide",
+    "helpHint": "Prévenir ma famille maintenant",
     "sentTitle": "C'est envoyé.",
     "sentDetail": "Ta famille est prévenue.",
     "errorTitle": "Ça n'a pas marché.",
@@ -38,6 +80,45 @@
   },
   "companion": {
     "open": "Discuter un moment"
+  },
+  "info": {
+    "title": "Mes informations",
+    "name": "Je m'appelle",
+    "address": "Mon adresse",
+    "phone": "Mon téléphone",
+    "contacts": "Les personnes que je peux appeler",
+    "empty": "Aucune information renseignée pour l'instant.",
+    "close": "Fermer",
+    "categories": {
+      "doctor": "Médecin",
+      "nurse": "Infirmier(ère)",
+      "pharmacy": "Pharmacie",
+      "aide": "Aide à domicile",
+      "physio": "Kiné"
+    }
+  },
+  "pin": {
+    "title": "Code aidant",
+    "hint": "Ce réglage est réservé aux aidants. Saisis le code.",
+    "placeholder": "Code",
+    "submit": "Valider",
+    "wrong": "Code incorrect",
+    "cancel": "Annuler"
+  },
+  "leave": {
+    "title": "Quitter l'écran patient",
+    "unpairHint": "Cet appareil sera détaché du cercle. Un aidant pourra l'appairer à nouveau depuis les réglages.",
+    "unpair": "Détacher cet appareil",
+    "back": "Retour à l'application aidant"
+  },
+  "pair": {
+    "title": "Appairer cet appareil",
+    "subtitle": "Saisis le code affiché dans OpenCare (Réglages, Écran patient).",
+    "codeLabel": "Code d'appairage",
+    "submit": "Appairer",
+    "error": "Code invalide ou expiré. Demande un nouveau code à un aidant.",
+    "caregiver": "Je suis un aidant : me connecter",
+    "success": "C'est fait ! Cet appareil est prêt pour {{name}}."
   },
   "weather": {
     "clear": "Il fait beau",
@@ -58,12 +139,97 @@
     "noResults": "Aucun résultat",
     "noLocation": "Choisissez un lieu pour afficher la météo sur cet écran.",
     "change": "Changer",
-    "photoBackground": "Fond photo",
-    "photoBackgroundHint": "Affiche des photos de famille en arrière-plan. Nécessite une intégration Immich connectée."
+    "photoBackground": "Photos de famille",
+    "photoBackgroundHint": "Affiche les photos de famille dans le bandeau d'accueil. Nécessite une intégration Immich connectée.",
+    "fontSize": "Taille du texte",
+    "fontNormal": "Normal",
+    "fontLarge": "Grand",
+    "fontXL": "Très grand",
+    "language": "Langue de l'écran",
+    "deviceName": "Cet appareil : {{name}}",
+    "browserSpeech": "Dictée par le navigateur",
+    "browserSpeechHint": "Sans serveur Whisper, la voix de « Demandez-moi » est reconnue par le navigateur (Google, Apple ou Microsoft selon l'appareil) et sort donc de votre serveur. Désactivé, seule la dictée locale est utilisée."
   },
   "settings": {
-    "title": "Affichage kiosk",
-    "subtitle": "L'écran de la tablette murale chez votre proche : visites du jour, rappels de médicaments, météo, photos et boutons « Tout va bien » / « J'ai besoin d'aide ».",
-    "open": "Ouvrir l'affichage kiosk"
+    "title": "Écran patient (tablette et téléphone)",
+    "subtitle": "L'écran de la tablette murale et du téléphone de votre proche : ce qu'il y a à prendre maintenant, qui vient, les rendez-vous, l'assistant, et les boutons « Tout va bien » / « J'ai besoin d'aide ».",
+    "open": "Ouvrir l'écran patient",
+    "devices": "Appareils appairés",
+    "noDevices": "Aucun appareil appairé. Appairez la tablette murale ou le téléphone de votre proche : ils n'auront pas besoin de compte.",
+    "pairKiosk": "Appairer une tablette",
+    "pairPhone": "Appairer un téléphone",
+    "deviceName": "Nom de l'appareil",
+    "deviceNamePlaceholder": "Ex. Tablette du salon",
+    "kinds": {
+      "kiosk": "Tablette murale",
+      "phone": "Téléphone du proche"
+    },
+    "lastSeen": "Vu {{when}}",
+    "neverSeen": "Jamais connecté",
+    "revoke": "Détacher",
+    "revoked": "Appareil détaché",
+    "pairingTitle": "Code d'appairage",
+    "pairingHint": "Sur l'appareil, ouvrez {{url}} et saisissez ce code, ou scannez le QR code. Valable 15 minutes, à usage unique.",
+    "pairingDone": "Fermer",
+    "pin": "Code aidant (PIN)",
+    "pinHint": "Protège les réglages et la sortie de l'écran patient, surtout quand des visiteurs touchent la tablette. De 4 à 8 chiffres.",
+    "pinSet": "Un code est défini.",
+    "pinNotSet": "Aucun code : les réglages de l'écran patient sont accessibles à tous.",
+    "pinPlaceholder": "Ex. 2468",
+    "setPin": "Définir le code",
+    "changePin": "Changer le code",
+    "removePin": "Supprimer le code",
+    "pinSaved": "Code enregistré",
+    "pinRemoved": "Code supprimé",
+    "pinInvalid": "Le code doit contenir de 4 à 8 chiffres."
+  },
+  "visitor": {
+    "button": "Visiteur",
+    "title": "Qui vient aujourd'hui ?",
+    "subtitle": "Choisis le type de visiteur.",
+    "nameTitle": "Comment t'appelles-tu ?",
+    "namePlaceholder": "Ton prénom",
+    "namePick": "Ou choisis ton nom",
+    "back": "Retour",
+    "continue": "Continuer",
+    "checkIn": "Je suis arrivé(e)",
+    "welcome": "Bonjour {{name}} !",
+    "thanks": "Merci de rendre visite à {{recipient}} aujourd'hui.",
+    "thanksNoName": "Merci de ta visite aujourd'hui.",
+    "recorded": "Ton arrivée est notée, la famille est prévenue.",
+    "present": "{{name}} est là depuis {{time}}",
+    "checkOut": "Je repars",
+    "checkedOut": "Bonne journée {{name}}, à bientôt !",
+    "done": "C'est noté",
+    "proTitle": "Pendant ta visite",
+    "writeNote": "Écrire une note de passage",
+    "notePlaceholder": "Ce que tu as fait, ce que tu as observé...",
+    "sendNote": "Envoyer la note",
+    "noteSent": "Note envoyée à la famille.",
+    "confirmMeds": "Confirmer les médicaments",
+    "confirmMedsHint": "{{count}} prise(s) à confirmer maintenant",
+    "medsConfirmed": "Médicaments confirmés, merci.",
+    "nothingToConfirm": "Aucun médicament à confirmer maintenant.",
+    "types": {
+      "family": "Famille",
+      "friend": "Ami(e) ou voisin(e)",
+      "caregiver": "Aide à domicile",
+      "nurse": "Infirmier(ère)",
+      "doctor": "Médecin ou rendez-vous",
+      "other": "Autre"
+    },
+    "error": "Ça n'a pas marché, réessaie.",
+    "instructions": "Consignes pour la visite",
+    "instructionsEmpty": "Pas de consignes particulières.",
+    "instructionSections": {
+      "morning": "Le matin",
+      "meals": "Repas",
+      "mobility": "Mobilité",
+      "personal_care": "Toilette",
+      "communication": "Communication",
+      "triggers": "Ce qui contrarie",
+      "calming": "Ce qui apaise",
+      "emergency": "En cas d'urgence"
+    }
   }
 }

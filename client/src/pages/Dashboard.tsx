@@ -7,6 +7,7 @@ import {
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { api } from '../lib/api';
 import { cn } from '../lib/utils';
+import { formatAmount } from '../lib/medications';
 import { useCircle } from '../contexts/CircleContext';
 import { useWebSocketUpdates } from '../hooks/useWebSocketUpdates';
 import { dateLocale, intlLocale } from '../i18n/format';
@@ -14,6 +15,7 @@ import WeeklyDigestCard from '../components/app/WeeklyDigestCard';
 import PresenceBanner from '../components/app/PresenceBanner';
 import HeatwaveBanner from '../components/app/HeatwaveBanner';
 import HouseholdOverview from '../components/app/HouseholdOverview';
+import AttentionCard, { type AttentionItem } from '../components/app/AttentionCard';
 
 // ─── Payload of GET /api/dashboard ────────────────────────────────────────────
 
@@ -61,6 +63,9 @@ interface MedicationIntake {
     medication_name: string;
     dosage?: string | null;
     form?: string | null;
+    quantity?: number | string | null;
+    unit?: string | null;
+    confirmed_source?: 'caregiver' | 'kiosk' | 'phone' | 'link' | null;
 }
 
 interface Vital {
@@ -79,6 +84,8 @@ interface DashboardData {
     medication_intakes_today: MedicationIntake[] | null;
     latest_vitals: Vital[] | null;
     unread_messages_count: number;
+    /** "A traiter" : elements structures, tries par gravite (voir AttentionCard). */
+    attention?: AttentionItem[];
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -156,7 +163,7 @@ const CardEmpty: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 const Dashboard: React.FC = () => {
-    const { t } = useTranslation(['dashboard', 'common']);
+    const { t } = useTranslation(['dashboard', 'common', 'medications']);
     const navigate = useNavigate();
     const { activeCircle, circles } = useCircle();
 
@@ -193,6 +200,7 @@ const Dashboard: React.FC = () => {
     useWebSocketUpdates('journal', () => { void load(); });
     useWebSocketUpdates('intakes', () => { void load(); });
     useWebSocketUpdates('tasks', () => { void load(); });
+    useWebSocketUpdates('visits', () => { void load(); });
 
     const todayLabel = new Intl.DateTimeFormat(intlLocale(), {
         weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
@@ -292,6 +300,9 @@ const Dashboard: React.FC = () => {
                 </div>
             </div>
 
+            {/* Ce qui demande l'attention d'un aidant, avant tout le reste */}
+            {view === 'single' && <AttentionCard items={data?.attention ?? []} />}
+
             {(data?.unread_messages_count ?? 0) > 0 && (
                 <button
                     type="button"
@@ -365,6 +376,7 @@ const Dashboard: React.FC = () => {
                                                     <span className="min-w-0 flex-1 truncate">
                                                         {intake.medication_name}
                                                         {intake.dosage ? ` · ${intake.dosage}` : ''}
+                                                        {intake.quantity ? ` · ${formatAmount(t, intake.quantity, intake.unit, intake.form)}` : ''}
                                                     </span>
                                                 </li>
                                             ))}

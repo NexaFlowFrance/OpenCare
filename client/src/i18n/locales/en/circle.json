@@ -2,13 +2,14 @@
   "onboarding": {
     "title": "Welcome {{name}}",
     "titleAnother": "Care for another person",
-    "subtitle": "Create the care circle of the person you are supporting.",
+    "subtitle": "Create the care circle of the person you are supporting. The details below are about them, not about you.",
     "hint": "You will then be able to invite siblings, professionals and neighbours into this circle.",
-    "firstName": "First name of your loved one",
+    "aboutTitle": "About your loved one",
+    "firstName": "First name of the person receiving care",
     "firstNamePlaceholder": "For example: Jane",
-    "lastName": "Last name (optional)",
+    "lastName": "Their last name (optional)",
     "lastNamePlaceholder": "For example: Smith",
-    "birthDate": "Birth date (optional)",
+    "birthDate": "Their birth date (optional)",
     "submit": "Create the circle",
     "creating": "Creating...",
     "error": "Creating the circle failed. Please try again.",
@@ -179,5 +180,14 @@
   "errors": {
     "load": "Could not load the circle.",
     "action": "The operation failed."
+  },
+  "resets": {
+    "title": "Forgotten passwords",
+    "subtitle": "These members asked for a password reset. Hand them the link in person or through a safe channel: it is valid for one hour and can only be used once.",
+    "expires": "Link valid until {{time}}",
+    "copy": "Copy link",
+    "copied": "Link copied",
+    "cancel": "Cancel request",
+    "cancelled": "Request cancelled"
   }
 }

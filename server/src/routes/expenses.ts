@@ -4,6 +4,7 @@ import { authMiddleware } from '../middleware/auth';
 import { circleMiddleware, requireContentWriter, CircleRequest } from '../middleware/circle';
 import { broadcastToCircle } from '../lib/broadcaster';
 import { toNullIfEmpty, toOptionalNumber } from '../lib/normalize';
+import { langFromRequest, t, type Lang } from '../lib/i18n';
 
 const router = Router();
 
@@ -73,10 +74,11 @@ const computeEqualSplits = (amount: number, memberIds: string[]): Split[] => {
 const validateCustomSplits = (
     splits: unknown,
     amount: number,
-    validMemberIds: Set<string>
+    validMemberIds: Set<string>,
+    lang: Lang
 ): { splits?: Split[]; error?: string } => {
     if (!Array.isArray(splits) || splits.length === 0) {
-        return { error: 'splits est requis pour une répartition personnalisée' };
+        return { error: t(lang, 'expenses.splitsRequired') };
     }
 
     const cleaned: Split[] = [];
@@ -85,13 +87,13 @@ const validateCustomSplits = (
         const memberId = item && typeof item === 'object' ? (item as any).member_id : null;
         const share = toOptionalNumber(item && typeof item === 'object' ? (item as any).share : null);
         if (typeof memberId !== 'string' || !validMemberIds.has(memberId)) {
-            return { error: 'splits contient un membre invalide' };
+            return { error: t(lang, 'expenses.splitsInvalidMember') };
         }
         if (seen.has(memberId)) {
-            return { error: 'splits contient un membre en double' };
+            return { error: t(lang, 'expenses.splitsDuplicateMember') };
         }
         if (share === null || share < 0) {
-            return { error: 'Chaque part doit être un montant positif' };
+            return { error: t(lang, 'expenses.sharePositive') };
         }
         seen.add(memberId);
         cleaned.push({ member_id: memberId, share: fromCents(toCents(share)) });
@@ -99,7 +101,7 @@ const validateCustomSplits = (
 
     const sumCents = cleaned.reduce((acc, s) => acc + toCents(s.share), 0);
     if (Math.abs(sumCents - toCents(amount)) > 1) {
-        return { error: 'La somme des parts doit être égale au montant' };
+        return { error: t(lang, 'expenses.sharesSum') };
     }
 
     return { splits: cleaned };
@@ -155,6 +157,7 @@ router.get('/', async (req: CircleRequest, res: Response) => {
 
 // Create an expense. Equal split is computed between admin + family members (payer included).
 router.post('/', async (req: CircleRequest, res: Response) => {
+    const lang = langFromRequest(req);
     try {
         const { category, description, date, split_mode, splits, document_id } = req.body;
         const amount = toOptionalNumber(req.body.amount);
@@ -162,27 +165,27 @@ router.post('/', async (req: CircleRequest, res: Response) => {
         const mode = split_mode === undefined ? 'equal' : split_mode;
 
         if (amount === null || amount <= 0) {
-            return res.status(400).json({ success: false, error: 'Le montant doit être supérieur à zéro' });
+            return res.status(400).json({ success: false, error: t(lang, 'expenses.amountPositive') });
         }
         if (typeof category !== 'string' || !EXPENSE_CATEGORIES.includes(category)) {
-            return res.status(400).json({ success: false, error: 'Catégorie invalide' });
+            return res.status(400).json({ success: false, error: t(lang, 'expenses.categoryInvalid') });
         }
         if (!isDateString(date)) {
-            return res.status(400).json({ success: false, error: 'Date invalide (format AAAA-MM-JJ)' });
+            return res.status(400).json({ success: false, error: t(lang, 'expenses.dateInvalid') });
         }
         if (mode !== 'equal' && mode !== 'custom') {
-            return res.status(400).json({ success: false, error: 'split_mode invalide' });
+            return res.status(400).json({ success: false, error: t(lang, 'expenses.splitModeInvalid') });
         }
 
         const sharingMembers = await getSharingMembers(req.circleId!);
         if (!sharingMembers.some((m) => m.id === paidBy)) {
-            return res.status(400).json({ success: false, error: 'Payeur invalide' });
+            return res.status(400).json({ success: false, error: t(lang, 'expenses.payerInvalid') });
         }
 
         let finalSplits: Split[];
         if (mode === 'custom') {
             const memberIds = await getCircleMemberIds(req.circleId!);
-            const validation = validateCustomSplits(splits, amount, memberIds);
+            const validation = validateCustomSplits(splits, amount, memberIds, lang);
             if (validation.error) {
                 return res.status(400).json({ success: false, error: validation.error });
             }
@@ -195,7 +198,7 @@ router.post('/', async (req: CircleRequest, res: Response) => {
         if (document_id) {
             const doc = await query('SELECT id FROM documents WHERE id = $1 AND circle_id = $2', [document_id, req.circleId]);
             if (doc.rows.length === 0) {
-                return res.status(400).json({ success: false, error: 'Justificatif invalide' });
+                return res.status(400).json({ success: false, error: t(lang, 'expenses.receiptInvalid') });
             }
             documentId = document_id;
         }
@@ -218,14 +221,15 @@ router.post('/', async (req: CircleRequest, res: Response) => {
 
 // Update an expense (payer or admin). Splits are recomputed or revalidated.
 router.put('/:id', async (req: CircleRequest, res: Response) => {
+    const lang = langFromRequest(req);
     try {
         const existing = await query('SELECT * FROM expenses WHERE id = $1 AND circle_id = $2', [req.params.id, req.circleId]);
         if (existing.rows.length === 0) {
-            return res.status(404).json({ success: false, error: 'Frais introuvable' });
+            return res.status(404).json({ success: false, error: t(lang, 'expenses.notFound') });
         }
         const current = existing.rows[0];
         if (!canManageExpense(req, current.paid_by)) {
-            return res.status(403).json({ success: false, error: 'Seul l\'auteur du frais ou un admin peut le modifier' });
+            return res.status(403).json({ success: false, error: t(lang, 'expenses.onlyAuthorEdit') });
         }
 
         const body = req.body;
@@ -237,28 +241,28 @@ router.put('/:id', async (req: CircleRequest, res: Response) => {
         const paidBy = body.paid_by !== undefined ? body.paid_by : current.paid_by;
 
         if (amount === null || amount <= 0) {
-            return res.status(400).json({ success: false, error: 'Le montant doit être supérieur à zéro' });
+            return res.status(400).json({ success: false, error: t(lang, 'expenses.amountPositive') });
         }
         if (typeof category !== 'string' || !EXPENSE_CATEGORIES.includes(category)) {
-            return res.status(400).json({ success: false, error: 'Catégorie invalide' });
+            return res.status(400).json({ success: false, error: t(lang, 'expenses.categoryInvalid') });
         }
         if (!isDateString(date)) {
-            return res.status(400).json({ success: false, error: 'Date invalide (format AAAA-MM-JJ)' });
+            return res.status(400).json({ success: false, error: t(lang, 'expenses.dateInvalid') });
         }
         if (mode !== 'equal' && mode !== 'custom') {
-            return res.status(400).json({ success: false, error: 'split_mode invalide' });
+            return res.status(400).json({ success: false, error: t(lang, 'expenses.splitModeInvalid') });
         }
 
         const sharingMembers = await getSharingMembers(req.circleId!);
         if (!sharingMembers.some((m) => m.id === paidBy)) {
-            return res.status(400).json({ success: false, error: 'Payeur invalide' });
+            return res.status(400).json({ success: false, error: t(lang, 'expenses.payerInvalid') });
         }
 
         let finalSplits: Split[];
         if (mode === 'custom') {
             const memberIds = await getCircleMemberIds(req.circleId!);
             const candidate = body.splits !== undefined ? body.splits : current.splits;
-            const validation = validateCustomSplits(candidate, amount, memberIds);
+            const validation = validateCustomSplits(candidate, amount, memberIds, lang);
             if (validation.error) {
                 return res.status(400).json({ success: false, error: validation.error });
             }
@@ -274,7 +278,7 @@ router.put('/:id', async (req: CircleRequest, res: Response) => {
             } else {
                 const doc = await query('SELECT id FROM documents WHERE id = $1 AND circle_id = $2', [body.document_id, req.circleId]);
                 if (doc.rows.length === 0) {
-                    return res.status(400).json({ success: false, error: 'Justificatif invalide' });
+                    return res.status(400).json({ success: false, error: t(lang, 'expenses.receiptInvalid') });
                 }
                 documentId = body.document_id;
             }
@@ -302,13 +306,14 @@ router.put('/:id', async (req: CircleRequest, res: Response) => {
 
 // Delete an expense (payer or admin).
 router.delete('/:id', async (req: CircleRequest, res: Response) => {
+    const lang = langFromRequest(req);
     try {
         const existing = await query('SELECT paid_by FROM expenses WHERE id = $1 AND circle_id = $2', [req.params.id, req.circleId]);
         if (existing.rows.length === 0) {
-            return res.status(404).json({ success: false, error: 'Frais introuvable' });
+            return res.status(404).json({ success: false, error: t(lang, 'expenses.notFound') });
         }
         if (!canManageExpense(req, existing.rows[0].paid_by)) {
-            return res.status(403).json({ success: false, error: 'Seul l\'auteur du frais ou un admin peut le supprimer' });
+            return res.status(403).json({ success: false, error: t(lang, 'expenses.onlyAuthorDelete') });
         }
 
         await query('DELETE FROM expenses WHERE id = $1 AND circle_id = $2', [req.params.id, req.circleId]);
@@ -444,23 +449,24 @@ router.get('/settlements', async (req: CircleRequest, res: Response) => {
 });
 
 router.post('/settlements', async (req: CircleRequest, res: Response) => {
+    const lang = langFromRequest(req);
     try {
         const { from_member, to_member, date, note } = req.body;
         const amount = toOptionalNumber(req.body.amount);
 
         if (amount === null || amount <= 0) {
-            return res.status(400).json({ success: false, error: 'Le montant doit être supérieur à zéro' });
+            return res.status(400).json({ success: false, error: t(lang, 'expenses.amountPositive') });
         }
         if (!isDateString(date)) {
-            return res.status(400).json({ success: false, error: 'Date invalide (format AAAA-MM-JJ)' });
+            return res.status(400).json({ success: false, error: t(lang, 'expenses.dateInvalid') });
         }
         if (typeof from_member !== 'string' || typeof to_member !== 'string' || from_member === to_member) {
-            return res.status(400).json({ success: false, error: 'Membres invalides' });
+            return res.status(400).json({ success: false, error: t(lang, 'expenses.membersInvalid') });
         }
 
         const memberIds = await getCircleMemberIds(req.circleId!);
         if (!memberIds.has(from_member) || !memberIds.has(to_member)) {
-            return res.status(400).json({ success: false, error: 'Membres invalides' });
+            return res.status(400).json({ success: false, error: t(lang, 'expenses.membersInvalid') });
         }
 
         const inserted = await query(
@@ -481,16 +487,17 @@ router.post('/settlements', async (req: CircleRequest, res: Response) => {
 
 // Delete a settlement (its author: from_member, or an admin).
 router.delete('/settlements/:id', async (req: CircleRequest, res: Response) => {
+    const lang = langFromRequest(req);
     try {
         const existing = await query(
             'SELECT from_member FROM expense_settlements WHERE id = $1 AND circle_id = $2',
             [req.params.id, req.circleId]
         );
         if (existing.rows.length === 0) {
-            return res.status(404).json({ success: false, error: 'Règlement introuvable' });
+            return res.status(404).json({ success: false, error: t(lang, 'expenses.settlementNotFound') });
         }
         if (req.circleRole !== 'admin' && existing.rows[0].from_member !== req.memberId) {
-            return res.status(403).json({ success: false, error: 'Seul l\'auteur du règlement ou un admin peut le supprimer' });
+            return res.status(403).json({ success: false, error: t(lang, 'expenses.onlySettlementAuthorDelete') });
         }
 
         await query('DELETE FROM expense_settlements WHERE id = $1 AND circle_id = $2', [req.params.id, req.circleId]);
@@ -521,21 +528,22 @@ router.get('/aids', async (req: CircleRequest, res: Response) => {
 });
 
 router.post('/aids', async (req: CircleRequest, res: Response) => {
+    const lang = langFromRequest(req);
     try {
         const { type, label, period_start, period_end, notes } = req.body;
         const amount = toOptionalNumber(req.body.amount);
 
         if (typeof type !== 'string' || !AID_TYPES.includes(type)) {
-            return res.status(400).json({ success: false, error: 'Type d\'aide invalide' });
+            return res.status(400).json({ success: false, error: t(lang, 'expenses.aidTypeInvalid') });
         }
         if (amount === null || amount <= 0) {
-            return res.status(400).json({ success: false, error: 'Le montant doit être supérieur à zéro' });
+            return res.status(400).json({ success: false, error: t(lang, 'expenses.amountPositive') });
         }
         if (period_start !== undefined && period_start !== null && period_start !== '' && !isDateString(period_start)) {
-            return res.status(400).json({ success: false, error: 'period_start invalide (format AAAA-MM-JJ)' });
+            return res.status(400).json({ success: false, error: t(lang, 'expenses.fieldDateInvalid', { field: 'period_start' }) });
         }
         if (period_end !== undefined && period_end !== null && period_end !== '' && !isDateString(period_end)) {
-            return res.status(400).json({ success: false, error: 'period_end invalide (format AAAA-MM-JJ)' });
+            return res.status(400).json({ success: false, error: t(lang, 'expenses.fieldDateInvalid', { field: 'period_end' }) });
         }
 
         const result = await query(
@@ -553,6 +561,7 @@ router.post('/aids', async (req: CircleRequest, res: Response) => {
 });
 
 router.put('/aids/:id', async (req: CircleRequest, res: Response) => {
+    const lang = langFromRequest(req);
     try {
         const fields: string[] = [];
         const values: unknown[] = [];
@@ -560,7 +569,7 @@ router.put('/aids/:id', async (req: CircleRequest, res: Response) => {
 
         if ('type' in req.body) {
             if (typeof req.body.type !== 'string' || !AID_TYPES.includes(req.body.type)) {
-                return res.status(400).json({ success: false, error: 'Type d\'aide invalide' });
+                return res.status(400).json({ success: false, error: t(lang, 'expenses.aidTypeInvalid') });
             }
             fields.push(`type = $${idx++}`);
             values.push(req.body.type);
@@ -568,7 +577,7 @@ router.put('/aids/:id', async (req: CircleRequest, res: Response) => {
         if ('amount' in req.body) {
             const amount = toOptionalNumber(req.body.amount);
             if (amount === null || amount <= 0) {
-                return res.status(400).json({ success: false, error: 'Le montant doit être supérieur à zéro' });
+                return res.status(400).json({ success: false, error: t(lang, 'expenses.amountPositive') });
             }
             fields.push(`amount = $${idx++}`);
             values.push(amount);
@@ -581,7 +590,7 @@ router.put('/aids/:id', async (req: CircleRequest, res: Response) => {
             if (field in req.body) {
                 const value = toNullIfEmpty(req.body[field]);
                 if (value !== null && !isDateString(value)) {
-                    return res.status(400).json({ success: false, error: `${field} invalide (format AAAA-MM-JJ)` });
+                    return res.status(400).json({ success: false, error: t(lang, 'expenses.fieldDateInvalid', { field }) });
                 }
                 fields.push(`${field} = $${idx++}`);
                 values.push(value);
@@ -603,7 +612,7 @@ router.put('/aids/:id', async (req: CircleRequest, res: Response) => {
         );
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ success: false, error: 'Aide introuvable' });
+            return res.status(404).json({ success: false, error: t(lang, 'expenses.aidNotFound') });
         }
 
         await broadcastToCircle(req.circleId!, { type: 'update', entity: 'expenses', action: 'updated' });
@@ -615,13 +624,14 @@ router.put('/aids/:id', async (req: CircleRequest, res: Response) => {
 });
 
 router.delete('/aids/:id', async (req: CircleRequest, res: Response) => {
+    const lang = langFromRequest(req);
     try {
         const result = await query(
             'DELETE FROM aid_records WHERE id = $1 AND circle_id = $2 RETURNING id',
             [req.params.id, req.circleId]
         );
         if (result.rows.length === 0) {
-            return res.status(404).json({ success: false, error: 'Aide introuvable' });
+            return res.status(404).json({ success: false, error: t(lang, 'expenses.aidNotFound') });
         }
 
         await broadcastToCircle(req.circleId!, { type: 'update', entity: 'expenses', action: 'deleted' });

@@ -31,6 +31,9 @@ const asArray = (value: unknown): any[] => (Array.isArray(value) ? value : []);
 const oneOf = (value: unknown, allowed: readonly string[], fallback: string): string =>
     typeof value === 'string' && allowed.includes(value) ? value : fallback;
 
+const oneOfOrNull = (value: unknown, allowed: readonly string[]): string | null =>
+    typeof value === 'string' && allowed.includes(value) ? value : null;
+
 const textOrNull = (value: unknown): string | null => {
     if (value === undefined || value === null || value === '') return null;
     return typeof value === 'string' ? value : String(value);
@@ -324,10 +327,14 @@ router.post('/import', async (req: CircleRequest, res: Response) => {
                 continue;
             }
             const newId = await insert('medications',
-                ['circle_id', 'name', 'dosage', 'form', 'instructions', 'photo_url', 'prescriber', 'start_date', 'end_date', 'active', 'created_at', 'updated_at'],
+                ['circle_id', 'name', 'dosage', 'form', 'instructions', 'photo_url', 'prescriber', 'start_date', 'end_date', 'active',
+                    'prn', 'with_food', 'reason', 'appearance', 'created_at', 'updated_at'],
                 [circleId, row.name, textOrNull(row.dosage), textOrNull(row.form), textOrNull(row.instructions),
                     textOrNull(row.photo_url), textOrNull(row.prescriber), row.start_date ?? null, row.end_date ?? null,
-                    boolOr(row.active, true), tsOrNow(row.created_at), tsOrNow(row.updated_at)]
+                    boolOr(row.active, true),
+                    boolOr(row.prn, false), oneOfOrNull(row.with_food, ['with', 'without', 'any']),
+                    textOrNull(row.reason), textOrNull(row.appearance),
+                    tsOrNow(row.created_at), tsOrNow(row.updated_at)]
             );
             if (typeof row.id === 'string') medicationMap.set(row.id, newId);
             bump(imported, 'medications');
@@ -340,11 +347,14 @@ router.post('/import', async (req: CircleRequest, res: Response) => {
                 bump(skipped, 'medication_schedules');
                 continue;
             }
+            const quantity = Number(row.quantity);
             const newId = await insert('medication_schedules',
-                ['medication_id', 'time_of_day', 'days_of_week', 'label', 'created_at'],
+                ['medication_id', 'time_of_day', 'days_of_week', 'label', 'quantity', 'unit', 'created_at'],
                 [medicationId, row.time_of_day,
                     JSON.stringify(Array.isArray(row.days_of_week) ? row.days_of_week : [1, 2, 3, 4, 5, 6, 7]),
-                    textOrNull(row.label), tsOrNow(row.created_at)]
+                    textOrNull(row.label),
+                    Number.isFinite(quantity) && quantity > 0 ? quantity : 1, textOrNull(row.unit),
+                    tsOrNow(row.created_at)]
             );
             if (typeof row.id === 'string') scheduleMap.set(row.id, newId);
             bump(imported, 'medication_schedules');
@@ -361,13 +371,17 @@ router.post('/import', async (req: CircleRequest, res: Response) => {
             // against duplicated rows inside the import file itself.
             const result = await client.query(
                 `INSERT INTO medication_intakes
-                 (circle_id, medication_id, schedule_id, due_at, status, confirmed_by_user, confirmed_at, journal_entry_id, created_at)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                 (circle_id, medication_id, schedule_id, due_at, status, confirmed_by_user, confirmed_at, journal_entry_id, created_at,
+                  confirmed_source, quantity, unit)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
                  ON CONFLICT (medication_id, schedule_id, due_at) DO NOTHING`,
                 [circleId, medicationId, mapOrNull(scheduleMap, row.schedule_id), row.due_at,
                     oneOf(row.status, INTAKE_STATUSES, 'pending'),
                     await userOrNull(row.confirmed_by_user), row.confirmed_at ?? null,
-                    mapOrNull(journalMap, row.journal_entry_id), tsOrNow(row.created_at)]
+                    mapOrNull(journalMap, row.journal_entry_id), tsOrNow(row.created_at),
+                    oneOfOrNull(row.confirmed_source, ['caregiver', 'kiosk', 'phone', 'link']),
+                    Number.isFinite(Number(row.quantity)) && Number(row.quantity) > 0 ? Number(row.quantity) : null,
+                    textOrNull(row.unit)]
             );
             bump((result.rowCount ?? 0) > 0 ? imported : skipped, 'medication_intakes');
         }

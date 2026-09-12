@@ -25,7 +25,8 @@
       "taken": "pris",
       "skipped": "sauté",
       "missed": "manqué"
-    }
+    },
+    "take": "Prendre {{amount}}"
   },
   "today": {
     "title": "Aujourd'hui",

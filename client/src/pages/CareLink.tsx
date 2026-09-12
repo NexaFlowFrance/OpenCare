@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { BookOpen, Check, ChevronDown, ChevronUp, Clock, Send, X, AlertCircle } from 'lucide-react';
 import { API_BASE_URL } from '../lib/api';
+import { formatAmount } from '../lib/medications';
 
 /**
  * Page publique du lien magique intervenant (auxiliaire, infirmière).
@@ -25,7 +26,15 @@ interface TodayData {
     intakes: Array<{
         id: string;
         medication_name: string;
+        // Le serveur envoie `dosage` ; `medication_dosage` est garde par compatibilite.
+        dosage?: string | null;
         medication_dosage?: string | null;
+        form?: string | null;
+        photo_url?: string | null;
+        quantity?: number | string | null;
+        unit?: string | null;
+        instructions?: string | null;
+        with_food?: 'with' | 'without' | 'any' | null;
         due_at: string;
         status: string;
         confirmed_at?: string | null;
@@ -45,7 +54,7 @@ const formatTime = (iso: string) =>
 
 const CareLink: React.FC = () => {
     const { token } = useParams<{ token: string }>();
-    const { t } = useTranslation('carelink');
+    const { t } = useTranslation(['carelink', 'medications']);
     const [data, setData] = React.useState<TodayData | null>(null);
     const [error, setError] = React.useState<string | null>(null);
     const [loading, setLoading] = React.useState(true);
@@ -239,13 +248,24 @@ const CareLink: React.FC = () => {
                         <h2 className="text-h2 text-foreground">{t('medications.title')}</h2>
                         {pendingIntakes.map((intake) => (
                             <div key={intake.id} className="flex flex-wrap items-center gap-3 rounded-card border border-border bg-surface-2/60 p-3">
-                                <Clock className="h-5 w-5 shrink-0 text-muted-foreground" />
+                                {intake.photo_url ? (
+                                    <img src={intake.photo_url} alt="" className="h-12 w-12 shrink-0 rounded-card border border-border object-cover" />
+                                ) : (
+                                    <Clock className="h-5 w-5 shrink-0 text-muted-foreground" />
+                                )}
                                 <div className="min-w-0 flex-1">
                                     <p className="text-body font-medium text-foreground">
                                         {intake.medication_name}
-                                        {intake.medication_dosage ? ` ${intake.medication_dosage}` : ''}
+                                        {(intake.dosage ?? intake.medication_dosage) ? ` ${intake.dosage ?? intake.medication_dosage}` : ''}
                                     </p>
-                                    <p className="text-caption text-muted-foreground">{formatTime(intake.due_at)}</p>
+                                    <p className="text-caption text-foreground">
+                                        {t('medications.take', { amount: formatAmount(t, intake.quantity, intake.unit, intake.form) })}
+                                        {intake.with_food ? ` · ${t(`medications:withFood.${intake.with_food}`)}` : ''}
+                                    </p>
+                                    <p className="text-caption text-muted-foreground">
+                                        {formatTime(intake.due_at)}
+                                        {intake.instructions ? ` · ${intake.instructions}` : ''}
+                                    </p>
                                 </div>
                                 <div className="flex gap-2">
                                     <button

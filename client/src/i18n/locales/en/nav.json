@@ -1,6 +1,6 @@
 {
   "items": {
-    "today": "Today",
+    "today": "Dashboard",
     "journal": "Care journal",
     "calendar": "Calendar",
     "medications": "Medications",
@@ -14,10 +14,17 @@
     "recipient": "Loved one",
     "circle": "Care circle",
     "integrations": "Integrations",
-    "settings": "Settings"
+    "settings": "Settings",
+    "visitors": "Visitors",
+    "carePlan": "Care plan"
   },
   "sections": {
-    "organisation": "Organisation"
+    "today": "Today",
+    "care": "Care",
+    "organise": "Organise",
+    "information": "Information",
+    "team": "Team",
+    "more": "More"
   },
   "mobile": {
     "home": "Home",

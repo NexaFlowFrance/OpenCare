@@ -3,6 +3,8 @@ import { query } from '../db';
 import { authMiddleware } from '../middleware/auth';
 import { circleMiddleware, CircleRequest } from '../middleware/circle';
 import { toLocalISO } from './events';
+import { ensureTodayIntakes } from '../lib/intakes';
+import { loadAttention } from '../lib/attention';
 
 const router = Router();
 router.use(authMiddleware);
@@ -83,6 +85,9 @@ router.get('/', async (req: CircleRequest, res: Response) => {
     try {
         const circleId = req.circleId!;
         const includeHealth = req.circleRole !== 'neighbor';
+        // Today's intakes exist and late ones are marked missed before we read them
+        // (the "Needs attention" block relies on accurate statuses).
+        if (includeHealth) await ensureTodayIntakes(circleId);
 
         const [
             recipientResult,
@@ -93,6 +98,7 @@ router.get('/', async (req: CircleRequest, res: Response) => {
             pendingTasksResult,
             intakesResult,
             vitalsResult,
+            attention,
         ] = await Promise.all([
             query('SELECT first_name, photo_url FROM care_recipients WHERE circle_id = $1', [circleId]),
             query(
@@ -130,10 +136,12 @@ router.get('/', async (req: CircleRequest, res: Response) => {
             ),
             includeHealth
                 ? query(
-                    `SELECT i.id, i.due_at, i.status, i.confirmed_at,
+                    `SELECT i.id, i.due_at, i.status, i.confirmed_at, i.confirmed_source,
+                            COALESCE(i.quantity, s.quantity, 1) AS quantity, COALESCE(i.unit, s.unit) AS unit,
                             m.name AS medication_name, m.dosage, m.form
                      FROM medication_intakes i
                      JOIN medications m ON m.id = i.medication_id
+                     LEFT JOIN medication_schedules s ON s.id = i.schedule_id
                      WHERE i.circle_id = $1 AND i.due_at::date = CURRENT_DATE
                      ORDER BY i.due_at`,
                     [circleId]
@@ -148,6 +156,7 @@ router.get('/', async (req: CircleRequest, res: Response) => {
                     [circleId]
                 )
                 : Promise.resolve(null),
+            loadAttention(circleId, includeHealth),
         ]);
 
         // Recurring occurrences of today, computed from a minimal RRULE subset
@@ -175,6 +184,8 @@ router.get('/', async (req: CircleRequest, res: Response) => {
                 // TODO: no per-user read tracking on messages yet, so the
                 // unread counter is always 0 until a read-marker table exists.
                 unread_messages_count: 0,
+                // "Needs attention": what a caregiver should look at first.
+                attention,
             },
         });
     } catch (error) {

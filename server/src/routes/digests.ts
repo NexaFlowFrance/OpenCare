@@ -5,6 +5,7 @@ import { circleMiddleware, requireAdmin, CircleRequest } from '../middleware/cir
 import { AiError } from '../services/ai';
 import { generateDigestForCircle, currentWeekStart } from '../lib/digestScheduler';
 import logger from '../lib/logger';
+import { langFromRequest, t } from '../lib/i18n';
 
 const router = Router();
 
@@ -35,6 +36,7 @@ router.get('/', async (req: CircleRequest, res) => {
 // POST /api/digests/generate : circle admins only. Generates (or regenerates)
 // the digest of the CURRENT week (current Monday) on demand.
 router.post('/generate', requireAdmin, async (req: CircleRequest, res) => {
+    const lang = langFromRequest(req);
     try {
         const digest = await generateDigestForCircle(req.circleId!, currentWeekStart());
         if (!digest) {
@@ -44,8 +46,10 @@ router.post('/generate', requireAdmin, async (req: CircleRequest, res) => {
     } catch (error) {
         if (error instanceof AiError) {
             // Machine-readable code (the client maps it to a localized message);
-            // `message` carries the provider detail.
-            return res.status(502).json({ success: false, error: error.code, message: error.message });
+            // `message` is a neutral text in the user's language. The provider
+            // detail (which can include an internal URL) only goes to the logs.
+            logger.warn('digest.generate_ai_error', { code: error.code, detail: error.message });
+            return res.status(502).json({ success: false, error: error.code, message: t(lang, `ai.${error.code}`) });
         }
         logger.error('digest.generate_error', {
             error: error instanceof Error ? error.message : String(error),

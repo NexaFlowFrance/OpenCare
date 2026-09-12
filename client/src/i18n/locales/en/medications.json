@@ -34,7 +34,19 @@
     },
     "markTaken": "Taken",
     "markSkipped": "Skip",
-    "undo": "Undo"
+    "undo": "Undo",
+    "take": "Take {{amount}}",
+    "prnTitle": "As needed",
+    "prnHint": "These medications have no fixed time: log a dose when it happens.",
+    "logPrn": "Log a dose",
+    "prnToday_one": "{{count}} dose today",
+    "prnToday_other": "{{count}} doses today",
+    "source": {
+      "caregiver": "confirmed by a caregiver",
+      "kiosk": "confirmed on the kiosk",
+      "phone": "confirmed on the phone",
+      "link": "confirmed through a caregiver link"
+    }
   },
   "treatments": {
     "add": "Add a treatment",
@@ -50,7 +62,11 @@
     "fromDate": "from {{date}}",
     "untilDate": "until {{date}}",
     "photoAlt": "Photo of {{name}}",
-    "noSchedule": "No intake schedule defined"
+    "noSchedule": "No intake schedule defined",
+    "prn": "As needed",
+    "prnHint": "No fixed time: doses are logged on demand from the Today tab.",
+    "reason": "Why: {{reason}}",
+    "appearance": "Looks like: {{appearance}}"
   },
   "forms": {
     "tablet": "Tablet",
@@ -59,7 +75,10 @@
     "drops": "Drops",
     "patch": "Patch",
     "injection": "Injection",
-    "other": "Other"
+    "other": "Other",
+    "sachet": "Sachet",
+    "inhaler": "Inhaler",
+    "cream": "Cream"
   },
   "form": {
     "createTitle": "New treatment",
@@ -91,7 +110,20 @@
     "labelPlaceholder": "E.g. before the meal",
     "noSchedules": "No schedule yet. Add a line to track daily intakes.",
     "scheduleTimeError": "Set a time for every intake line.",
-    "scheduleDaysError": "Select at least one day for every intake line."
+    "scheduleDaysError": "Select at least one day for every intake line.",
+    "quantity": "Quantity",
+    "unit": "Unit",
+    "unitAuto": "Based on the form",
+    "quantityError": "Enter a valid quantity for each schedule (between 0.25 and 99).",
+    "prn": "As needed (no fixed time)",
+    "prnHint": "Painkiller, laxative... The dose is logged when it happens.",
+    "prnNoSchedule": "As-needed medication: no schedule to define. Doses are logged from the Today tab.",
+    "withFood": "Relative to meals",
+    "withFoodPlaceholder": "Not specified",
+    "reason": "Why this treatment",
+    "reasonPlaceholder": "e.g. for blood pressure",
+    "appearance": "What it looks like",
+    "appearancePlaceholder": "e.g. small round white tablet"
   },
   "prescriptions": {
     "add": "Add a prescription",
@@ -128,10 +160,38 @@
     "deletePrescription": "Unable to delete the prescription.",
     "archive": "Unable to update the treatment.",
     "photo": "Unable to process the photo.",
-    "photoTooLarge": "The photo is still too large after compression (1.5 MB max)."
+    "photoTooLarge": "The photo is still too large after compression (1.5 MB max).",
+    "logPrn": "Could not log this dose."
   },
   "restricted": {
     "title": "Restricted access",
     "description": "Medications are visible to the family and professionals of the circle."
+  },
+  "units": {
+    "tablet_one": "tablet",
+    "tablet_other": "tablets",
+    "capsule_one": "capsule",
+    "capsule_other": "capsules",
+    "ml_one": "ml",
+    "ml_other": "ml",
+    "drop_one": "drop",
+    "drop_other": "drops",
+    "sachet_one": "sachet",
+    "sachet_other": "sachets",
+    "patch_one": "patch",
+    "patch_other": "patches",
+    "injection_one": "injection",
+    "injection_other": "injections",
+    "puff_one": "puff",
+    "puff_other": "puffs",
+    "application_one": "application",
+    "application_other": "applications",
+    "dose_one": "dose",
+    "dose_other": "doses"
+  },
+  "withFood": {
+    "with": "With food",
+    "without": "Without food",
+    "any": "With or without food"
   }
 }

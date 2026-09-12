@@ -1,6 +1,7 @@
 import { query } from '../../db';
 import { decryptCredentials } from '../../utils/crypto';
 import { safeFetch } from '../../utils/safeFetch';
+import { t, type Lang } from '../../lib/i18n';
 
 interface GrocyShoppingItem {
     id: string;
@@ -14,18 +15,18 @@ interface GrocyProduct {
     name: string;
 }
 
-export async function testGrocyConnection(baseUrl: string, apiKey: string): Promise<{ success: boolean; message: string }> {
+export async function testGrocyConnection(baseUrl: string, apiKey: string, lang: Lang = 'fr'): Promise<{ success: boolean; message: string }> {
     try {
         const resp = await safeFetch(`${baseUrl}/api/system/info`, {
             headers: { 'GROCY-API-KEY': apiKey },
         });
         if (resp.ok) {
             const data = await resp.json() as { grocy_version?: { Version: string } };
-            return { success: true, message: `Connecte a Grocy ${data.grocy_version?.Version || ''}`.trim() };
+            return { success: true, message: t(lang, 'integrations.grocy.connected', { version: data.grocy_version?.Version || '' }).trim() };
         }
-        return { success: false, message: `Erreur HTTP ${resp.status}` };
+        return { success: false, message: t(lang, 'integrations.httpError', { status: resp.status }) };
     } catch (e) {
-        return { success: false, message: e instanceof Error ? e.message : 'Impossible de joindre le serveur' };
+        return { success: false, message: e instanceof Error ? e.message : t(lang, 'integrations.unreachable') };
     }
 }
 

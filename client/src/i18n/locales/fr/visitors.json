@@ -1,0 +1,29 @@
+{
+  "title": "Visiteurs",
+  "subtitle": "Qui est passé voir votre proche, déclaré depuis l'écran patient.",
+  "empty": "Aucune visite déclarée sur cette période.",
+  "emptyHint": "Sur l'écran patient, le bouton « Visiteur » permet à chaque personne qui passe de se signaler en deux gestes.",
+  "range": {
+    "week": "7 derniers jours",
+    "month": "30 derniers jours",
+    "quarter": "3 derniers mois"
+  },
+  "present": "Sur place",
+  "arrived": "Arrivé(e) à {{time}}",
+  "left": "Reparti(e) à {{time}}",
+  "duration": "{{minutes}} min",
+  "note": "Note de passage",
+  "delete": "Supprimer cette visite",
+  "deleted": "Visite supprimée",
+  "types": {
+    "family": "Famille",
+    "friend": "Ami(e) ou voisin(e)",
+    "caregiver": "Aide à domicile",
+    "nurse": "Infirmier(ère)",
+    "doctor": "Médecin",
+    "other": "Autre"
+  },
+  "errors": {
+    "load": "Impossible de charger les visites."
+  }
+}

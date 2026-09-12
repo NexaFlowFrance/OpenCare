@@ -25,7 +25,8 @@
       "taken": "taken",
       "skipped": "skipped",
       "missed": "missed"
-    }
+    },
+    "take": "Take {{amount}}"
   },
   "today": {
     "title": "Today",

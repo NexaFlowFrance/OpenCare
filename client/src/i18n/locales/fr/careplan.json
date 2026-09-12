@@ -1,0 +1,46 @@
+{
+  "title": "Plan de soins",
+  "titleFor": "Plan de soins de {{name}}",
+  "theLovedOne": "votre proche",
+  "subtitle": "Tout ce qu'il faut savoir pour prendre soin de {{name}}, au même endroit : les routines, les médicaments, l'équipe et la semaine.",
+  "updated": "Consignes mises à jour {{when}} par {{name}}",
+  "neverUpdated": "Les consignes n'ont pas encore été rédigées.",
+  "readOnly": "Seuls les administrateurs et la famille peuvent les modifier.",
+  "print": "Imprimer",
+  "complete": "Compléter",
+  "saved": "Consignes enregistrées.",
+  "sections": {
+    "morning": { "title": "Routine du matin", "hint": "Lever, petit-déjeuner, ce qui aide à bien démarrer la journée." },
+    "meals": { "title": "Repas", "hint": "Horaires, préférences, textures, ce qu'il faut éviter, aide nécessaire." },
+    "mobility": { "title": "Aide à la mobilité", "hint": "Déambulateur, transferts, escaliers, risques de chute, ce qui ne se fait pas seul." },
+    "personal_care": { "title": "Toilette et soins personnels", "hint": "Toilette, habillage, continence, produits, pudeur et habitudes." },
+    "communication": { "title": "Communication", "hint": "Audition, vue, langue, mots à utiliser, comment s'assurer d'être compris." },
+    "triggers": { "title": "Ce qui contrarie", "hint": "Situations, sujets ou moments qui provoquent agitation ou anxiété." },
+    "calming": { "title": "Ce qui apaise", "hint": "Musique, souvenirs, objets, gestes, personnes rassurantes." },
+    "emergency": { "title": "En cas d'urgence", "hint": "Qui appeler en premier, où sont les papiers, allergies, consignes du médecin." }
+  },
+  "medications": {
+    "title": "Routine médicamenteuse",
+    "empty": "Aucun traitement en cours.",
+    "nothing": "Rien",
+    "prn": "Si besoin",
+    "slots": { "morning": "Matin", "midday": "Midi", "evening": "Soir", "night": "Coucher" },
+    "withFood": { "with": "pendant le repas", "without": "en dehors des repas" },
+    "manage": "Gérer les médicaments"
+  },
+  "professionals": {
+    "title": "Professionnels réguliers",
+    "empty": "Aucun professionnel dans les contacts (médecin, infirmier, aide à domicile, kiné, pharmacie).",
+    "manage": "Voir les contacts"
+  },
+  "week": {
+    "title": "Semaine à venir",
+    "empty": "Rien de prévu.",
+    "recurring": "Récurrent",
+    "manage": "Ouvrir l'agenda"
+  },
+  "errors": {
+    "load": "Impossible de charger le plan de soins.",
+    "save": "Impossible d'enregistrer les consignes."
+  }
+}

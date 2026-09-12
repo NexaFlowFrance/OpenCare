@@ -8,13 +8,18 @@ import { useWebSocketUpdates } from '../../hooks/useWebSocketUpdates';
 import { Button } from './Button';
 
 // Determine which page a notification should open when clicked.
+// Ou mene un clic sur une notification, selon son type (les memes chemins que
+// le champ `url` des notifications push cote serveur).
 function notificationRoute(n: AppNotification): string {
     const t = n.type || '';
-    if (t.startsWith('family')) return '/family';
+    if (t === 'kiosk_help' || t === 'companion_alert') return '/journal';
+    if (t === 'visitor_checkin') return '/visitors';
+    if (t === 'prescription_renewal') return '/medications';
+    if (t === 'password_reset') return '/circle';
     if (t.startsWith('task')) return '/tasks';
     if (t.startsWith('appointment') || t.startsWith('reminder') || t.startsWith('calendar')) return '/calendar';
     if (t.startsWith('shopping')) return '/shopping';
-    if (t.startsWith('budget')) return '/budget';
+    if (t.startsWith('expense')) return '/expenses';
     return '/';
 }
 

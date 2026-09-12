@@ -146,3 +146,6 @@ GNU Affero General Public License v3.0 (AGPL-3.0-only), voir [licence.md](licenc
 
 Développé et maintenu par [NexaFlow France](https://nexaflow.fr), et offert à toutes les familles
 qui prennent soin de quelqu'un.
+
+Un grand merci à [thecybermacgyver](https://github.com/thecybermacgyver), dont la revue produit approfondie
+et les maquettes du kiosk ont façonné l'expérience patient de la version 1.2.

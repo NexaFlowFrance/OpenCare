@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import { query } from '../db';
 import { authMiddleware, AuthRequest, generateToken } from '../middleware/auth';
 import { normalizeEmail } from '../lib/normalize';
+import { langFromRequest, t } from '../lib/i18n';
 
 const router = Router();
 
@@ -43,6 +44,7 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res) => {
 // very first account (bootstrap of the initial administrator when the users table
 // is still empty).
 router.post('/register', async (req, res) => {
+    const lang = langFromRequest(req);
     try {
         const { email, password, name, inviteToken } = req.body;
         const normalizedEmail = typeof email === 'string' ? normalizeEmail(email) : '';
@@ -83,13 +85,13 @@ router.post('/register', async (req, res) => {
                 [inviteToken]
             );
             if (inviteResult.rows.length === 0) {
-                return res.status(400).json({ success: false, error: 'Invitation invalide ou expirée' });
+                return res.status(400).json({ success: false, error: t(lang, 'invites.invalidOrExpired') });
             }
 
             const row = inviteResult.rows[0] as { id: string; circle_id: string; invitee_email: string | null; role: string };
 
             if (row.invitee_email && normalizeEmail(row.invitee_email) !== normalizedEmail) {
-                return res.status(403).json({ success: false, error: 'Cette invitation est réservée à une autre adresse e-mail' });
+                return res.status(403).json({ success: false, error: t(lang, 'invites.reservedForOtherEmail') });
             }
 
             invite = { id: row.id, circle_id: row.circle_id, role: row.role };
@@ -189,6 +191,7 @@ router.post('/refresh', authMiddleware, async (req: AuthRequest, res) => {
 // Update user profile (display name and/or avatar). The avatar is stored as a
 // compact data URL (the client resizes/compresses the image before upload).
 router.put('/profile', authMiddleware, async (req: AuthRequest, res) => {
+    const lang = langFromRequest(req);
     try {
         const { name, avatar_url } = req.body as { name?: unknown; avatar_url?: unknown };
 
@@ -214,7 +217,7 @@ router.put('/profile', authMiddleware, async (req: AuthRequest, res) => {
                 return res.status(400).json({ success: false, error: 'Invalid image format' });
             }
             if (avatar_url.length > 1_500_000) {
-                return res.status(400).json({ success: false, error: 'Image trop volumineuse' });
+                return res.status(400).json({ success: false, error: t(lang, 'auth.imageTooLarge') });
             }
             fields.push(`avatar_url = $${idx++}`);
             values.push(avatar_url);

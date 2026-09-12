@@ -1,5 +1,6 @@
 import { isIP } from 'node:net';
 import dns from 'node:dns/promises';
+import { t, type Lang } from '../lib/i18n';
 
 /**
  * SSRF guard for user-supplied integration URLs (Home Assistant, Grocy, Nextcloud…).
@@ -166,7 +167,46 @@ export const isBlockedAddress = (address: string, blockPrivate: boolean): string
     return null;
 };
 
-export class UnsafeUrlError extends Error {}
+/**
+ * Machine-readable reason of a guard rejection. The `message` stays the French
+ * text used historically (internal logs, callers matching on it); the code lets
+ * the HTTP boundaries answer in the user's language via unsafeUrlMessage().
+ */
+export type UnsafeUrlCode =
+    | 'invalid'
+    | 'protocol'
+    | 'ws_invalid'
+    | 'ws_protocol'
+    | 'cloud_metadata'
+    | 'blocked'
+    | 'private'
+    | 'dns'
+    | 'no_ip'
+    | 'redirect'
+    | 'redirect_invalid'
+    | 'too_many_redirects';
+
+export class UnsafeUrlError extends Error {
+    constructor(
+        message: string,
+        /** Reason code, absent for legacy throw sites that only carry a message. */
+        public readonly code?: UnsafeUrlCode,
+        /** Block reason (from isBlockedAddress) interpolated into 'blocked' messages. */
+        public readonly reason?: string
+    ) {
+        super(message);
+        this.name = 'UnsafeUrlError';
+    }
+}
+
+/**
+ * User-facing text of a guard rejection in the requested language. Falls back
+ * to the original message when the error carries no code.
+ */
+export function unsafeUrlMessage(error: UnsafeUrlError, lang: Lang): string {
+    if (!error.code) return error.message;
+    return t(lang, `url.${error.code}`, { reason: error.reason ?? '' });
+}
 
 export interface SafeUrlOptions {
     /**
@@ -198,17 +238,17 @@ export const resolveBlockPrivate = (options: SafeUrlOptions = {}): boolean =>
  */
 export async function resolveAndValidateHost(hostname: string, blockPrivate: boolean): Promise<string[]> {
     if (METADATA_HOSTNAMES.has(hostname)) {
-        throw new UnsafeUrlError('Cette adresse est bloquée (service de métadonnées cloud)');
+        throw new UnsafeUrlError('Cette adresse est bloquée (service de métadonnées cloud)', 'cloud_metadata');
     }
 
     if (isIP(hostname)) {
         const reason = isBlockedAddress(hostname, blockPrivate);
-        if (reason) throw new UnsafeUrlError(`Cette adresse est bloquée (${reason})`);
+        if (reason) throw new UnsafeUrlError(`Cette adresse est bloquée (${reason})`, 'blocked', reason);
         return [canonicalizeIp(hostname)];
     }
 
     if (blockPrivate && hostname === 'localhost') {
-        throw new UnsafeUrlError('Cette adresse est bloquée (private address)');
+        throw new UnsafeUrlError('Cette adresse est bloquée (private address)', 'private');
     }
 
     let addresses: { address: string }[];
@@ -216,18 +256,18 @@ export async function resolveAndValidateHost(hostname: string, blockPrivate: boo
         addresses = await dns.lookup(hostname, { all: true });
     } catch {
         // Fail closed: we cannot safely pin a connection we could not resolve.
-        throw new UnsafeUrlError('Résolution DNS impossible pour cet hôte');
+        throw new UnsafeUrlError('Résolution DNS impossible pour cet hôte', 'dns');
     }
 
     if (addresses.length === 0) {
-        throw new UnsafeUrlError('Aucune adresse IP pour cet hôte');
+        throw new UnsafeUrlError('Aucune adresse IP pour cet hôte', 'no_ip');
     }
 
     const validated: string[] = [];
     for (const { address } of addresses) {
         const reason = isBlockedAddress(address, blockPrivate);
         if (reason) {
-            throw new UnsafeUrlError(`Cette adresse est bloquée (${reason})`);
+            throw new UnsafeUrlError(`Cette adresse est bloquée (${reason})`, 'blocked', reason);
         }
         validated.push(canonicalizeIp(address));
     }
@@ -251,11 +291,11 @@ export async function assertSafeIntegrationUrl(baseUrl: string, options: SafeUrl
     try {
         url = new URL(baseUrl);
     } catch {
-        throw new UnsafeUrlError('URL invalide');
+        throw new UnsafeUrlError('URL invalide', 'invalid');
     }
 
     if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-        throw new UnsafeUrlError('Seuls les protocoles http et https sont autorisés');
+        throw new UnsafeUrlError('Seuls les protocoles http et https sont autorisés', 'protocol');
     }
 
     const blockPrivate = resolveBlockPrivate(options);
@@ -268,7 +308,7 @@ export async function assertSafeIntegrationUrl(baseUrl: string, options: SafeUrl
         // Keep the legacy lenience: a pure resolution failure is not a guard
         // rejection here (the subsequent fetch will surface a network error),
         // but a real block reason still propagates.
-        if (e instanceof UnsafeUrlError && /Résolution DNS impossible|Aucune adresse IP/.test(e.message)) {
+        if (e instanceof UnsafeUrlError && (e.code === 'dns' || e.code === 'no_ip')) {
             return;
         }
         throw e;
