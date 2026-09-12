@@ -162,8 +162,8 @@ visits=$(request GET "/api/visits")
 echo "$visits" | jq -e '.data | length == 1 and .[0].visitor_name == "Camille"' >/dev/null
 esc=$(request GET "/api/escalation/rules")
 echo "$esc" | jq -e '.data.rules.enabled == false and .data.rules.med_primary_min == 30' >/dev/null
-esc=$(request PUT "/api/escalation/rules" '{"med_primary_min":-1}')
-echo "$esc" | jq -e '.success == false' >/dev/null
+rejected=$(curl -sS -o /dev/null -w "%{http_code}" -X PUT "$API_BASE/api/escalation/rules" -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -H "X-Circle-Id: $CIRCLE_ID" -d '{"med_primary_min":-1}')
+[[ "$rejected" == "400" ]]
 esc=$(request PUT "/api/escalation/rules" '{"enabled":true,"med_patient_min":15,"med_primary_min":30,"help_ack_min":5}')
 echo "$esc" | jq -e '.data.rules.enabled == true and .data.rules.help_ack_min == 5' >/dev/null
 help_before=$(request GET "/api/escalation/help")
