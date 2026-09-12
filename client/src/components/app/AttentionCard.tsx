@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { AlertTriangle, BellRing, CalendarDays, CheckSquare, ChevronRight, DoorOpen, FileText, Pill, ShieldAlert } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { api } from '../../lib/api';
 import { cn } from '../../lib/utils';
 import { dateLocale, intlLocale } from '../../i18n/format';
 
@@ -30,6 +31,8 @@ export interface AttentionItem {
     details: AttentionDetail[];
     time?: string | null;
     name?: string | null;
+    /** help : demandes d aide sans prise en charge. */
+    open_help?: Array<{ id: string; created_at: string }>;
 }
 
 const ICONS: Record<AttentionKind, React.ComponentType<{ className?: string }>> = {
@@ -71,17 +74,34 @@ const relativeTime = (value: string | null | undefined): string => {
 interface Props {
     items: AttentionItem[];
     className?: string;
+    /** Appele apres une prise en charge, pour recharger le tableau de bord. */
+    onChanged?: () => void;
 }
 
-const AttentionCard: React.FC<Props> = ({ items, className }) => {
+const AttentionCard: React.FC<Props> = ({ items, className, onChanged }) => {
     const { t } = useTranslation(['dashboard', 'visitors']);
     const navigate = useNavigate();
+    const [acking, setAcking] = React.useState(false);
+
+    // "Je m en occupe" : prise en charge de toutes les demandes d aide ouvertes.
+    const acknowledge = async (ids: string[]) => {
+        setAcking(true);
+        try {
+            await Promise.all(ids.map((id) => api.post(`/api/escalation/help/${id}/ack`, {}).catch(() => undefined)));
+            onChanged?.();
+        } finally {
+            setAcking(false);
+        }
+    };
 
     const texts = (item: AttentionItem): { title: string; detail: string } => {
         const first = item.details[0];
         switch (item.kind) {
             case 'help':
-                return { title: t('dashboard:attention.help', { count: item.count }), detail: first ? `${first.extra ? `${first.extra} : ` : ''}${first.label} (${relativeTime(first.when)})` : '' };
+                return {
+                    title: t('dashboard:attention.help', { count: item.count }),
+                    detail: [item.open_help?.length ? t('dashboard:attention.helpOpen', { count: item.open_help.length }) : '', first ? `${first.extra ? `${first.extra} : ` : ''}${first.label} (${relativeTime(first.when)})` : ''].filter(Boolean).join(' · '),
+                };
             case 'presence':
                 return { title: t('dashboard:attention.presence', { time: item.time ?? '' }), detail: t('dashboard:attention.presenceDetail') };
             case 'missed_intakes':
@@ -139,6 +159,18 @@ const AttentionCard: React.FC<Props> = ({ items, className }) => {
                                     </span>
                                     <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
                                 </button>
+                                {item.kind === 'help' && item.open_help && item.open_help.length > 0 && (
+                                    <div className="pb-2 pl-12">
+                                        <button
+                                            type="button"
+                                            disabled={acking}
+                                            onClick={() => void acknowledge(item.open_help!.map((h) => h.id))}
+                                            className="min-h-[36px] rounded-pill bg-primary-soft px-4 text-caption font-medium text-primary transition-colors hover:bg-primary/15 disabled:opacity-60"
+                                        >
+                                            {t('dashboard:attention.acknowledge')}
+                                        </button>
+                                    </div>
+                                )}
                             </li>
                         );
                     })}

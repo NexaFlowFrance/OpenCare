@@ -1,0 +1,28 @@
+{
+  "title": "Alertes et escalade",
+  "subtitle": "Qui est prévenu, et au bout de combien de temps, quand une prise est en retard ou que le proche demande de l'aide.",
+  "enabled": "Activer l'escalade",
+  "enabledHint": "Désactivée : une prise en retard ne déclenche rien de plus et « J'ai besoin d'aide » prévient tout le cercle, comme avant.",
+  "minutes": "min",
+  "medication": {
+    "title": "Prise de médicament en retard",
+    "patient": "Rappel au proche sur l'écran patient après",
+    "primary": "Prévenir les aidants principaux après",
+    "secondary": "Prévenir les aidants de relais après",
+    "off": "Mettre 0 pour désactiver un palier. Après quatre heures, la prise est marquée manquée et l'escalade s'arrête."
+  },
+  "help": {
+    "title": "Bouton « J'ai besoin d'aide »",
+    "immediate": "Les aidants principaux sont prévenus immédiatement.",
+    "ack": "Sans prise en charge (« Je m'en occupe » sur le tableau de bord), prévenir les aidants de relais après"
+  },
+  "primary": "Aidants principaux",
+  "primaryHint": "Sans sélection : les administrateurs du cercle.",
+  "secondary": "Aidants de relais",
+  "secondaryHint": "Sans sélection : les membres « famille ».",
+  "saved": "Règles enregistrées.",
+  "errors": {
+    "load": "Impossible de charger les règles d'escalade.",
+    "save": "Impossible d'enregistrer les règles."
+  }
+}

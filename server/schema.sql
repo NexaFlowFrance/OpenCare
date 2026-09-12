@@ -237,6 +237,10 @@ CREATE TABLE medication_intakes (
     confirmed_at TIMESTAMP,
     -- D'ou vient la confirmation: aidant (app), kiosk, telephone patient, lien magique
     confirmed_source VARCHAR(20) CHECK (confirmed_source IN ('caregiver', 'kiosk', 'phone', 'link')),
+    -- Escalade (lib/escalation) : rappel patient, aidants principaux, aidants de relais
+    reminded_patient_at TIMESTAMP,
+    escalated_primary_at TIMESTAMP,
+    escalated_secondary_at TIMESTAMP,
     -- Quantite a prendre, copiee depuis l'horaire a la generation (survit a la re-edition des horaires)
     quantity NUMERIC(6,2),
     unit VARCHAR(20),
@@ -554,6 +558,32 @@ CREATE INDEX idx_visits_circle_in ON visits(circle_id, checked_in_at DESC);
 
 -- Plan de soins : consignes redigees par la famille (routine, repas, mobilite,
 -- toilette, communication, ce qui contrarie, ce qui apaise, urgence)
+-- Escalade configurable des alertes (prise en retard, demande d'aide) et
+-- demandes d'aide du bouton "J'ai besoin d'aide" avec leur prise en charge
+CREATE TABLE escalation_rules (
+    circle_id UUID PRIMARY KEY REFERENCES care_circles(id) ON DELETE CASCADE,
+    enabled BOOLEAN NOT NULL DEFAULT FALSE,
+    med_patient_min INTEGER NOT NULL DEFAULT 15,
+    med_primary_min INTEGER NOT NULL DEFAULT 30,
+    med_secondary_min INTEGER NOT NULL DEFAULT 60,
+    help_ack_min INTEGER NOT NULL DEFAULT 10,
+    primary_member_ids JSONB NOT NULL DEFAULT '[]',
+    secondary_member_ids JSONB NOT NULL DEFAULT '[]',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE help_requests (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    circle_id UUID NOT NULL REFERENCES care_circles(id) ON DELETE CASCADE,
+    journal_entry_id UUID REFERENCES journal_entries(id) ON DELETE SET NULL,
+    source VARCHAR(20) NOT NULL DEFAULT 'kiosk',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    acknowledged_at TIMESTAMP,
+    acknowledged_by UUID REFERENCES users(id) ON DELETE SET NULL,
+    escalated_at TIMESTAMP
+);
+CREATE INDEX idx_help_requests_circle_open ON help_requests(circle_id, created_at DESC);
+
 CREATE TABLE care_plans (
     circle_id UUID PRIMARY KEY REFERENCES care_circles(id) ON DELETE CASCADE,
     sections JSONB NOT NULL DEFAULT '{}',

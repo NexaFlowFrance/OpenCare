@@ -21,7 +21,8 @@ export type WsEntity =
     | 'presence'
     | 'heatwave'
     | 'visits'
-    | 'care_plan';
+    | 'care_plan'
+    | 'help_requests';
 
 export type WsAction = 'created' | 'updated' | 'deleted' | 'synced';
 
@@ -31,6 +32,19 @@ export interface WsUpdatePayload {
     action: WsAction;
     circleId?: string;
 }
+
+/** Rappel pousse aux appareils patient (escalade niveau 1) ; les sessions aidant l'ignorent. */
+export interface WsReminderPayload {
+    type: 'reminder';
+    kind: 'medication';
+    count: number;
+    circleId?: string;
+}
+
+export type WsPayload = WsUpdatePayload | WsReminderPayload;
+
+/** Meme union, sans circleId (pose par broadcastToCircle). Omit ne se distribue pas sur une union. */
+export type WsBroadcast = Omit<WsUpdatePayload, 'circleId'> | Omit<WsReminderPayload, 'circleId'>;
 
 /** Registered WebSocket connections keyed by userId */
 export const clients = new Map<string, Set<WebSocket>>();
@@ -55,7 +69,7 @@ export const unregisterDeviceSocket = (circleId: string, ws: WebSocket): void =>
     if (set.size === 0) deviceClients.delete(circleId);
 };
 
-const sendToDevices = (circleId: string, payload: WsUpdatePayload): void => {
+const sendToDevices = (circleId: string, payload: WsPayload): void => {
     const set = deviceClients.get(circleId);
     if (!set) return;
     const message = JSON.stringify(payload);
@@ -65,7 +79,7 @@ const sendToDevices = (circleId: string, payload: WsUpdatePayload): void => {
 };
 
 /** Push a real-time update to all connections of a given user */
-export const broadcast = (userId: string, data: WsUpdatePayload): void => {
+export const broadcast = (userId: string, data: WsPayload): void => {
     const userClients = clients.get(userId);
     if (!userClients) return;
 
@@ -81,10 +95,10 @@ export const broadcast = (userId: string, data: WsUpdatePayload): void => {
  * Push a real-time update to every member of a circle.
  * Fire-and-forget: a broadcast failure never breaks the API call that triggered it.
  */
-export const broadcastToCircle = async (circleId: string, data: Omit<WsUpdatePayload, 'circleId'>): Promise<void> => {
+export const broadcastToCircle = async (circleId: string, data: WsBroadcast): Promise<void> => {
     try {
         const result = await query('SELECT user_id FROM circle_members WHERE circle_id = $1', [circleId]);
-        const payload: WsUpdatePayload = { ...data, circleId };
+        const payload = { ...data, circleId } as WsPayload;
         for (const row of result.rows as Array<{ user_id: string }>) {
             broadcast(row.user_id, payload);
         }

@@ -107,7 +107,7 @@ function makeCircle(name: string, recipient: Json): CircleData {
             id: uid(), circle_id: id, user_id: store.user.id, role: 'admin', color: '#2563EB',
             created_at: naiveNow(), name: store.user.name, email: store.user.email, avatar_url: null,
         }],
-        invites: [], caregiverLinks: [], journal: [], vitals: [], medications: [], intakeOverrides: {}, prnIntakes: [], visits: [], carePlan: null,
+        invites: [], caregiverLinks: [], journal: [], vitals: [], medications: [], intakeOverrides: {}, prnIntakes: [], visits: [], carePlan: null, escalation: { enabled: false, med_patient_min: 15, med_primary_min: 30, med_secondary_min: 60, help_ack_min: 10, primary_member_ids: [], secondary_member_ids: [] }, helpRequests: [],
         prescriptions: [], events: [], tasks: [], shopping: [], messages: [], documents: [], contacts: [],
         expenses: [], settlements: [], aids: [], notes: [],
         story: { id: uid(), circle_id: id, sections: [], updated_by: null, updated_at: naiveNow(), created_at: naiveNow() },
@@ -578,6 +578,8 @@ function attention(c: CircleData): Json[] {
     const overdue = c.tasks.filter((t) => !t.is_completed && t.due_date && new Date(String(t.due_date)).getTime() < now.getTime());
     if (overdue.length) items.push({ kind: 'tasks_overdue', severity: 'warn', count: overdue.length, href: '/tasks', details: overdue.slice(0, 5).map((t) => ({ id: t.id, label: t.title, when: t.due_date })) });
     const active = c.visits.filter((v) => !v.checked_out_at && String(v.checked_in_at).slice(0, 10) === today);
+    const openHelp = c.helpRequests.filter((h) => !h.acknowledged_at);
+    if (incidents.length && openHelp.length) items[0].open_help = openHelp.map((h) => ({ id: h.id, created_at: h.created_at }));
     if (active.length) items.push({ kind: 'visitor_present', severity: 'info', count: active.length, href: '/visitors', details: active.map((v) => ({ id: v.id, label: v.visitor_name, when: v.checked_in_at, extra: v.visitor_type })), name: active[0].visitor_name });
     const soon = now.getTime() + 2 * 3600 * 1000;
     const upcoming = expandEvents(c, startOfDay(now), new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59))
@@ -1596,6 +1598,27 @@ async function route(method: string, path: string, q: Record<string, string>, bo
     if (path === '/api/kiosk/today') return ok(kioskToday(c));
     if (path === '/api/kiosk/care-plan') return ok({ sections: Object.fromEntries(Object.entries((c.carePlan?.sections ?? {}) as Record<string, string>).filter(([, v]) => v)), updated_at: c.carePlan?.updated_at ?? null });
     // Plan de soins : consignes (texte) + routine medicamenteuse + professionnels + semaine
+    // Escalade : regles du cercle et demandes d aide sans prise en charge
+    if (path === '/api/escalation/rules' && method === 'GET') return ok({ rules: c.escalation });
+    if (path === '/api/escalation/rules' && method === 'PUT') {
+        const r = c.escalation as Record<string, unknown>;
+        if (body.enabled !== undefined) r.enabled = body.enabled === true;
+        for (const k of ['med_patient_min', 'med_primary_min', 'med_secondary_min', 'help_ack_min']) {
+            if (body[k] === undefined) continue;
+            const n = Number(body[k]);
+            if (!Number.isInteger(n) || n < 0 || n > 1440) throw new Error('Invalid minutes');
+            r[k] = n;
+        }
+        for (const k of ['primary_member_ids', 'secondary_member_ids']) if (Array.isArray(body[k])) r[k] = body[k];
+        return ok({ rules: c.escalation });
+    }
+    if (path === '/api/escalation/help' && method === 'GET') return ok(c.helpRequests.filter((h) => !h.acknowledged_at));
+    if (seg[1] === 'escalation' && seg[2] === 'help' && seg[4] === 'ack' && method === 'POST') {
+        const req = c.helpRequests.find((h) => h.id === seg[3] && !h.acknowledged_at);
+        if (!req) throw new Error('Not found');
+        req.acknowledged_at = naiveNow();
+        return ok(req);
+    }
     if (path === '/api/care-plan' && method === 'GET') return ok(carePlan(c));
     if (path === '/api/care-plan' && method === 'PUT') {
         const next: Record<string, string> = { ...((c.carePlan?.sections ?? {}) as Record<string, string>) };

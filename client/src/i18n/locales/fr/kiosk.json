@@ -231,5 +231,13 @@
       "calming": "Ce qui apaise",
       "emergency": "En cas d'urgence"
     }
+  },
+  "reminder": {
+    "title": "C'est l'heure de tes médicaments",
+    "spoken": "Regarde ce qu'il faut prendre et appuie sur le bouton vert quand c'est fait.",
+    "subtitle_one": "{{count}} prise à prendre maintenant",
+    "subtitle_other": "{{count}} prises à prendre maintenant",
+    "taken": "J'ai tout pris",
+    "later": "D'accord, dans un instant"
   }
 }
