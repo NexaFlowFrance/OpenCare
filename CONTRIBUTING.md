@@ -43,15 +43,22 @@ The schema installs itself on first start, so there is no migration command to r
 ## Before opening a pull request
 
 ```bash
+npm test               # unit tests, fast, no database needed
 npm run build          # shared, server and client, with type checking
 npm run smoke:api      # end to end HTTP walk through the API (needs jq and a running server)
 ```
 
-Both run in CI on every pull request. Two more checks are quick and catch most review
-comments:
+All three run in CI on every pull request. The unit tests live in `tests/` and cover the
+logic that breaks silently: intake windows, recurrence and its exceptions, escalation
+rules, care plan sections, the grounded companion answers, and the consistency of every
+locale. Add one next to your change when you touch that kind of logic. Two more checks are
+quick and catch most review comments:
 
 - **FR and EN key parity.** Every key added to `client/src/i18n/locales/fr/<ns>.json` must
   exist in `client/src/i18n/locales/en/<ns>.json`, and the other way around.
+Both of these are covered by `npm test`, so a failing pull request tells you which key or
+which file is at fault.
+
 - **No em dash.** The em dash character (U+2014) is not used anywhere in the project, in code, comments,
   documentation or user-facing text. Use a comma, a colon or two sentences.
 

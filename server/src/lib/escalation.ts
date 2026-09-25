@@ -55,7 +55,11 @@ export function validateRules(input: unknown, lang: 'fr' | 'en'): { patch?: Part
     if (body.enabled !== undefined) patch.enabled = body.enabled === true;
     for (const key of MINUTE_KEYS) {
         if (body[key] === undefined) continue;
-        const n = Number(body[key]);
+        // null et la chaine vide valent 0 pour Number() : accepter ces valeurs
+        // desactiverait un palier d'alerte en silence. Pour couper un palier,
+        // il faut envoyer 0 explicitement.
+        const raw = body[key];
+        const n = typeof raw === 'number' || (typeof raw === 'string' && raw.trim() !== '') ? Number(raw) : NaN;
         if (!Number.isInteger(n) || n < 0 || n > MAX_MINUTES) {
             return { error: lang === 'en' ? `${key} must be a whole number of minutes between 0 and ${MAX_MINUTES}` : `${key} doit être un nombre entier de minutes entre 0 et ${MAX_MINUTES}` };
         }

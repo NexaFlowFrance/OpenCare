@@ -84,7 +84,12 @@ export const parseRRule = (text: unknown): ParsedRRule | null => {
                 break;
             }
             case 'UNTIL': {
-                if (!/^\d{8}$/.test(value)) return null;
+                // Deux formes acceptees : la date seule, ecrite par l'app, et la
+                // forme complete de la RFC 5545 (20260120T000000Z) qui arrive des
+                // agendas importes. L'heure est ignoree : tout le modele de dates
+                // de l'app est en heure locale naive, et UNTIL y vaut jusqu'a la
+                // fin du jour indique.
+                if (!/^\d{8}(T\d{6}Z?)?$/.test(value)) return null;
                 const year = Number(value.slice(0, 4));
                 const month = Number(value.slice(4, 6));
                 const day = Number(value.slice(6, 8));

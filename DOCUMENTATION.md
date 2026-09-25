@@ -237,6 +237,37 @@ L'interface existe en **français, anglais et espagnol**. Les langues sont déco
 
 Côté accessibilité : un lien d'évitement mène directement au contenu dès la première tabulation, les deux barres de navigation sont nommées et la page courante porte `aria-current`, le contenu principal est un repère `main` focalisable, les boutons de langue annoncent le nom de la langue et non son code, et les boîtes de dialogue se ferment à l'échappement en rendant le focus. Les états importants ne passent jamais par la seule couleur : une mesure hors plage, un stock bas ou un message non lu portent aussi un texte lisible par un lecteur d'écran.
 
+### Sauvegarde et restauration
+
+Tout vit dans PostgreSQL : le journal, les photos, les documents, les médicaments. Sauvegarder la base, c'est donc tout sauvegarder.
+
+```bash
+bash scripts/backup.sh                  # pile Docker, écrit dans ./backups
+bash scripts/backup.sh --dir /mnt/nas   # ailleurs, disque externe ou NAS
+bash scripts/backup.sh --keep 30        # ne garde que les 30 plus récentes
+bash scripts/backup.sh --direct         # PostgreSQL local, sans Docker
+```
+
+Le fichier est un `pg_dump` compressé, nommé par sa date, écrit en 600. Il n'apparaît qu'une fois vérifié : un dump vide ou tronqué est supprimé plutôt que publié, parce qu'une sauvegarde à laquelle on ne peut pas se fier est pire que pas de sauvegarde. Une ligne de cron suffit à l'automatiser :
+
+```
+30 3 * * * cd /opt/opencare && bash scripts/backup.sh --keep 30 >> /var/log/opencare-backup.log 2>&1
+```
+
+Copiez ces fichiers **hors de la machine**. Une sauvegarde qui vit sur le disque qui lâche ne sauve personne.
+
+Pour restaurer, arrêtez d'abord le serveur applicatif (`docker compose stop server`) :
+
+```bash
+bash scripts/restore.sh backups/opencare-20260925-093000.sql.gz
+```
+
+La restauration demande une confirmation explicite, vérifie que le fichier ressemble bien à une sauvegarde OpenCare, et prend une sauvegarde de sécurité de l'état actuel avant de l'écraser. L'export JSON par cercle des Paramètres reste disponible pour un besoin plus fin : emporter un cercle, pas toute l'instance.
+
+### Tests
+
+`npm test` lance les tests unitaires (Vitest, dossier `tests/`) : fenêtres de prise de la vue patient, récurrences et leurs exceptions, validation des règles d'escalade et des consignes du plan de soins, réponses du compagnon, et cohérence des traductions dans toutes les langues. Ils ne touchent pas la base et tournent en quelques secondes. Le parcours complet avec PostgreSQL est couvert par `npm run smoke:api`, joué en intégration continue sur la pile Docker.
+
 ### Divers
 
 - `GET / POST / PUT / DELETE /api/notes` : notes partagées du cercle.

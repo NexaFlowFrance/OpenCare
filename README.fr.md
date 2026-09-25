@@ -92,6 +92,18 @@ docker-compose up -d --build
 - Interface : http://localhost:3000
 - API : http://localhost:3001
 
+### 💾 Sauvegardes
+
+Tout vit dans PostgreSQL : un dump suffit à tout sauvegarder.
+
+```bash
+bash scripts/backup.sh              # dump compressé et vérifié dans ./backups
+bash scripts/restore.sh <fichier>   # restauration, après une sauvegarde de sécurité
+```
+
+Mettez-le dans cron, et copiez les fichiers hors de la machine. Les options sont dans
+[DOCUMENTATION.md](DOCUMENTATION.md).
+
 ### 🛠️ Développement
 
 Sous Windows, le plus simple ne demande pas Docker : le script démarre le

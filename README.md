@@ -90,6 +90,18 @@ docker-compose up -d --build
 - Frontend: http://localhost:3000
 - Backend API: http://localhost:3001
 
+### 💾 Backups
+
+Everything lives in PostgreSQL, so one dump is a full backup.
+
+```bash
+bash scripts/backup.sh              # writes a checked, compressed dump to ./backups
+bash scripts/restore.sh <file>      # restores it, after a safety backup
+```
+
+Put it in cron, and copy the files off the machine. See
+[DOCUMENTATION.md](DOCUMENTATION.md) for the options.
+
 ### 🛠️ Development
 
 On Windows, the simplest path needs no Docker: the script starts the bundled
