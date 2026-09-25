@@ -157,6 +157,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     key={item.labelKey}
                     to={item.href}
                     onClick={closeMenus}
+                    aria-current={active ? 'page' : undefined}
                     className={cn(
                         'group relative flex items-center gap-3 rounded-input px-4 py-2.5 text-caption font-medium',
                         'transition-colors duration-fast ease-soft',
@@ -178,6 +179,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
     return (
         <div className="min-h-screen bg-background font-sans text-foreground">
+            {/* Lien d'evitement : premiere tabulation, il saute la navigation. */}
+            <a
+                href="#main-content"
+                className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-input focus:bg-card focus:px-4 focus:py-2 focus:text-caption focus:font-medium focus:text-foreground focus:shadow-surface-hover focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+                {t('skipToContent')}
+            </a>
             {(sidebarOpen || quickActionsOpen) && (
                 <div
                     className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm lg:hidden"
@@ -211,7 +219,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                         <CircleSwitcher onNavigate={closeMenus} />
                     </div>
 
-                    <nav className="flex-1 overflow-y-auto px-4 py-4 scrollbar-hide">
+                    <nav aria-label={t('primaryNav')} className="flex-1 overflow-y-auto px-4 py-4 scrollbar-hide">
                         {NAV_GROUPS.map((group, index) => {
                             const items = group.items.filter((item) => !item.hideFor || !myRole || !item.hideFor.includes(myRole));
                             if (items.length === 0) return null;
@@ -322,7 +330,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     </div>
                 </header>
 
-                <main className="container max-w-[1200px] px-4 pb-28 pt-6 lg:px-6 lg:pb-10 lg:pt-8">
+                <main id="main-content" tabIndex={-1} className="container max-w-[1200px] px-4 pb-28 pt-6 lg:px-6 lg:pb-10 lg:pt-8">
                     {isOffline && (
                         <div className="mb-4 flex items-start gap-2 rounded-card border border-warning/40 bg-[rgb(var(--warning-soft))] px-4 py-2.5 text-caption text-warning">
                             <WifiOff className="mt-0.5 h-4 w-4 flex-shrink-0" />
@@ -386,7 +394,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 </div>
             </div>
 
-            <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 pb-safe backdrop-blur lg:hidden">
+            <nav aria-label={t('mobileNav')} className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 pb-safe backdrop-blur lg:hidden">
                 <div className="grid grid-cols-5 gap-1 px-2 py-2">
                     {mobileTabs.map((item) => {
                         const Icon = item.icon;

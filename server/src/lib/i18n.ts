@@ -33,6 +33,13 @@ export function langFromRequest(req: Request & { language?: string }): Lang {
 // (aucun changement pour les utilisateurs francophones).
 const MESSAGES: Record<Lang, Record<string, string>> = {
     fr: {
+        'events.not_recurring': "Cet événement ne se répète pas : modifiez-le directement.",
+        'medications.stockInvalid': 'Quantité de stock invalide.',
+        'medications.stockRequired': 'Indiquez un stock ou un seuil.',
+        'vitals.thresholdInvalid': 'Seuil invalide : le minimum doit être inférieur au maximum.',
+        'vitals.thresholdType': 'Type de constante inconnu.',
+        'events.no_occurrence': "Aucune occurrence à cette date.",
+        'events.move_too_far': 'Une occurrence ne peut être déplacée que de {{days}} jours au maximum.',
         'url.invalid': 'URL invalide',
         'url.protocol': 'Seuls les protocoles http et https sont autorisés',
         'url.ws_invalid': 'URL WebSocket invalide',
@@ -151,6 +158,13 @@ const MESSAGES: Record<Lang, Record<string, string>> = {
         'voice.whisperTimeout': "Le service Whisper n'a pas répondu en {{seconds}}s",
     },
     en: {
+        'events.not_recurring': 'This event does not repeat: edit it directly.',
+        'medications.stockInvalid': 'Invalid stock quantity.',
+        'medications.stockRequired': 'Provide a stock or a threshold.',
+        'vitals.thresholdInvalid': 'Invalid threshold: the minimum must be below the maximum.',
+        'vitals.thresholdType': 'Unknown vital type.',
+        'events.no_occurrence': 'No occurrence on that date.',
+        'events.move_too_far': 'An occurrence can only be moved by up to {{days}} days.',
         'url.invalid': 'Invalid URL',
         'url.protocol': 'Only the http and https protocols are allowed',
         'url.ws_invalid': 'Invalid WebSocket URL',

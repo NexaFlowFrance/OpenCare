@@ -107,7 +107,7 @@ function makeCircle(name: string, recipient: Json): CircleData {
             id: uid(), circle_id: id, user_id: store.user.id, role: 'admin', color: '#2563EB',
             created_at: naiveNow(), name: store.user.name, email: store.user.email, avatar_url: null,
         }],
-        invites: [], caregiverLinks: [], journal: [], vitals: [], medications: [], intakeOverrides: {}, prnIntakes: [], visits: [], carePlan: null, escalation: { enabled: false, med_patient_min: 15, med_primary_min: 30, med_secondary_min: 60, help_ack_min: 10, primary_member_ids: [], secondary_member_ids: [] }, helpRequests: [],
+        invites: [], caregiverLinks: [], journal: [], vitals: [], medications: [], intakeOverrides: {}, prnIntakes: [], visits: [], carePlan: null, vitalThresholds: [], messageReads: {}, escalation: { enabled: false, med_patient_min: 15, med_primary_min: 30, med_secondary_min: 60, help_ack_min: 10, primary_member_ids: [], secondary_member_ids: [] }, helpRequests: [],
         prescriptions: [], events: [], tasks: [], shopping: [], messages: [], documents: [], contacts: [],
         expenses: [], settlements: [], aids: [], notes: [],
         story: { id: uid(), circle_id: id, sections: [], updated_by: null, updated_at: naiveNow(), created_at: naiveNow() },
@@ -185,8 +185,31 @@ function expandEvents(c: CircleData, from: Date, to: Date): Json[] {
             if (freq === 'DAILY') matches = true;
             else if (freq === 'WEEKLY') matches = (byDays ?? [start.getDay()]).includes(d.getDay());
             if (!matches) continue;
-            const occStart = new Date(d.getFullYear(), d.getMonth(), d.getDate(), start.getHours(), start.getMinutes(), 0);
-            push(ev, occStart, durMs !== null ? new Date(occStart.getTime() + durMs) : null, true);
+            // Exception sur cette occurrence : sautee, ou deplacee ailleurs.
+            const day = isoDate(d);
+            const exception = (Array.isArray(ev.exceptions) ? ev.exceptions : []).find((e: Json) => e.date === day);
+            if (exception?.action === 'skip') continue;
+            let occStart = new Date(d.getFullYear(), d.getMonth(), d.getDate(), start.getHours(), start.getMinutes(), 0);
+            let occEnd = durMs !== null ? new Date(occStart.getTime() + durMs) : null;
+            if (exception?.action === 'move') {
+                occStart = new Date(String(exception.start_time));
+                occEnd = exception.end_time ? new Date(String(exception.end_time)) : (durMs !== null ? new Date(occStart.getTime() + durMs) : null);
+            }
+            const moved = exception?.action === 'move';
+            out.push({
+                ...ev,
+                member_ids: Array.isArray(ev.member_ids) ? ev.member_ids : [],
+                start_time: toLocalISO(occStart),
+                end_time: occEnd ? toLocalISO(occEnd) : null,
+                occurrence_date: day,
+                is_recurring: true,
+                moved,
+                members_data: (Array.isArray(ev.member_ids) ? ev.member_ids : [])
+                    .map((id: string) => membersById.get(id))
+                    .filter(Boolean)
+                    .map((m) => ({ id: m!.id, name: m!.name, color: m!.color, role: m!.role })),
+            });
+            continue;
         }
     }
 
@@ -551,9 +574,41 @@ function dashboard(c: CircleData): Json {
         latest_vitals: latestVitals(c).map((v) => ({
             type: v.type, value: v.value, value2: v.value2, unit: v.unit, measured_at: v.measured_at,
         })),
-        unread_messages_count: 0,
+        unread_messages_count: unreadMessages(c).total,
         attention: attention(c),
     };
+}
+
+// Messages non lus : posterieurs a la derniere lecture du fil et ecrits par un autre.
+function unreadMessages(c: CircleData): Json {
+    const me = store.user.id;
+    const circleRead = c.messageReads.circle ?? '';
+    const circle = c.messages.filter((m) => m.channel === 'circle' && m.author_user_id !== me && String(m.created_at) > circleRead).length;
+    const dms: Json[] = [];
+    for (const m of c.messages) {
+        if (m.channel !== 'dm' || m.recipient_user_id !== me) continue;
+        const peer = String(m.author_user_id);
+        if (String(m.created_at) <= (c.messageReads[`dm:${peer}`] ?? '')) continue;
+        const row = dms.find((d) => d.user_id === peer);
+        if (row) row.count += 1;
+        else dms.push({ user_id: peer, count: 1 });
+    }
+    return { total: circle + dms.reduce((sum, d) => sum + Number(d.count), 0), circle, dms };
+}
+
+// Une mesure sort-elle de la plage fixee ? Meme regle que le serveur.
+function vitalOutOfRange(c: CircleData, v: Json): boolean {
+    const th = c.vitalThresholds.find((t) => t.type === v.type);
+    if (!th) return false;
+    const value = Number(v.value);
+    const value2 = v.value2 === null || v.value2 === undefined ? null : Number(v.value2);
+    if (th.min_value !== null && th.min_value !== undefined && value < Number(th.min_value)) return true;
+    if (th.max_value !== null && th.max_value !== undefined && value > Number(th.max_value)) return true;
+    if (value2 !== null) {
+        if (th.min_value2 !== null && th.min_value2 !== undefined && value2 < Number(th.min_value2)) return true;
+        if (th.max_value2 !== null && th.max_value2 !== undefined && value2 > Number(th.max_value2)) return true;
+    }
+    return false;
 }
 
 // "A traiter" : meme logique que server/src/lib/attention.ts, sur la graine.
@@ -570,6 +625,11 @@ function attention(c: CircleData): Json[] {
         items.push({ kind: 'presence', severity: 'urgent', count: 1, href: '/', details: [], time: String(rule.no_activity_before).slice(0, 5) });
     }
     if (c.role !== 'neighbor') {
+        const weekAgo = new Date(now.getTime() - 7 * 86400000).getTime();
+        const outOfRange = c.vitals.filter((v) => new Date(String(v.measured_at)).getTime() >= weekAgo && vitalOutOfRange(c, v));
+        if (outOfRange.length) items.push({ kind: 'vitals_out_of_range', severity: 'warn', count: outOfRange.length, href: '/health', details: outOfRange.slice(0, 5).map((v) => ({ id: v.id, label: v.type, when: v.measured_at, extra: v.value2 !== null && v.value2 !== undefined ? `${v.value}/${v.value2}` : String(v.value) })) });
+        const low = c.medications.filter((m) => m.active !== false && m.stock_quantity !== null && m.stock_quantity !== undefined && m.stock_alert_threshold !== null && m.stock_alert_threshold !== undefined && Number(m.stock_quantity) <= Number(m.stock_alert_threshold));
+        if (low.length) items.push({ kind: 'medication_stock', severity: 'warn', count: low.length, href: '/medications', details: low.slice(0, 5).map((m) => ({ id: m.id, label: m.name, when: null, extra: String(m.stock_quantity) })) });
         const missed = intakesForRange(c, today, today).filter((i) => i.status === 'missed');
         if (missed.length) items.push({ kind: 'missed_intakes', severity: 'urgent', count: missed.length, href: '/medications', details: missed.slice(0, 5).map((i) => ({ id: i.id, label: i.medication_name, when: i.due_at })) });
         const presc = c.prescriptions.filter((p) => p.renewal_date && new Date(`${String(p.renewal_date).slice(0, 10)}T12:00:00`).getTime() <= now.getTime() + (Number(p.reminder_days) || 7) * 86400000);
@@ -1599,6 +1659,65 @@ async function route(method: string, path: string, q: Record<string, string>, bo
     if (path === '/api/kiosk/care-plan') return ok({ sections: Object.fromEntries(Object.entries((c.carePlan?.sections ?? {}) as Record<string, string>).filter(([, v]) => v)), updated_at: c.carePlan?.updated_at ?? null });
     // Plan de soins : consignes (texte) + routine medicamenteuse + professionnels + semaine
     // Escalade : regles du cercle et demandes d aide sans prise en charge
+    // Exceptions d'occurrence d'un evenement recurrent
+    if (seg[1] === 'events' && seg[3] === 'occurrences' && seg.length === 5) {
+        const ev = c.events.find((e) => e.id === seg[2]);
+        if (!ev || !ev.rrule) throw new Error('Not found');
+        const day = seg[4];
+        const list: Json[] = Array.isArray(ev.exceptions) ? ev.exceptions : [];
+        if (method === 'PUT') {
+            const next = list.filter((e) => e.date !== day);
+            if (body.action === 'skip') next.push({ date: day, action: 'skip' });
+            else if (body.action === 'move' && body.start_time) next.push({ date: day, action: 'move', start_time: body.start_time, end_time: body.end_time ?? null });
+            else throw new Error('action must be skip or move');
+            ev.exceptions = next.sort((a, b) => String(a.date).localeCompare(String(b.date)));
+            return ok(ev);
+        }
+        if (method === 'DELETE') {
+            const next = list.filter((e) => e.date !== day);
+            if (next.length === list.length) throw new Error('Not found');
+            ev.exceptions = next;
+            return ok(ev);
+        }
+    }
+    // Stock d'un medicament
+    if (seg[1] === 'medications' && seg[3] === 'stock' && method === 'PUT') {
+        const med = c.medications.find((m) => m.id === seg[2]);
+        if (!med) throw new Error('Not found');
+        for (const key of ['stock_quantity', 'stock_alert_threshold']) {
+            if (!(key in body)) continue;
+            const raw = body[key];
+            if (raw === null || raw === '') { med[key] = null; continue; }
+            const n = Number(raw);
+            if (!Number.isFinite(n) || n < 0 || n > 100000) throw new Error('Invalid stock');
+            med[key] = Math.round(n * 100) / 100;
+        }
+        med.stock_updated_at = naiveNow();
+        return ok(med);
+    }
+    // Seuils sur les constantes
+    if (path === '/api/vitals/thresholds' && method === 'GET') return ok(c.vitalThresholds);
+    if (path === '/api/vitals/thresholds' && method === 'PUT') {
+        const type = String(body.type || '');
+        if (!['weight', 'bp', 'pain', 'mood', 'temperature', 'glucose'].includes(type)) throw new Error('Unknown vital type');
+        const bounds = ['min_value', 'max_value', 'min_value2', 'max_value2'].map((k) => (body[k] === null || body[k] === '' || body[k] === undefined ? null : Number(body[k])));
+        if (bounds.some((b) => b !== null && !Number.isFinite(b))) throw new Error('Invalid threshold');
+        const [minV, maxV, minV2, maxV2] = bounds;
+        if ((minV !== null && maxV !== null && minV >= maxV) || (minV2 !== null && maxV2 !== null && minV2 >= maxV2)) throw new Error('Invalid threshold');
+        const existing = c.vitalThresholds.findIndex((t) => t.type === type);
+        if (existing >= 0) c.vitalThresholds.splice(existing, 1);
+        if (bounds.every((b) => b === null)) return ok(null);
+        const row = { type, min_value: minV, max_value: maxV, min_value2: minV2, max_value2: maxV2 };
+        c.vitalThresholds.push(row);
+        return ok(row);
+    }
+    // Messages lus et non lus
+    if (path === '/api/messages/unread' && method === 'GET') return ok(unreadMessages(c));
+    if (path === '/api/messages/read' && method === 'POST') {
+        const key = body.channel === 'dm' && body.peer_user_id ? `dm:${body.peer_user_id}` : 'circle';
+        c.messageReads[key] = naiveNow();
+        return ok(unreadMessages(c));
+    }
     if (path === '/api/escalation/rules' && method === 'GET') return ok({ rules: c.escalation });
     if (path === '/api/escalation/rules' && method === 'PUT') {
         const r = c.escalation as Record<string, unknown>;

@@ -14,7 +14,8 @@ function notificationRoute(n: AppNotification): string {
     const t = n.type || '';
     if (t === 'kiosk_help' || t === 'companion_alert') return '/journal';
     if (t === 'visitor_checkin') return '/visitors';
-    if (t === 'prescription_renewal') return '/medications';
+    if (t === 'prescription_renewal' || t === 'medication_stock') return '/medications';
+    if (t === 'vital_out_of_range') return '/health';
     if (t === 'password_reset') return '/circle';
     if (t.startsWith('task')) return '/tasks';
     if (t.startsWith('appointment') || t.startsWith('reminder') || t.startsWith('calendar')) return '/calendar';

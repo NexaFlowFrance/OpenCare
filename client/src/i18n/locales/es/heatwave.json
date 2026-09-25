@@ -1,0 +1,48 @@
+{
+  "banner": {
+    "titleOrange": "Calor intenso en curso",
+    "titleRed": "Ola de calor: alerta reforzada",
+    "intro": "Se ha señalado un episodio de calor intenso para {{name}}. Unos gestos sencillos ayudan a pasar el día en fresco.",
+    "introNoName": "Se ha señalado un episodio de calor intenso. Unos gestos sencillos ayudan a pasar el día en fresco.",
+    "activeSince": "Declarado {{since}}",
+    "endEpisode": "Cerrar el episodio",
+    "ending": "Cerrando"
+  },
+  "checklist": {
+    "title": "Lo que ayuda",
+    "items": [
+      "Cierre las persianas y las ventanas en las horas de más calor, y ventile temprano por la mañana y por la noche.",
+      "Ofrézcale de beber con regularidad, aunque no tenga sed (agua, sopas frías, fruta).",
+      "Mantenga una habitación fresca e invite a la persona a pasar un rato allí.",
+      "Comidas ligeras y frescas, refresque la piel (paño húmedo, vaporizador de agua).",
+      "Vigile las señales de alarma (dolor de cabeza, mucho cansancio, confusión, poca orina). Ante la duda, llame a emergencias."
+    ]
+  },
+  "level": {
+    "orange": "Alerta naranja",
+    "red": "Alerta roja"
+  },
+  "section": {
+    "title": "Seguimiento de la ola de calor",
+    "intro": "Durante un episodio de calor intenso, OpenCare muestra lo que ayuda en el panel y en el kiosco, y envía recordatorios de hidratación a las personas cuidadoras.",
+    "enable": "Activar el seguimiento de la ola de calor en este círculo",
+    "enableHint": "Una vez activado, podrá declarar un episodio con un solo gesto cuando suba el calor.",
+    "reminderTimes": "Recordatorios de hidratación",
+    "reminderTimesHint": "Horas a las que las personas cuidadoras reciben un recordatorio durante un episodio activo.",
+    "addTime": "Añadir una hora",
+    "removeTime": "Quitar esta hora",
+    "noTimes": "No hay ningún recordatorio programado.",
+    "episodeTitle": "Episodio en curso",
+    "episodeActive": "Hay un episodio de calor intenso activo.",
+    "episodeInactive": "No hay ningún episodio en curso.",
+    "level": "Nivel de alerta",
+    "start": "Declarar un episodio",
+    "stop": "Cerrar el episodio",
+    "save": "Guardar",
+    "saved": "Guardado",
+    "disabledHint": "Active primero el seguimiento de la ola de calor, arriba."
+  },
+  "errors": {
+    "save": "No se pudo guardar. Inténtelo de nuevo."
+  }
+}

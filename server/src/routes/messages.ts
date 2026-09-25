@@ -56,6 +56,83 @@ const isCircleMember = async (circleId: string, userId: string): Promise<boolean
     return result.rows.length > 0;
 };
 
+// ============================================================
+// Suivi de lecture (compteur de messages non lus)
+// ============================================================
+
+// Une ligne de message_reads par fil : le fil du cercle (peer_user_id NULL) et
+// une ligne par correspondant en prive. Un message compte comme non lu tant
+// qu'il est posterieur au dernier last_read_at du fil et qu'il vient d'un autre.
+export const unreadCounts = async (circleId: string, userId: string): Promise<{ total: number; circle: number; dms: Array<{ user_id: string; count: number }> }> => {
+    const [circleResult, dmResult] = await Promise.all([
+        query(
+            `SELECT COUNT(*)::int AS count
+             FROM messages m
+             LEFT JOIN message_reads r
+               ON r.circle_id = m.circle_id AND r.user_id = $2 AND r.peer_user_id IS NULL
+             WHERE m.circle_id = $1 AND m.channel = 'circle' AND m.author_user_id <> $2
+               AND (r.last_read_at IS NULL OR m.created_at > r.last_read_at)`,
+            [circleId, userId]
+        ),
+        query(
+            `SELECT m.author_user_id AS user_id, COUNT(*)::int AS count
+             FROM messages m
+             LEFT JOIN message_reads r
+               ON r.circle_id = m.circle_id AND r.user_id = $2 AND r.peer_user_id = m.author_user_id
+             WHERE m.circle_id = $1 AND m.channel = 'dm' AND m.recipient_user_id = $2
+               AND (r.last_read_at IS NULL OR m.created_at > r.last_read_at)
+             GROUP BY m.author_user_id`,
+            [circleId, userId]
+        ),
+    ]);
+    const circleCount = (circleResult.rows[0]?.count as number) ?? 0;
+    const dms = dmResult.rows as Array<{ user_id: string; count: number }>;
+    return {
+        total: circleCount + dms.reduce((sum, row) => sum + row.count, 0),
+        circle: circleCount,
+        dms,
+    };
+};
+
+// GET /api/messages/unread : what this user has not read yet, in this circle.
+router.get('/unread', async (req: CircleRequest, res: Response) => {
+    try {
+        res.json({ success: true, data: await unreadCounts(req.circleId!, req.userId!) });
+    } catch (error) {
+        console.error('Unread messages error:', error);
+        res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+});
+
+// POST /api/messages/read : mark a thread as read up to now.
+// Body { channel: 'circle' } or { channel: 'dm', peer_user_id }.
+router.post('/read', async (req: CircleRequest, res: Response) => {
+    try {
+        const channel = req.body?.channel === 'dm' ? 'dm' : 'circle';
+        let peer: string | null = null;
+        if (channel === 'dm') {
+            peer = typeof req.body?.peer_user_id === 'string' ? req.body.peer_user_id : null;
+            if (!peer) return res.status(400).json({ success: false, error: 'peer_user_id is required' });
+            if (!(await isCircleMember(req.circleId!, peer))) {
+                return res.status(404).json({ success: false, error: 'User is not in this circle' });
+            }
+        }
+        // L'index unique porte sur COALESCE(peer_user_id, uuid zero) : le ON CONFLICT
+        // doit reprendre la meme expression.
+        await query(
+            `INSERT INTO message_reads (circle_id, user_id, peer_user_id, last_read_at)
+             VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+             ON CONFLICT (circle_id, user_id, COALESCE(peer_user_id, '00000000-0000-0000-0000-000000000000'::uuid))
+             DO UPDATE SET last_read_at = CURRENT_TIMESTAMP`,
+            [req.circleId, req.userId, peer]
+        );
+        res.json({ success: true, data: await unreadCounts(req.circleId!, req.userId!) });
+    } catch (error) {
+        console.error('Mark messages read error:', error);
+        res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+});
+
 // Circle feed, most recent first. Cursor pagination via ?before=<created_at>.
 // Viewers have read access to the feed.
 router.get('/', async (req: CircleRequest, res: Response) => {

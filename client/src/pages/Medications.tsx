@@ -13,10 +13,11 @@ import {
     FileText,
     Clock,
     PlusCircle,
+    Package,
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { cn } from '../lib/utils';
-import { MEDICATION_FORMS, MEDICATION_UNITS, formatAmount } from '../lib/medications';
+import { MEDICATION_FORMS, MEDICATION_UNITS, formatAmount, safeQuantity } from '../lib/medications';
 import { useCircle } from '../contexts/CircleContext';
 import { useWebSocketUpdates } from '../hooks/useWebSocketUpdates';
 import { dateLocale } from '../i18n/format';
@@ -68,6 +69,11 @@ interface Medication {
     with_food: WithFood | null;
     reason: string | null;
     appearance: string | null;
+    /** Stock restant, dans l'unite d'une prise ; null = stock non suivi */
+    stock_quantity: number | null;
+    /** Sous ce seuil le stock est signale comme bas ; null = pas d'alerte */
+    stock_alert_threshold: number | null;
+    stock_updated_at: string | null;
     schedules: MedicationSchedule[];
 }
 
@@ -121,6 +127,54 @@ const parseQuantity = (raw: string): number | null => {
     if (!Number.isFinite(value) || value <= 0 || value > 99) return null;
     return Math.round(value * 100) / 100;
 };
+// Memes bornes que le serveur pour le stock.
+const MAX_STOCK = 100000;
+/** Saisie libre du stock : vide = valeur non suivie, `undefined` = saisie refusee. */
+const parseStockValue = (raw: string): number | null | undefined => {
+    const text = raw.trim();
+    if (text === '') return null;
+    const value = Number(text.replace(',', '.'));
+    if (!Number.isFinite(value) || value < 0 || value > MAX_STOCK) return undefined;
+    return Math.round(value * 100) / 100;
+};
+
+// PostgreSQL renvoie ses colonnes NUMERIC en texte : on repasse par Number avant
+// toute comparaison, sinon "9" passerait pour plus grand que "10".
+const stockNumber = (value: number | null | undefined): number | null => {
+    if (value === null || value === undefined) return null;
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+};
+
+/** Unite du stock : celle des horaires, c'est a dire l'unite d'une prise. */
+const stockUnitOf = (med: Medication): string | null => med.schedules[0]?.unit ?? null;
+
+// Un horaire qui ne tombe pas tous les jours ne consomme pas une dose par jour :
+// on le compte au prorata de ses jours pour rester juste sur les semaines partielles.
+const dailyDoseTotal = (med: Medication): number =>
+    med.schedules.reduce(
+        (total, schedule) =>
+            total + safeQuantity(schedule.quantity) * (schedule.days_of_week.length / 7),
+        0
+    );
+
+/** Jours couverts par le stock restant, null quand le calcul n'aurait pas de sens. */
+const stockDaysLeft = (med: Medication): number | null => {
+    const remaining = stockNumber(med.stock_quantity);
+    if (remaining === null || remaining <= 0 || med.prn || med.schedules.length === 0) return null;
+    const perDay = dailyDoseTotal(med);
+    if (perDay <= 0) return null;
+    return Math.floor(remaining / perDay);
+};
+
+/** Stock bas : epuise, ou sous le seuil d'alerte choisi par l'aidant. */
+const isStockLow = (med: Medication): boolean => {
+    const remaining = stockNumber(med.stock_quantity);
+    if (remaining === null) return false;
+    const threshold = stockNumber(med.stock_alert_threshold);
+    return remaining <= 0 || (threshold !== null && remaining <= threshold);
+};
+
 // Same limit as the server: the raw data URL string must stay under 1.5 MB.
 const MAX_PHOTO_CHARS = 1.5 * 1024 * 1024;
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -220,6 +274,12 @@ const Medications: React.FC = () => {
     const [photoBusy, setPhotoBusy] = useState(false);
     const [savingMed, setSavingMed] = useState(false);
     const photoInputRef = useRef<HTMLInputElement>(null);
+
+    // Stock dialog
+    const [stockMed, setStockMed] = useState<Medication | null>(null);
+    const [stockForm, setStockForm] = useState({ quantity: '', threshold: '' });
+    const [stockFormError, setStockFormError] = useState('');
+    const [savingStock, setSavingStock] = useState(false);
 
     // Prescription dialog
     const [rxDialogOpen, setRxDialogOpen] = useState(false);
@@ -690,6 +750,80 @@ const Medications: React.FC = () => {
         }
     };
 
+    const openStockDialog = (med: Medication) => {
+        setStockMed(med);
+        setStockForm({
+            quantity: med.stock_quantity === null ? '' : String(stockNumber(med.stock_quantity) ?? ''),
+            threshold:
+                med.stock_alert_threshold === null
+                    ? ''
+                    : String(stockNumber(med.stock_alert_threshold) ?? ''),
+        });
+        setStockFormError('');
+    };
+
+    const saveStock = async (med: Medication, quantity: number | null, threshold: number | null) => {
+        setSavingStock(true);
+        try {
+            await api.put(`/api/medications/${med.id}/stock`, {
+                stock_quantity: quantity,
+                stock_alert_threshold: threshold,
+            });
+            setStockMed(null);
+            await loadMedications();
+        } catch (err) {
+            console.error('Failed to save stock:', err);
+            setStockFormError(err instanceof Error ? err.message : t('medications:errors.saveStock'));
+        } finally {
+            setSavingStock(false);
+        }
+    };
+
+    const handleStockSubmit = async (event: React.FormEvent) => {
+        event.preventDefault();
+        if (!stockMed) return;
+        setStockFormError('');
+        const quantity = parseStockValue(stockForm.quantity);
+        const threshold = parseStockValue(stockForm.threshold);
+        if (quantity === undefined || threshold === undefined) {
+            setStockFormError(t('medications:stock.invalid'));
+            return;
+        }
+        await saveStock(stockMed, quantity, threshold);
+    };
+
+    const stockActionLabel = (med: Medication) =>
+        stockNumber(med.stock_quantity) === null
+            ? t('medications:stock.start')
+            : t('medications:stock.manage');
+
+    /** Bloc stock d'un traitement : rien du tout tant que le stock n'est pas suivi. */
+    const stockLines = (med: Medication) => {
+        const remaining = stockNumber(med.stock_quantity);
+        if (remaining === null) return null;
+        const daysLeft = stockDaysLeft(med);
+        const low = isStockLow(med);
+        return (
+            <div className="mt-1.5">
+                <div className="flex flex-wrap items-center gap-2">
+                    <p className={cn('text-caption', low ? 'text-warning' : 'text-foreground')}>
+                        {remaining <= 0
+                            ? t('medications:stock.empty')
+                            : t('medications:stock.remaining', {
+                                  amount: amountLabel(remaining, stockUnitOf(med), med.form),
+                              })}
+                    </p>
+                    {low && <Badge variant="warning">{t('medications:stock.low')}</Badge>}
+                </div>
+                {daysLeft !== null && (
+                    <p className="mt-0.5 text-micro text-muted-foreground">
+                        {t('medications:stock.coverage', { count: daysLeft })}
+                    </p>
+                )}
+            </div>
+        );
+    };
+
     const scheduleLine = (schedule: MedicationSchedule, form: string | null) => {
         const hour = parseInt(schedule.time_of_day.slice(0, 2), 10);
         const name = schedule.label || t(`medications:moments.${momentOf(hour)}`);
@@ -785,6 +919,7 @@ const Medications: React.FC = () => {
                                                 ))
                                             )}
                                         </div>
+                                        {stockLines(med)}
                                         {(med.with_food || med.reason || med.appearance) && (
                                             <p className="mt-1.5 text-caption text-muted-foreground">
                                                 {[
@@ -825,6 +960,15 @@ const Medications: React.FC = () => {
                                     </div>
                                     {canWriteContent && (
                                         <div className="flex flex-shrink-0 items-center gap-1">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => openStockDialog(med)}
+                                                aria-label={stockActionLabel(med)}
+                                                title={stockActionLabel(med)}
+                                            >
+                                                <Package className="h-4 w-4" />
+                                            </Button>
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
@@ -1413,6 +1557,75 @@ const Medications: React.FC = () => {
                                   ? t('common:actions.save')
                                   : t('common:actions.create')}
                         </Button>
+                    </div>
+                </form>
+            </Dialog>
+
+            {/* Stock dialog */}
+            <Dialog
+                open={stockMed !== null}
+                onOpenChange={(open) => {
+                    if (!open) setStockMed(null);
+                }}
+                title={t('medications:stock.dialogTitle', { name: stockMed?.name ?? '' })}
+                description={t('medications:stock.dialogDescription')}
+            >
+                <form onSubmit={handleStockSubmit} className="space-y-4">
+                    {stockFormError ? (
+                        <div className="rounded-input border border-danger/30 bg-danger/10 px-4 py-3 text-caption text-danger">
+                            {stockFormError}
+                        </div>
+                    ) : null}
+
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <Input
+                            label={t('medications:stock.quantity')}
+                            type="number"
+                            inputMode="decimal"
+                            min={0}
+                            max={MAX_STOCK}
+                            step={1}
+                            value={stockForm.quantity}
+                            onChange={(e) => setStockForm({ ...stockForm, quantity: e.target.value })}
+                            placeholder={t('medications:stock.quantityPlaceholder')}
+                        />
+                        <Input
+                            label={t('medications:stock.threshold')}
+                            type="number"
+                            inputMode="decimal"
+                            min={0}
+                            max={MAX_STOCK}
+                            step={1}
+                            value={stockForm.threshold}
+                            onChange={(e) => setStockForm({ ...stockForm, threshold: e.target.value })}
+                            placeholder={t('medications:stock.thresholdPlaceholder')}
+                        />
+                    </div>
+                    <p className="text-micro text-muted-foreground">{t('medications:stock.hint')}</p>
+
+                    <div className="flex flex-col gap-3 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            disabled={
+                                savingStock ||
+                                (stockMed?.stock_quantity === null &&
+                                    stockMed?.stock_alert_threshold === null)
+                            }
+                            onClick={() => {
+                                if (stockMed) void saveStock(stockMed, null, null);
+                            }}
+                        >
+                            {t('medications:stock.stopTracking')}
+                        </Button>
+                        <div className="flex justify-end gap-3">
+                            <Button type="button" variant="secondary" onClick={() => setStockMed(null)}>
+                                {t('common:actions.cancel')}
+                            </Button>
+                            <Button type="submit" disabled={savingStock}>
+                                {savingStock ? t('common:states.saving') : t('common:actions.save')}
+                            </Button>
+                        </div>
                     </div>
                 </form>
             </Dialog>

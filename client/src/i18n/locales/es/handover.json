@@ -1,0 +1,81 @@
+{
+  "card": {
+    "title": "Modo relevo",
+    "description": "¿Se va a ausentar? Genere un paquete de relevo: instrucciones, medicamentos, agenda del periodo, contactos y la página «Quién soy», que se comparte con la persona que toma el relevo mediante un simple enlace.",
+    "empty": "Aún no hay ningún paquete de relevo.",
+    "period": "Del {{start}} al {{end}}",
+    "copyLink": "Copiar el enlace",
+    "copied": "Enlace copiado",
+    "deleteConfirm": "¿Eliminar este paquete? Su enlace dejará de funcionar.",
+    "deleted": "Paquete eliminado",
+    "new": "Crear un paquete de relevo",
+    "startsOn": "Inicio del relevo",
+    "endsOn": "Fin del relevo",
+    "instructions": "Instrucciones para quien toma el relevo",
+    "instructionsPlaceholder": "Las llaves están en casa de la vecina, el fisioterapeuta viene los martes, llamar a Sophie en caso de duda...",
+    "create": "Generar el paquete",
+    "creating": "Generando...",
+    "created": "Paquete creado. Envíe el enlace de abajo a quien toma el relevo.",
+    "linkLabel": "Enlace para compartir",
+    "expiryNote": "El contenido queda fijado en el momento de la creación. El enlace se puede consultar hasta 7 días después del fin del relevo.",
+    "datesRequired": "Indique las fechas de inicio y de fin.",
+    "datesOrder": "La fecha de fin debe ser posterior a la de inicio.",
+    "errors": {
+      "load": "No se pudieron cargar los paquetes de relevo.",
+      "create": "No se pudo crear el paquete.",
+      "delete": "No se pudo eliminar."
+    }
+  },
+  "page": {
+    "title": "Relevo del {{start}} al {{end}}",
+    "forName": "para {{name}}",
+    "generatedAt": "Paquete generado el {{date}}",
+    "print": "Imprimir",
+    "sections": {
+      "recipient": "Su familiar",
+      "instructions": "Instrucciones",
+      "medications": "Medicamentos actuales",
+      "schedule": "Agenda del periodo",
+      "contacts": "Contactos",
+      "story": "Quién soy"
+    },
+    "recipient": {
+      "birthDate": "Fecha de nacimiento",
+      "phone": "Teléfono",
+      "address": "Dirección",
+      "allergies": "Alergias",
+      "gp": "Médico de cabecera"
+    },
+    "noMedications": "No hay ningún medicamento activo.",
+    "noEvents": "No hay nada previsto en este periodo.",
+    "noContacts": "No hay ningún contacto registrado.",
+    "hasKey": "tiene la llave",
+    "eventCategories": {
+      "visit": "Visita",
+      "medical": "Médico",
+      "nurse": "Enfermera",
+      "aide": "Auxiliar",
+      "other": "Otro"
+    },
+    "contactCategories": {
+      "doctor": "Médico",
+      "nurse": "Enfermera",
+      "aide": "Auxiliar",
+      "physio": "Fisioterapeuta",
+      "pharmacy": "Farmacia",
+      "family": "Familia",
+      "neighbor": "Vecino",
+      "other": "Otro"
+    },
+    "expired": {
+      "title": "Enlace caducado",
+      "text": "Este paquete de relevo ya no está disponible. Pida un nuevo enlace a la familia."
+    },
+    "errors": {
+      "title": "Paquete no disponible",
+      "notFound": "Este enlace no es válido. Compruébelo o pida uno nuevo a la familia.",
+      "network": "No se pudo conectar. Compruebe la red e inténtelo de nuevo."
+    },
+    "footer": "Este enlace está destinado a la persona que toma el relevo durante el periodo indicado."
+  }
+}

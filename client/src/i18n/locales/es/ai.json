@@ -1,0 +1,64 @@
+{
+  "magic": {
+    "open": "Asistente de IA",
+    "title": "Asistente de IA ✨",
+    "description": "Describa lo que quiere añadir, el asistente se encarga del resto.",
+    "placeholder": "Añade lasaña el jueves por la noche y recuérdale a Mia su bolsa de deporte…",
+    "parse": "Analizar",
+    "parsing": "Analizando…",
+    "nothingFound": "No se ha encontrado nada que se pueda añadir en esta nota. Pruebe a escribirla de otra forma.",
+    "back": "Volver",
+    "reviewHint": "Revise las propuestas, desmarque lo que no quiera y confirme.",
+    "confirm": "Añadir ({{count}})",
+    "confirming": "Añadiendo…",
+    "successTitle": "Listo ✨",
+    "successDescription": "{{count}} elemento(s) añadido(s).",
+    "partialTitle": "Añadido parcial",
+    "partialDescription": "{{added}} añadido(s), {{failed}} con error.",
+    "allFailed": "No se ha podido añadir ningún elemento. Inténtelo de nuevo.",
+    "types": {
+      "task": "Tarea",
+      "appointment": "Cita",
+      "shopping_item": "Compra",
+      "budget_entry": "Presupuesto"
+    }
+  },
+  "settings": {
+    "title": "Asistente de IA",
+    "subtitle": "Conecte un modelo de IA (local o en la nube) al círculo activo para añadir cosas escribiendo con sus palabras. Ajustes reservados a los administradores del círculo.",
+    "provider": "Proveedor",
+    "providers": {
+      "ollama": "Ollama (local)",
+      "openai": "API compatible con OpenAI",
+      "anthropic": "Anthropic"
+    },
+    "baseUrl": "URL del servidor",
+    "apiKey": "Clave API",
+    "keyKept": "••• (guardada)",
+    "clearKey": "Borrar la clave guardada",
+    "model": "Modelo",
+    "enabled": "Asistente activado",
+    "localBadge": "100% local",
+    "localNote": "Con Ollama, todo ocurre en SU servidor: no se envía nada a un proveedor externo.",
+    "cloudNote": "Proveedor en la nube: lo que se envía a analizar sale hacia {{provider}}. Para que todo siga siendo 100% local, elija Ollama.",
+    "companion": "Compañero de conversación para su familiar",
+    "companionHint": "Permite que su familiar hable con el asistente desde el kiosk (recuerdos, compañía). El asistente nunca da consejos médicos y avisa al círculo si detecta angustia.",
+    "companionCloudWarning": "Atención: el compañero está activado con un proveedor en la nube ({{provider}}). Las conversaciones de su familiar, a veces íntimas, se enviarán a ese proveedor. Para que se queden en casa, elija Ollama.",
+    "privacy": "Confidencialidad: la clave API se cifra y se guarda únicamente en SU servidor. Con Ollama no sale nada de casa: las notas se analizan en local.",
+    "save": "Guardar",
+    "saving": "Guardando…",
+    "saved": "Ajustes guardados.",
+    "test": "Probar la conexión",
+    "testing": "Probando…",
+    "testSuccess": "Conexión correcta: el modelo responde bien."
+  },
+  "errors": {
+    "AI_NOT_CONFIGURED": "El asistente de IA no está configurado. Vaya a los Ajustes.",
+    "AI_DISABLED": "El asistente de IA está desactivado en los Ajustes.",
+    "AI_UNREACHABLE": "No se puede contactar con el proveedor de IA. Compruebe la URL y que el servicio esté funcionando.",
+    "AI_UNAUTHORIZED": "Clave API rechazada. Revísela en los Ajustes.",
+    "AI_MODEL_NOT_FOUND": "El proveedor no encuentra el modelo. Compruebe su nombre (p. ej. llama3.1).",
+    "AI_INVALID_RESPONSE": "El modelo ha devuelto una respuesta no válida. Inténtelo de nuevo o cambie de modelo.",
+    "AI_PROVIDER_ERROR": "El proveedor de IA ha devuelto un error. Inténtelo de nuevo."
+  }
+}

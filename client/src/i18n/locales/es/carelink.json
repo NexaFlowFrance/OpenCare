@@ -1,0 +1,50 @@
+{
+  "header": {
+    "title": "Diario de {{name}}",
+    "signedAs": "Conectado como {{name}}"
+  },
+  "compose": {
+    "title": "Escribir en el diario",
+    "placeholder": "Por ejemplo: visita de 20 minutos, ha comido bien, buen ánimo.",
+    "submit": "Enviar al diario",
+    "sending": "Enviando...",
+    "sent": "Enviado. Gracias por su visita."
+  },
+  "types": {
+    "visit": "Visita",
+    "note": "Nota",
+    "mood": "Ánimo",
+    "incident": "Incidencia"
+  },
+  "medications": {
+    "title": "Medicamentos de hoy",
+    "taken": "Tomada",
+    "skipped": "Omitida",
+    "allDone": "Todas las tomas de hoy están registradas.",
+    "status": {
+      "taken": "tomada",
+      "skipped": "omitida",
+      "missed": "no tomada"
+    },
+    "take": "Tomar {{amount}}"
+  },
+  "today": {
+    "title": "Hoy",
+    "empty": "Todavía no hay ninguna visita registrada hoy."
+  },
+  "errors": {
+    "title": "Enlace no disponible",
+    "invalid": "Este enlace ya no es válido. Pida un enlace nuevo a la familia.",
+    "network": "No se ha podido conectar. Compruebe la red e inténtelo de nuevo.",
+    "sendFailed": "No se ha podido enviar. Inténtelo de nuevo."
+  },
+  "story": {
+    "show": "¿Quién es {{name}}?",
+    "showNoName": "¿Quién es la persona a la que cuida?",
+    "hide": "Ocultar",
+    "loading": "Cargando...",
+    "empty": "La familia todavía no ha rellenado esta página.",
+    "error": "No se puede cargar esta página por ahora."
+  },
+  "footer": "Este enlace es personal. La familia ve sus mensajes en tiempo real."
+}

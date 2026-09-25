@@ -1,0 +1,49 @@
+{
+  "loading": "Cargando la lista…",
+  "title": "Lista de la compra",
+  "subtitle_one": "{{count}} artículo por comprar",
+  "subtitle_other": "{{count}} artículos por comprar",
+  "categories": {
+    "food": "Alimentación",
+    "hygiene": "Higiene",
+    "household": "Limpieza",
+    "pharmacy": "Farmacia",
+    "other": "Otro"
+  },
+  "add": {
+    "label": "Añadir un artículo",
+    "placeholder": "Añadir un artículo (ej.: compotas, pañuelos)…",
+    "noCategory": "Sin categoría"
+  },
+  "row": {
+    "check": "Marcar {{name}}",
+    "uncheck": "Desmarcar {{name}}"
+  },
+  "checked": {
+    "title_one": "Artículo marcado ({{count}})",
+    "title_other": "Artículos marcados ({{count}})",
+    "clear": "Vaciar los artículos marcados"
+  },
+  "edit": {
+    "description": "Indique la cantidad, la unidad o una nota para la persona que hace la compra.",
+    "quantity": "Cantidad",
+    "unit": "Unidad",
+    "unitPlaceholder": "Ej.: kg, caja, paquete",
+    "notes": "Nota (opcional)",
+    "notesPlaceholder": "Ej.: la marca de siempre, sin azúcar…"
+  },
+  "empty": {
+    "title": "La lista está vacía",
+    "description": "Añada lo que hay que comprar para la próxima visita: todo el círculo ve la misma lista.",
+    "allChecked": "Todo está marcado: no queda nada por comprar."
+  },
+  "errors": {
+    "load": "No se ha podido cargar la lista de la compra.",
+    "add": "No se ha podido añadir este artículo.",
+    "toggle": "No se ha podido actualizar este artículo.",
+    "update": "No se ha podido guardar este artículo.",
+    "delete": "No se ha podido eliminar este artículo.",
+    "clear": "No se han podido vaciar los artículos marcados.",
+    "quantityInvalid": "La cantidad debe ser un número positivo."
+  }
+}

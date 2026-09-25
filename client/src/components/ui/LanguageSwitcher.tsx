@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '../../lib/utils';
-import { SUPPORTED_LANGUAGES } from '../../i18n';
+import { SUPPORTED_LANGUAGES, LANGUAGE_NAMES } from '../../i18n';
 import { changeAppLanguage } from '../../lib/language';
 import { useToast } from './Toast';
 
@@ -28,7 +28,7 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ className })
                 className
             )}
             role="group"
-            aria-label="Language"
+            aria-label={t('language.label')}
         >
             {SUPPORTED_LANGUAGES.map((lng) => (
                 <button
@@ -36,6 +36,9 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ className })
                     type="button"
                     onClick={() => handleChange(lng)}
                     aria-pressed={current === lng}
+                    aria-label={LANGUAGE_NAMES[lng] ?? lng}
+                    title={LANGUAGE_NAMES[lng] ?? lng}
+                    lang={lng}
                     className={cn(
                         'rounded-[6px] px-2.5 py-1 text-micro font-semibold uppercase tracking-wide transition-colors',
                         current === lng

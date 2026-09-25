@@ -67,7 +67,7 @@ All on **your** server: the health data of a vulnerable person should not live o
 - **Offline-friendly PWA**: works in a nursing-home room with poor signal
 - **Local-first AI**: Ollama on your machine, or your own Anthropic / OpenAI-compatible key, encrypted at rest
 - **Full export** of all circle data, **AGPL-3.0** licensed
-- **French and English** interface
+- **French, English and Spanish** interface, keyboard reachable and screen reader friendly
 
 ## 🚀 Quick start
 

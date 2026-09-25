@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
 import { cn } from '../../lib/utils';
@@ -20,6 +21,7 @@ export const Dialog: React.FC<DialogProps> = ({
     children,
     className,
 }) => {
+    const { t } = useTranslation('common');
     return (
         <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
             <DialogPrimitive.Portal>
@@ -45,7 +47,7 @@ export const Dialog: React.FC<DialogProps> = ({
                         </div>
                         <DialogPrimitive.Close className="rounded-input p-1 text-muted-foreground transition-colors hover:bg-surface-2 hover:text-foreground">
                             <X className="h-5 w-5" />
-                            <span className="sr-only">Fermer</span>
+                            <span className="sr-only">{t('actions.close')}</span>
                         </DialogPrimitive.Close>
                     </div>
                     <div className="px-5 py-4 md:px-6 md:py-5">{children}</div>

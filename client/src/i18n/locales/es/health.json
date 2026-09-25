@@ -1,0 +1,87 @@
+{
+  "title": "Salud",
+  "subtitle": "Constantes y evolución en el tiempo",
+  "loading": "Cargando el seguimiento de salud...",
+  "addMeasure": "Nueva medición",
+  "latest": {
+    "title": "Últimos valores",
+    "emptyTitle": "Todavía no hay mediciones",
+    "emptyDescription": "Añada una primera medición para seguir su evolución.",
+    "addFirst": "Añadir una medición"
+  },
+  "chart": {
+    "title": "Evolución",
+    "subtitle": "Curva del periodo elegido",
+    "empty": "Ninguna medición en este periodo.",
+    "systolic": "Sistólica",
+    "diastolic": "Diastólica",
+    "periods": {
+      "30": "30 días",
+      "90": "90 días",
+      "365": "1 año"
+    }
+  },
+  "recent": {
+    "title": "Mediciones recientes",
+    "empty": "Ninguna medición reciente."
+  },
+  "thresholds": {
+    "title": "Rangos normales",
+    "description": "Defina el rango habitual de cada constante. Una medición fuera de ese rango avisa a los cuidadores.",
+    "readOnly": "Los rangos normales los definen los administradores y la familia.",
+    "none": "Sin rango definido",
+    "between": "De {{min}} a {{max}} {{unit}}",
+    "minOnly": "A partir de {{min}} {{unit}}",
+    "maxOnly": "Hasta {{max}} {{unit}}",
+    "systolicPrefix": "Sistólica:",
+    "diastolicPrefix": "Diastólica:",
+    "minLabel": "Mínimo",
+    "maxLabel": "Máximo",
+    "minSystolicLabel": "Mínimo sistólico",
+    "maxSystolicLabel": "Máximo sistólico",
+    "minDiastolicLabel": "Mínimo diastólico",
+    "maxDiastolicLabel": "Máximo diastólico",
+    "clearHint": "Vacíe los campos para quitar el rango.",
+    "outOfRange": "Fuera de rango",
+    "outOfRangeLabel": "Medición fuera del rango normal"
+  },
+  "vitalTypes": {
+    "weight": "Peso",
+    "bp": "Tensión",
+    "pain": "Dolor",
+    "mood": "Ánimo",
+    "temperature": "Temperatura",
+    "glucose": "Glucemia"
+  },
+  "form": {
+    "title": "Nueva medición",
+    "description": "La medición se comparte con todo el círculo.",
+    "typeLabel": "Tipo de constante",
+    "valueLabel": "Valor",
+    "systolicLabel": "Sistólica",
+    "diastolicLabel": "Diastólica",
+    "dateLabel": "Fecha y hora",
+    "notesLabel": "Notas (opcional)"
+  },
+  "actions": {
+    "delete": "Eliminar la medición"
+  },
+  "confirmDelete": "¿Eliminar esta medición?",
+  "toasts": {
+    "saved": "Medición guardada",
+    "deleted": "Medición eliminada",
+    "thresholdSaved": "Rango normal guardado"
+  },
+  "errors": {
+    "load": "No se pueden cargar las mediciones.",
+    "save": "No se puede guardar la medición.",
+    "delete": "No se puede eliminar la medición.",
+    "valueRequired": "Escriba un valor numérico válido.",
+    "threshold": "No se puede guardar el rango normal.",
+    "thresholdInvalid": "Escriba unos límites numéricos válidos."
+  },
+  "restricted": {
+    "title": "Acceso restringido",
+    "description": "El seguimiento de salud de su familiar lo ven la familia y los profesionales del círculo."
+  }
+}

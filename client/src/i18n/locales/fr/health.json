@@ -25,6 +25,26 @@
     "title": "Mesures récentes",
     "empty": "Aucune mesure récente."
   },
+  "thresholds": {
+    "title": "Plages normales",
+    "description": "Définissez la plage habituelle de chaque constante. Une mesure en dehors prévient les aidants.",
+    "readOnly": "Les plages normales sont définies par les administrateurs et la famille.",
+    "none": "Aucune plage définie",
+    "between": "De {{min}} à {{max}} {{unit}}",
+    "minOnly": "À partir de {{min}} {{unit}}",
+    "maxOnly": "Jusqu'à {{max}} {{unit}}",
+    "systolicPrefix": "Systolique :",
+    "diastolicPrefix": "Diastolique :",
+    "minLabel": "Minimum",
+    "maxLabel": "Maximum",
+    "minSystolicLabel": "Minimum systolique",
+    "maxSystolicLabel": "Maximum systolique",
+    "minDiastolicLabel": "Minimum diastolique",
+    "maxDiastolicLabel": "Maximum diastolique",
+    "clearHint": "Videz les champs pour retirer la plage.",
+    "outOfRange": "Hors plage",
+    "outOfRangeLabel": "Mesure en dehors de la plage normale"
+  },
   "vitalTypes": {
     "weight": "Poids",
     "bp": "Tension",
@@ -49,13 +69,16 @@
   "confirmDelete": "Supprimer cette mesure ?",
   "toasts": {
     "saved": "Mesure enregistrée",
-    "deleted": "Mesure supprimée"
+    "deleted": "Mesure supprimée",
+    "thresholdSaved": "Plage normale enregistrée"
   },
   "errors": {
     "load": "Impossible de charger les mesures.",
     "save": "Impossible d'enregistrer la mesure.",
     "delete": "Impossible de supprimer la mesure.",
-    "valueRequired": "Renseignez une valeur numérique valide."
+    "valueRequired": "Renseignez une valeur numérique valide.",
+    "threshold": "Impossible d'enregistrer la plage normale.",
+    "thresholdInvalid": "Renseignez des bornes numériques valides."
   },
   "restricted": {
     "title": "Accès réservé",

@@ -160,6 +160,43 @@ out=$(curl -sS -X POST "$API_BASE/api/kiosk/visits/$visit_id/check-out" -H "Cont
 echo "$out" | jq -e '.data.checked_out_at != null' >/dev/null
 visits=$(request GET "/api/visits")
 echo "$visits" | jq -e '.data | length == 1 and .[0].visitor_name == "Camille"' >/dev/null
+occ_event=$(request POST "/api/events" '{"title":"Passage infirmier","category":"nurse","start_time":"2026-01-05T09:00:00","rrule":"FREQ=WEEKLY;BYDAY=MO"}')
+occ_id=$(echo "$occ_event" | jq -r '.data.id')
+skipped=$(request PUT "/api/events/$occ_id/occurrences/2026-01-12" '{"action":"skip"}')
+echo "$skipped" | jq -e '.data.exceptions | length == 1 and .[0].action == "skip"' >/dev/null
+moved=$(request PUT "/api/events/$occ_id/occurrences/2026-01-19" '{"action":"move","start_time":"2026-01-20T14:00:00"}')
+echo "$moved" | jq -e '.data.exceptions | length == 2 and (map(select(.action == "move")) | length == 1)' >/dev/null
+bad_occ=$(curl -sS -o /dev/null -w "%{http_code}" -X PUT "$API_BASE/api/events/$occ_id/occurrences/2026-01-13" -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -H "X-Circle-Id: $CIRCLE_ID" -d '{"action":"skip"}')
+[[ "$bad_occ" == "400" ]]
+restored=$(request DELETE "/api/events/$occ_id/occurrences/2026-01-12")
+echo "$restored" | jq -e '.data.exceptions | length == 1' >/dev/null
+request DELETE "/api/events/$occ_id" >/dev/null
+
+med_id=$(echo "$med" | jq -r '.data.id')
+second_id=$(echo "$intakes" | jq -r '.data[1].id')
+second_qty=$(echo "$intakes" | jq -r '.data[1].quantity')
+stock=$(request PUT "/api/medications/$med_id/stock" '{"stock_quantity":10,"stock_alert_threshold":4}')
+echo "$stock" | jq -e '(.data.stock_quantity | tonumber) == 10 and (.data.stock_alert_threshold | tonumber) == 4' >/dev/null
+bad_stock=$(curl -sS -o /dev/null -w "%{http_code}" -X PUT "$API_BASE/api/medications/$med_id/stock" -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -H "X-Circle-Id: $CIRCLE_ID" -d '{"stock_quantity":-2}')
+[[ "$bad_stock" == "400" ]]
+request POST "/api/kiosk/intakes/confirm" "{"intake_ids":["$second_id"]}" >/dev/null
+after_stock=$(request GET "/api/medications" | jq -r --arg id "$med_id" '.data[] | select(.id == $id) | .stock_quantity')
+awk -v a="$after_stock" -v q="$second_qty" 'BEGIN { exit !(a + 0 == 10 - q) }'
+
+thr=$(request PUT "/api/vitals/thresholds" '{"type":"bp","min_value":90,"max_value":140,"min_value2":50,"max_value2":90}')
+echo "$thr" | jq -e '.data.type == "bp"' >/dev/null
+bad_thr=$(curl -sS -o /dev/null -w "%{http_code}" -X PUT "$API_BASE/api/vitals/thresholds" -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -H "X-Circle-Id: $CIRCLE_ID" -d '{"type":"bp","min_value":150,"max_value":100}')
+[[ "$bad_thr" == "400" ]]
+request POST "/api/vitals" '{"type":"bp","value":175,"value2":105}' >/dev/null
+dash_vitals=$(request GET "/api/dashboard")
+echo "$dash_vitals" | jq -e '.data.attention | map(.kind) | index("vitals_out_of_range") != null' >/dev/null
+request GET "/api/vitals/thresholds" | jq -e '. | .data | length == 1' >/dev/null
+
+unread=$(request GET "/api/messages/unread")
+echo "$unread" | jq -e '.data.total == 0 and (.data.dms | type == "array")' >/dev/null
+read_ack=$(request POST "/api/messages/read" '{"channel":"circle"}')
+echo "$read_ack" | jq -e '.data.total == 0' >/dev/null
+
 esc=$(request GET "/api/escalation/rules")
 echo "$esc" | jq -e '.data.rules.enabled == false and .data.rules.med_primary_min == 30' >/dev/null
 rejected=$(curl -sS -o /dev/null -w "%{http_code}" -X PUT "$API_BASE/api/escalation/rules" -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -H "X-Circle-Id: $CIRCLE_ID" -d '{"med_primary_min":-1}')

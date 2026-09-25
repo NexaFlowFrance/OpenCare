@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { AlertTriangle, BellRing, CalendarDays, CheckSquare, ChevronRight, DoorOpen, FileText, Pill, ShieldAlert } from 'lucide-react';
+import { Activity, AlertTriangle, BellRing, CalendarDays, CheckSquare, ChevronRight, DoorOpen, FileText, PackageOpen, Pill, ShieldAlert } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { api } from '../../lib/api';
 import { cn } from '../../lib/utils';
@@ -13,7 +13,7 @@ import { dateLocale, intlLocale } from '../../i18n/format';
  * composant les traduit et les rend cliquables vers la page concernee.
  */
 
-export type AttentionKind = 'help' | 'presence' | 'missed_intakes' | 'prescriptions' | 'tasks_overdue' | 'visitor_present' | 'appointments';
+export type AttentionKind = 'help' | 'presence' | 'missed_intakes' | 'vitals_out_of_range' | 'medication_stock' | 'prescriptions' | 'tasks_overdue' | 'visitor_present' | 'appointments';
 export type AttentionSeverity = 'urgent' | 'warn' | 'info';
 
 export interface AttentionDetail {
@@ -39,6 +39,8 @@ const ICONS: Record<AttentionKind, React.ComponentType<{ className?: string }>> 
     help: ShieldAlert,
     presence: BellRing,
     missed_intakes: Pill,
+    vitals_out_of_range: Activity,
+    medication_stock: PackageOpen,
     prescriptions: FileText,
     tasks_overdue: CheckSquare,
     visitor_present: DoorOpen,
@@ -106,6 +108,17 @@ const AttentionCard: React.FC<Props> = ({ items, className, onChanged }) => {
                 return { title: t('dashboard:attention.presence', { time: item.time ?? '' }), detail: t('dashboard:attention.presenceDetail') };
             case 'missed_intakes':
                 return { title: t('dashboard:attention.missed_intakes', { count: item.count }), detail: item.details.map((d) => `${d.label} ${timeOf(d.when)}`).join(', ') };
+            case 'vitals_out_of_range':
+                return {
+                    title: t('dashboard:attention.vitals_out_of_range', { count: item.count }),
+                    // Le libelle envoye par le serveur est le type de constante, traduit ici.
+                    detail: item.details.map((d) => `${t(`dashboard:vitals.types.${d.label}`, { defaultValue: d.label })} ${d.extra ?? ''} (${relativeTime(d.when)})`.trim()).join(', '),
+                };
+            case 'medication_stock':
+                return {
+                    title: t('dashboard:attention.medication_stock', { count: item.count }),
+                    detail: item.details.map((d) => t('dashboard:attention.stockLeft', { name: d.label, count: Number(d.extra ?? 0) })).join(', '),
+                };
             case 'prescriptions':
                 return { title: t('dashboard:attention.prescriptions', { count: item.count }), detail: item.details.map((d) => `${d.label} (${dayOf(d.when)})`).join(', ') };
             case 'tasks_overdue':

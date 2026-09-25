@@ -68,7 +68,7 @@ les données de santé d'une personne vulnérable n'ont rien à faire sur le clo
 - **PWA tolérante au hors-ligne** : fonctionne dans une chambre d'EHPAD sans réseau
 - **IA locale d'abord** : Ollama sur votre machine, ou votre propre clé Anthropic / compatible OpenAI, chiffrée au repos
 - **Export complet** des données du cercle, licence **AGPL-3.0**
-- Interface **français et anglais**
+- Interface **français, anglais et espagnol**, accessible au clavier et aux lecteurs d'écran
 
 ## 🚀 Démarrage rapide
 

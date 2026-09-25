@@ -1,0 +1,33 @@
+{
+  "title": "Pregúntame",
+  "subtitle": "Toca el micrófono y haz tu pregunta, o charla un rato.",
+  "close": "Cerrar",
+  "you": "Tú",
+  "companion": "Acompañante",
+  "mic": {
+    "idle": "Toca para hablar",
+    "recording": "Te escucho, toca para terminar",
+    "thinking": "Un momento...",
+    "denied": "El micrófono no está disponible. Puedes escribir aquí abajo.",
+    "unavailable": "El dictado no está disponible aquí. Puedes escribir aquí abajo."
+  },
+  "textPlaceholder": "Escribe aquí si lo prefieres",
+  "send": "Enviar",
+  "replay": "Volver a escuchar",
+  "starters": [
+    "Hola, ¿cómo estás hoy?",
+    "Cuéntame un bonito recuerdo.",
+    "Háblame de mi día."
+  ],
+  "openingLine": "Hola {{name}}, te escucho. ¿Qué quieres saber?",
+  "openingLineNoName": "Hola, te escucho. ¿Qué quieres saber?",
+  "error": "Lo siento, no he podido responder. ¿Lo intentamos otra vez?",
+  "subtitleFacts": "Toca el micrófono y haz tu pregunta.",
+  "quick": {
+    "meds": "¿Qué tengo que tomar?",
+    "visitors": "¿Quién viene hoy?",
+    "appointments": "¿Mis citas?",
+    "date": "¿Qué día es hoy?",
+    "call": "¿A quién puedo llamar?"
+  }
+}

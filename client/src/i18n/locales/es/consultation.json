@@ -1,0 +1,68 @@
+{
+  "title": "Preparación de la consulta",
+  "subtitle": "En un clic, un documento imprimible para el médico: eventos destacados, evolución de las constantes, tratamientos en curso y preguntas de la familia.",
+  "noCircle": "Seleccione un círculo para preparar una consulta.",
+  "error": "No se ha podido preparar el documento.",
+  "controls": {
+    "since": "Eventos desde el",
+    "sinceHint": "Por defecto: los últimos 90 días.",
+    "questions": "Preguntas de la familia",
+    "questionsPlaceholder": "Una pregunta por línea. Por ejemplo: ¿hay que revisar el tratamiento para el dolor?",
+    "print": "Imprimir / PDF",
+    "preview": "Vista previa del documento"
+  },
+  "doc": {
+    "title": "Preparación de la consulta",
+    "patient": "Paciente",
+    "birthDate": "Fecha de nacimiento: {{date}}",
+    "generatedOn": "Documento emitido el {{date}}",
+    "period": "Periodo cubierto: del {{from}} al {{to}}",
+    "gp": "Médico de cabecera: {{name}}",
+    "bloodType": "Grupo sanguíneo: {{value}}",
+    "allergies": "Alergias: {{value}}",
+    "history": "Antecedentes: {{value}}",
+    "medications": "Tratamientos en curso",
+    "medsName": "Medicamento",
+    "medsDosage": "Posología",
+    "medsSchedule": "Horarios",
+    "medsInstructions": "Indicaciones",
+    "noMedications": "Ningún tratamiento activo.",
+    "intakes": "Adherencia en el periodo",
+    "intakesSummary": "{{taken}} tomas confirmadas de {{scheduled}} previstas ({{percent}} %), {{skipped}} omitidas, {{missed}} no realizadas.",
+    "noIntakes": "Ninguna toma planificada en el periodo.",
+    "missed": "Tomas no realizadas",
+    "vitals": "Constantes",
+    "vitalsType": "Constante",
+    "vitalsFirst": "Inicio del periodo",
+    "vitalsLast": "Última medición",
+    "vitalsTrend": "Tendencia",
+    "vitalsCount_one": "{{count}} medición",
+    "vitalsCount_other": "{{count}} mediciones",
+    "trend": {
+      "up": "al alza",
+      "down": "a la baja",
+      "stable": "estable"
+    },
+    "noVitals": "Ninguna constante registrada en el periodo.",
+    "highlights": "Eventos destacados",
+    "noHighlights": "Ningún evento destacado en el periodo.",
+    "entryTypes": {
+      "visit": "Visita",
+      "incident": "Incidente",
+      "mood": "Ánimo"
+    },
+    "prescriptions": "Recetas",
+    "renewalOn": "Para renovar el {{date}}",
+    "noRenewal": "Sin fecha de renovación",
+    "questions": "Preguntas de la familia",
+    "noQuestions": "Ninguna pregunta anotada."
+  },
+  "vitalTypes": {
+    "weight": "Peso",
+    "bp": "Tensión",
+    "pain": "Dolor",
+    "mood": "Ánimo",
+    "temperature": "Temperatura",
+    "glucose": "Glucemia"
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "loading": "Cargando el presupuesto…",
+  "categories": {
+    "Logement": "Vivienda",
+    "Alimentation": "Alimentación",
+    "Transport": "Transporte",
+    "Santé": "Salud",
+    "Loisirs": "Ocio",
+    "Abonnements": "Suscripciones",
+    "Assurance": "Seguros",
+    "Enfants": "Hijos",
+    "Maison": "Hogar",
+    "Autre": "Otros"
+  },
+  "readOnly": "Modo de solo lectura. Solo los administradores y la familia pueden modificar el presupuesto.",
+  "alerts": {
+    "title": "Límites alcanzados",
+    "over": " · superado",
+    "warn": " (≥ 80 %)"
+  },
+  "balance": {
+    "current": "Saldo actual",
+    "pointed_one": "{{count}} cargo marcado",
+    "pointed_other": "{{count}} cargos marcados",
+    "expenses_one": "{{count}} gasto",
+    "expenses_other": "{{count}} gastos"
+  },
+  "forecast": {
+    "title": "Previsión",
+    "subtitle": "Quedan {{amount}} de cargos por marcar"
+  },
+  "analytics": "Análisis y límites",
+  "charts": {
+    "expensesByCategory": "Gastos por categoría",
+    "noExpenses": "Ningún gasto este mes",
+    "yearEvolution": "Evolución del año",
+    "income": "Ingresos",
+    "expenses": "Gastos"
+  },
+  "limits": {
+    "title": "Límites mensuales",
+    "subtitle": "Seguimiento de los gastos por categoría",
+    "define": "Definir",
+    "none": "Ningún límite definido"
+  },
+  "sections": {
+    "recurring": "Cargos",
+    "expenses": "Gastos",
+    "income": "Ingresos"
+  },
+  "recurring": {
+    "empty": "Ningún cargo recurrente",
+    "addOne": "+ Añadir un cargo",
+    "markOn": "Marcar como cobrado",
+    "markOff": "Desmarcar",
+    "dayPrefix": "día"
+  },
+  "empty": {
+    "expenses": "Ningún gasto este mes",
+    "income": "Ningún ingreso este mes"
+  },
+  "sheets": {
+    "recurringEdit": "Modificar el cargo",
+    "recurringNew": "Nuevo cargo",
+    "edit": "Modificar",
+    "newExpense": "Nuevo gasto",
+    "newIncome": "Nuevo ingreso",
+    "limit": "Límite mensual"
+  },
+  "toggle": {
+    "expense": "Gasto",
+    "income": "Ingreso"
+  },
+  "fields": {
+    "name": "Nombre del cargo",
+    "namePlaceholder": "Ej.: Alquiler, luz, Netflix…",
+    "amount": "Importe ({{currency}})",
+    "debitDay": "Día de cobro del mes (1 a 31)",
+    "debitDayPlaceholder": "Ej.: 5",
+    "description": "Descripción (opcional)",
+    "descriptionPlaceholder": "Ej.: Compra del súper, nómina…",
+    "date": "Fecha",
+    "category": "Categoría",
+    "limit": "Límite mensual ({{currency}})",
+    "limitHint": "Ponga 0 para quitar el seguimiento de esta categoría."
+  },
+  "errors": {
+    "amountInvalid": "Importe no válido.",
+    "nameRequired": "El nombre es obligatorio.",
+    "debitDayInvalid": "Día de cobro no válido (1-31).",
+    "save": "Error al guardar.",
+    "limitInvalid": "Límite no válido."
+  },
+  "confirm": {
+    "deleteRecurring": "¿Eliminar este cargo recurrente?",
+    "deleteEntry": "¿Eliminar esta entrada?"
+  }
+}

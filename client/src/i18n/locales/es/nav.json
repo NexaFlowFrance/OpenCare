@@ -1,0 +1,76 @@
+{
+  "items": {
+    "today": "Panel",
+    "journal": "Diario",
+    "calendar": "Agenda",
+    "medications": "Medicamentos",
+    "health": "Salud",
+    "tasks": "Tareas",
+    "shopping": "Compras",
+    "messages": "Mensajes",
+    "expenses": "Gastos compartidos",
+    "documents": "Documentos",
+    "contacts": "Contactos",
+    "recipient": "Su familiar",
+    "circle": "Círculo de cuidados",
+    "integrations": "Integraciones",
+    "settings": "Ajustes",
+    "visitors": "Visitas",
+    "carePlan": "Plan de cuidados"
+  },
+  "sections": {
+    "today": "Hoy",
+    "care": "Cuidados",
+    "organise": "Organizar",
+    "information": "Información",
+    "team": "Equipo",
+    "more": "Más"
+  },
+  "mobile": {
+    "home": "Inicio",
+    "journal": "Diario",
+    "calendar": "Agenda",
+    "medications": "Medic.",
+    "messages": "Mensajes"
+  },
+  "quickActions": {
+    "title": "Acciones rápidas",
+    "addJournalEntry": "Escribir en el diario",
+    "addEvent": "Añadir una cita",
+    "addTask": "Añadir una tarea",
+    "addShopping": "Añadir un artículo",
+    "addExpense": "Añadir un gasto"
+  },
+  "circle": {
+    "create": "Acompañar a otro familiar",
+    "householdWith": "Hogar con {{names}}"
+  },
+  "roles": {
+    "admin": "Administrador",
+    "family": "Familia",
+    "professional": "Profesional",
+    "neighbor": "Vecino / allegado",
+    "viewer": "Solo lectura"
+  },
+  "user": {
+    "profile": "Perfil",
+    "toggleTheme": "Cambiar el tema",
+    "logout": "Cerrar sesión",
+    "openMenu": "Abrir el menú"
+  },
+  "offline": "Modo sin conexión. Los datos mostrados vienen de la caché. Podrá hacer cambios cuando vuelva la conexión.",
+  "offlineQueue": {
+    "pending_one": "{{count}} cambio se enviará cuando vuelva la red.",
+    "pending_other": "{{count}} cambios se enviarán cuando vuelva la red.",
+    "syncing": "Sincronizando los cambios pendientes...",
+    "errors": {
+      "authNotQueueable": "No se puede iniciar sesión sin conexión. Vuelva a intentarlo cuando regrese la red.",
+      "queueFull": "Demasiados cambios pendientes sin conexión. Vuelva a intentarlo cuando regrese la red.",
+      "photoTooLarge": "La foto es demasiado grande para guardarla sin conexión. Vuelva a intentarlo cuando regrese la red."
+    }
+  },
+  "pageTitleFallback": "Panel",
+  "skipToContent": "Ir al contenido",
+  "primaryNav": "Navegación principal",
+  "mobileNav": "Navegación rápida"
+}

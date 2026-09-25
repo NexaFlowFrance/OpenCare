@@ -56,6 +56,22 @@
   },
   "confirmDelete": "Supprimer cet événement ?",
   "deleteRecurringHint": "Toutes ses occurrences seront supprimées.",
+  "occurrence": {
+    "sectionTitle": "Cette occurrence",
+    "sectionHint": "Ces actions ne concernent que cette date, le reste de la série ne bouge pas.",
+    "seriesTitle": "Toute la série",
+    "skip": "Passer cette fois",
+    "move": "Déplacer cette fois",
+    "restore": "Remettre à sa place",
+    "confirmSkip": "Passer cette occurrence ? Les autres dates de la série sont conservées.",
+    "movedBadge": "Occurrence déplacée",
+    "movedFrom": "Occurrence déplacée, prévue au départ le {{date}}.",
+    "moveTitle": "Déplacer cette occurrence",
+    "moveDescription": "Choisissez la nouvelle date et la nouvelle heure pour cette date uniquement.",
+    "moveLimit": "Le déplacement est possible jusqu'à {{days}} jours avant ou après la date prévue.",
+    "keepsDuration": "La durée est conservée.",
+    "moveConfirm": "Déplacer"
+  },
   "feed": {
     "title": "Flux iCal",
     "description": "Abonnez-vous depuis votre application de calendrier (Apple, Google, Outlook) pour retrouver les événements du cercle.",
@@ -74,6 +90,9 @@
     "endAfterStart": "L'heure de fin doit être après l'heure de début.",
     "save": "Impossible d'enregistrer cet événement.",
     "delete": "Impossible de supprimer cet événement.",
+    "skipOccurrence": "Impossible de passer cette occurrence.",
+    "moveOccurrence": "Impossible de déplacer cette occurrence.",
+    "restoreOccurrence": "Impossible de remettre cette occurrence à sa place.",
     "feed": "Impossible de générer le lien iCal."
   }
 }

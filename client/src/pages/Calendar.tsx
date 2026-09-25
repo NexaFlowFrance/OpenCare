@@ -3,10 +3,12 @@ import { useTranslation } from 'react-i18next';
 import {
     Plus, ChevronLeft, ChevronRight, MapPin, Clock, Users, Repeat,
     Trash2, Edit2, Copy, Check, CalendarPlus, RefreshCw, CalendarDays, List, Bell,
+    CalendarClock, CalendarOff, Undo2,
 } from 'lucide-react';
 import {
     format, startOfMonth, endOfMonth, startOfWeek, endOfWeek,
     eachDayOfInterval, isSameMonth, isToday, addMonths, subMonths, parseISO,
+    addDays, subDays, addMinutes, differenceInMinutes,
 } from 'date-fns';
 import { Card, CardContent, Button, Dialog, Input, Textarea, Select, DatePicker } from '../components/ui';
 import { api } from '../lib/api';
@@ -65,6 +67,7 @@ interface EventOccurrence {
     created_by?: string | null;
     occurrence_date: string; // local "YYYY-MM-DD"
     is_recurring: boolean;
+    moved?: boolean;
 }
 
 interface CircleMember {
@@ -79,6 +82,17 @@ interface CircleMember {
 
 /** "YYYY-MM-DDTHH:mm:ss" -> "HH:mm" without any Date round-trip. */
 const timeOf = (value: string | null | undefined): string => (value ? value.slice(11, 16) : '');
+
+/** Ecart maximal accepte par le serveur pour deplacer une occurrence. */
+const MOVE_MAX_DAYS = 7;
+
+// Le serveur pose un drapeau sur les occurrences deplacees ; on retombe sur la
+// comparaison des jours pour que le reperage tienne meme sans ce drapeau.
+const isMovedOccurrence = (occ: EventOccurrence): boolean =>
+    occ.moved === true || (occ.is_recurring && occ.start_time.slice(0, 10) !== occ.occurrence_date);
+
+/** Date locale naive attendue par l'API, sans detour par UTC. */
+const toNaiveLocal = (value: Date): string => format(value, "yyyy-MM-dd'T'HH:mm:ss");
 
 const RRULE_DAY_CODES = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'] as const;
 
@@ -205,6 +219,12 @@ const Calendar: React.FC = () => {
     const [editingRecurring, setEditingRecurring] = useState(false);
     const [formData, setFormData] = useState<EventForm>(emptyForm());
     const [saving, setSaving] = useState(false);
+
+    // Occurrence isolee d'une serie : deplacement ponctuel, sans toucher a la regle.
+    const [moveTarget, setMoveTarget] = useState<EventOccurrence | null>(null);
+    const [moveDate, setMoveDate] = useState('');
+    const [moveTime, setMoveTime] = useState('');
+    const [occurrenceBusy, setOccurrenceBusy] = useState(false);
 
     const [feedToken, setFeedToken] = useState<string | null>(null);
     const [feedBusy, setFeedBusy] = useState(false);
@@ -396,6 +416,81 @@ const Calendar: React.FC = () => {
         }
     };
 
+    // ── Occurrence unique d'une serie ─────────────────────────────────────────
+    // L'occurrence est identifiee par son jour d'origine : c'est la cle sous
+    // laquelle le serveur range l'exception, meme apres un deplacement.
+    const skipOccurrence = async (occ: EventOccurrence) => {
+        if (!window.confirm(t('calendar:occurrence.confirmSkip'))) return;
+        setOccurrenceBusy(true);
+        try {
+            await api.put(`/api/events/${occ.id}/occurrences/${occ.occurrence_date}`, { action: 'skip' });
+            setSelected(null);
+            setError('');
+            void loadEvents();
+        } catch (err) {
+            console.error('Failed to skip occurrence:', err);
+            setError(err instanceof Error ? err.message : t('calendar:errors.skipOccurrence'));
+        } finally {
+            setOccurrenceBusy(false);
+        }
+    };
+
+    const restoreOccurrence = async (occ: EventOccurrence) => {
+        setOccurrenceBusy(true);
+        try {
+            await api.delete(`/api/events/${occ.id}/occurrences/${occ.occurrence_date}`);
+            setSelected(null);
+            setError('');
+            void loadEvents();
+        } catch (err) {
+            console.error('Failed to restore occurrence:', err);
+            setError(err instanceof Error ? err.message : t('calendar:errors.restoreOccurrence'));
+        } finally {
+            setOccurrenceBusy(false);
+        }
+    };
+
+    const openMove = (occ: EventOccurrence) => {
+        setSelected(null);
+        setMoveTarget(occ);
+        setMoveDate(occ.start_time.slice(0, 10));
+        setMoveTime(timeOf(occ.start_time));
+        setError('');
+    };
+
+    const submitMove = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!moveTarget) return;
+        if (!moveDate || !moveTime) {
+            setError(t('calendar:errors.startRequired'));
+            return;
+        }
+
+        const start = parseISO(`${moveDate}T${moveTime}:00`);
+        // On reporte la duree de l'occurrence pour que le creneau reste le meme
+        // une fois deplace ; sans heure de fin, l'evenement reste ponctuel.
+        const duration = moveTarget.end_time
+            ? differenceInMinutes(parseISO(moveTarget.end_time), parseISO(moveTarget.start_time))
+            : 0;
+
+        setOccurrenceBusy(true);
+        try {
+            await api.put(`/api/events/${moveTarget.id}/occurrences/${moveTarget.occurrence_date}`, {
+                action: 'move',
+                start_time: toNaiveLocal(start),
+                end_time: duration > 0 ? toNaiveLocal(addMinutes(start, duration)) : null,
+            });
+            setMoveTarget(null);
+            setError('');
+            void loadEvents();
+        } catch (err) {
+            console.error('Failed to move occurrence:', err);
+            setError(err instanceof Error ? err.message : t('calendar:errors.moveOccurrence'));
+        } finally {
+            setOccurrenceBusy(false);
+        }
+    };
+
     const toggleMember = (memberId: string) => {
         setFormData((prev) => ({
             ...prev,
@@ -467,7 +562,7 @@ const Calendar: React.FC = () => {
 
     return (
         <div className="mx-auto max-w-6xl space-y-6">
-            {error && !dialogOpen ? (
+            {error && !dialogOpen && !selected && !moveTarget ? (
                 <div className="rounded-input border border-danger/30 bg-danger/10 px-4 py-3 text-caption text-danger">
                     {error}
                 </div>
@@ -588,12 +683,16 @@ const Calendar: React.FC = () => {
                                                         e.stopPropagation();
                                                         setSelected(occ);
                                                     }}
+                                                    title={isMovedOccurrence(occ) ? t('calendar:occurrence.movedBadge') : undefined}
                                                     className={cn(
                                                         'flex w-full items-center gap-1 rounded px-1 py-0.5 text-left text-micro text-foreground transition-colors duration-fast hover:opacity-80',
                                                         CATEGORY_CHIP[occ.category]
                                                     )}
                                                 >
                                                     <CategoryDot category={occ.category} className="h-1.5 w-1.5" />
+                                                    {isMovedOccurrence(occ) && (
+                                                        <CalendarClock className="h-2.5 w-2.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+                                                    )}
                                                     <span className="truncate">
                                                         <span className="font-medium tabular-nums">{timeOf(occ.start_time)}</span> {occ.title}
                                                     </span>
@@ -653,6 +752,12 @@ const Calendar: React.FC = () => {
                                                                 <span className="block truncate text-micro text-muted-foreground">{occ.location}</span>
                                                             )}
                                                         </span>
+                                                        {isMovedOccurrence(occ) && (
+                                                            <CalendarClock
+                                                                className="h-4 w-4 shrink-0 text-muted-foreground"
+                                                                aria-label={t('calendar:occurrence.movedBadge')}
+                                                            />
+                                                        )}
                                                         {occ.is_recurring && (
                                                             <Repeat className="h-4 w-4 shrink-0 text-muted-foreground" aria-label={t('calendar:recurring')} />
                                                         )}
@@ -737,6 +842,11 @@ const Calendar: React.FC = () => {
             >
                 {selected && (
                     <div className="space-y-4">
+                        {error && (
+                            <div className="rounded-input border border-danger/30 bg-danger/10 px-3 py-2 text-caption text-danger">
+                                {error}
+                            </div>
+                        )}
                         <div className="flex items-center gap-2 text-caption text-foreground">
                             <CategoryDot category={selected.category} />
                             <span className="capitalize">
@@ -753,6 +863,13 @@ const Calendar: React.FC = () => {
                                 </span>
                             )}
                         </div>
+                        {isMovedOccurrence(selected) && (
+                            <p className="rounded-input bg-info/10 px-3 py-2 text-micro text-foreground">
+                                {t('calendar:occurrence.movedFrom', {
+                                    date: format(parseISO(selected.occurrence_date), 'EEEE d MMMM', { locale: dateLocale() }),
+                                })}
+                            </p>
+                        )}
                         {selected.location && (
                             <div className="flex items-center gap-2 text-caption text-muted-foreground">
                                 <MapPin className="h-4 w-4" />
@@ -789,24 +906,125 @@ const Calendar: React.FC = () => {
                                 {selected.notes}
                             </p>
                         )}
+                        {canManage(selected) && selected.is_recurring && (
+                            <div className="border-t border-border pt-4">
+                                <p className="mb-2 text-label font-medium text-foreground">
+                                    {t('calendar:occurrence.sectionTitle')}
+                                </p>
+                                <p className="mb-2 text-micro text-muted-foreground">
+                                    {t('calendar:occurrence.sectionHint')}
+                                </p>
+                                <div className="flex flex-wrap gap-2">
+                                    <Button
+                                        variant="secondary"
+                                        size="sm"
+                                        disabled={occurrenceBusy}
+                                        onClick={() => openMove(selected)}
+                                    >
+                                        <CalendarClock className="mr-2 h-4 w-4" />
+                                        {t('calendar:occurrence.move')}
+                                    </Button>
+                                    <Button
+                                        variant="secondary"
+                                        size="sm"
+                                        disabled={occurrenceBusy}
+                                        onClick={() => void skipOccurrence(selected)}
+                                    >
+                                        <CalendarOff className="mr-2 h-4 w-4" />
+                                        {t('calendar:occurrence.skip')}
+                                    </Button>
+                                    {isMovedOccurrence(selected) && (
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            disabled={occurrenceBusy}
+                                            onClick={() => void restoreOccurrence(selected)}
+                                        >
+                                            <Undo2 className="mr-2 h-4 w-4" />
+                                            {t('calendar:occurrence.restore')}
+                                        </Button>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                         {canManage(selected) && (
-                            <div className="flex justify-end gap-2 border-t border-border pt-4">
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                                    onClick={() => void handleDelete(selected)}
-                                >
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    {t('common:actions.delete')}
-                                </Button>
-                                <Button variant="secondary" size="sm" onClick={() => openEdit(selected)}>
-                                    <Edit2 className="mr-2 h-4 w-4" />
-                                    {t('common:actions.edit')}
-                                </Button>
+                            <div className="border-t border-border pt-4">
+                                {selected.is_recurring && (
+                                    <p className="mb-2 text-label font-medium text-foreground">
+                                        {t('calendar:occurrence.seriesTitle')}
+                                    </p>
+                                )}
+                                <div className="flex justify-end gap-2">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                        onClick={() => void handleDelete(selected)}
+                                    >
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        {t('common:actions.delete')}
+                                    </Button>
+                                    <Button variant="secondary" size="sm" onClick={() => openEdit(selected)}>
+                                        <Edit2 className="mr-2 h-4 w-4" />
+                                        {t('common:actions.edit')}
+                                    </Button>
+                                </div>
                             </div>
                         )}
                     </div>
+                )}
+            </Dialog>
+
+            {/* Deplacement d'une seule occurrence */}
+            <Dialog
+                open={moveTarget !== null}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setMoveTarget(null);
+                        setError('');
+                    }
+                }}
+                title={t('calendar:occurrence.moveTitle')}
+                description={moveTarget?.title}
+            >
+                {moveTarget && (
+                    <form onSubmit={submitMove} className="space-y-4">
+                        {error && (
+                            <div className="rounded-input border border-danger/30 bg-danger/10 px-3 py-2 text-caption text-danger">
+                                {error}
+                            </div>
+                        )}
+                        <p className="text-caption text-muted-foreground">
+                            {t('calendar:occurrence.moveDescription')}
+                        </p>
+                        <div className="grid grid-cols-1 gap-3 rounded-input border border-border bg-surface-2/40 p-3 sm:grid-cols-2">
+                            <DatePicker
+                                label={t('calendar:form.date')}
+                                value={moveDate}
+                                min={format(subDays(parseISO(moveTarget.occurrence_date), MOVE_MAX_DAYS), 'yyyy-MM-dd')}
+                                max={format(addDays(parseISO(moveTarget.occurrence_date), MOVE_MAX_DAYS), 'yyyy-MM-dd')}
+                                onChange={setMoveDate}
+                            />
+                            <DatePicker
+                                label={t('calendar:form.startTime')}
+                                type="time"
+                                value={moveTime}
+                                onChange={setMoveTime}
+                            />
+                        </div>
+                        <p className="text-micro text-muted-foreground">
+                            {t('calendar:occurrence.moveLimit', { days: MOVE_MAX_DAYS })}
+                            {moveTarget.end_time ? ` ${t('calendar:occurrence.keepsDuration')}` : ''}
+                        </p>
+                        <div className="flex justify-end gap-3 pt-2">
+                            <Button type="button" variant="secondary" onClick={() => setMoveTarget(null)}>
+                                {t('common:actions.cancel')}
+                            </Button>
+                            <Button type="submit" disabled={occurrenceBusy}>
+                                {t('calendar:occurrence.moveConfirm')}
+                            </Button>
+                        </div>
+                    </form>
                 )}
             </Dialog>
 

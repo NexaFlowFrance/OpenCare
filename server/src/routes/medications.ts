@@ -360,6 +360,49 @@ router.post('/', requireContentWriter, async (req: CircleRequest, res: Response)
 });
 
 // Update a medication; if schedules is provided, replace them all (admin and family)
+// PUT /api/medications/:id/stock : set the remaining stock and the refill
+// threshold, both in the unit of a dose. Either can be null to stop tracking.
+router.put('/:id/stock', requireContentWriter, async (req: CircleRequest, res: Response) => {
+    const lang = langFromRequest(req);
+    try {
+        const parseAmount = (raw: unknown): { value?: number | null; error?: string } => {
+            if (raw === null || raw === '' || raw === undefined) return { value: null };
+            const n = Number(raw);
+            if (!Number.isFinite(n) || n < 0 || n > 100000) return { error: t(lang, 'medications.stockInvalid') };
+            return { value: Math.round(n * 100) / 100 };
+        };
+
+        const fields: string[] = [];
+        const values: unknown[] = [];
+        let idx = 1;
+        for (const [key, column] of [['stock_quantity', 'stock_quantity'], ['stock_alert_threshold', 'stock_alert_threshold']] as const) {
+            if (!(key in req.body)) continue;
+            const parsed = parseAmount(req.body[key]);
+            if (parsed.error) return res.status(400).json({ success: false, error: parsed.error });
+            fields.push(`${column} = $${idx++}`);
+            values.push(parsed.value);
+        }
+        if (fields.length === 0) {
+            return res.status(400).json({ success: false, error: t(lang, 'medications.stockRequired') });
+        }
+        fields.push('stock_updated_at = CURRENT_TIMESTAMP');
+        values.push(req.params.id, req.circleId);
+
+        const result = await query(
+            `UPDATE medications SET ${fields.join(', ')} WHERE id = $${idx++} AND circle_id = $${idx} RETURNING *`,
+            values
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: t(lang, 'medications.notFound') });
+        }
+        await broadcastToCircle(req.circleId!, { type: 'update', entity: 'medications', action: 'updated' });
+        res.json({ success: true, data: result.rows[0] });
+    } catch (error) {
+        console.error('Update medication stock error:', error);
+        res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+});
+
 router.put('/:id', requireContentWriter, async (req: CircleRequest, res: Response) => {
     const lang = langFromRequest(req);
     const client = await getClient();

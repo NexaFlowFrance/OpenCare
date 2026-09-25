@@ -1,0 +1,88 @@
+{
+  "greeting": "¿Cómo está {{name}}?",
+  "greetingFallback": "Hola",
+  "seeAll": "Ver todo",
+  "household": {
+    "label": "Mismo hogar:",
+    "viewAll": "El hogar",
+    "current": "Familiar mostrado",
+    "nextEvent": "A las {{time}}: {{title}}",
+    "eventsDone": "{{count}} citas hoy",
+    "noEvent": "Nada previsto hoy",
+    "meds": "{{taken}}/{{total}} medicamentos tomados",
+    "medsNone": "Hoy no hay medicamentos",
+    "lastNews": "Última noticia {{when}} ({{author}})",
+    "noNews": "Todavía no hay notas",
+    "open": "Abrir"
+  },
+  "unreadMessages_one": "{{count}} mensaje sin leer",
+  "unreadMessages_other": "{{count}} mensajes sin leer",
+  "today": {
+    "title": "Hoy",
+    "empty": "Nada previsto hoy. Un día tranquilo."
+  },
+  "categories": {
+    "visit": "Visita",
+    "medical": "Médico",
+    "nurse": "Enfermera",
+    "aide": "Auxiliar",
+    "other": "Otro"
+  },
+  "medications": {
+    "title": "Medicamentos de hoy",
+    "takenCount": "{{taken}}/{{total}} tomas confirmadas",
+    "next": "Próximas tomas",
+    "allDone": "Ya han pasado todas las tomas de hoy.",
+    "empty": "Hoy no hay ninguna toma prevista."
+  },
+  "journal": {
+    "title": "Últimas noticias",
+    "empty": "Todavía no hay noticias. Las visitas y las notas del círculo aparecerán aquí."
+  },
+  "tasks": {
+    "title": "Tareas pendientes",
+    "count_one": "{{count}} tarea pendiente",
+    "count_other": "{{count}} tareas pendientes",
+    "empty": "Todo hecho. Nada pendiente."
+  },
+  "vitals": {
+    "title": "Constantes",
+    "empty": "Todavía no hay mediciones.",
+    "types": {
+      "weight": "Peso",
+      "bp": "Tensión",
+      "temperature": "Temperatura",
+      "glucose": "Glucemia",
+      "pain": "Dolor",
+      "mood": "Ánimo"
+    }
+  },
+  "errors": {
+    "load": "No se puede cargar el panel."
+  },
+  "attention": {
+    "title": "Por atender",
+    "empty": "Nada por atender ahora mismo. Todo está en orden.",
+    "help_one": "{{count}} señal de alerta en las últimas 24 h",
+    "help_other": "{{count}} señales de alerta en las últimas 24 h",
+    "presence": "Sin señales de vida antes de las {{time}}",
+    "presenceDetail": "Puede llamar o pasar a ver que todo va bien.",
+    "missed_intakes_one": "{{count}} toma no realizada hoy",
+    "missed_intakes_other": "{{count}} tomas no realizadas hoy",
+    "prescriptions_one": "{{count}} receta por renovar",
+    "prescriptions_other": "{{count}} recetas por renovar",
+    "tasks_overdue_one": "{{count}} tarea atrasada",
+    "tasks_overdue_other": "{{count}} tareas atrasadas",
+    "visitor_present": "{{name}} está aquí desde las {{time}}",
+    "appointments": "Pronto: {{title}} a las {{time}}",
+    "acknowledge": "Me ocupo yo",
+    "helpOpen_one": "{{count}} petición sin atender",
+    "helpOpen_other": "{{count}} peticiones sin atender",
+    "vitals_out_of_range_one": "{{count}} medición fuera de rango",
+    "vitals_out_of_range_other": "{{count}} mediciones fuera de rango",
+    "medication_stock_one": "{{count}} medicamento casi agotado",
+    "medication_stock_other": "{{count}} medicamentos casi agotados",
+    "stockLeft_one": "{{name}} (queda {{count}})",
+    "stockLeft_other": "{{name}} (quedan {{count}})"
+  }
+}

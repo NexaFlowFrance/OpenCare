@@ -1,0 +1,97 @@
+{
+    "title": "Diario",
+    "subtitle": "El diario de seguimiento del círculo",
+    "loading": "Cargando el diario...",
+    "composer": {
+        "placeholder": "ha comido bien, tensión 13/8, buen ánimo",
+        "typeLabel": "Tipo de entrada",
+        "dateLabel": "Fecha y hora de la visita",
+        "addPhotos": "Añadir fotos",
+        "photoHint": "{{current}}/{{max}} fotos",
+        "removePhoto": "Quitar la foto",
+        "publish": "Publicar",
+        "publishing": "Publicando...",
+        "vitalTypeLabel": "Tipo de constante",
+        "valueLabel": "Valor",
+        "systolicLabel": "Sistólica",
+        "diastolicLabel": "Diastólica"
+    },
+    "types": {
+        "visit": "Visita",
+        "note": "Nota",
+        "vital": "Constante",
+        "medication": "Medicamento",
+        "incident": "Incidente",
+        "mood": "Ánimo"
+    },
+    "vitalTypes": {
+        "weight": "Peso",
+        "bp": "Tensión",
+        "pain": "Dolor",
+        "mood": "Ánimo",
+        "temperature": "Temperatura",
+        "glucose": "Glucemia"
+    },
+    "filters": {
+        "all": "Todo"
+    },
+    "days": {
+        "today": "Hoy",
+        "yesterday": "Ayer"
+    },
+    "timeline": {
+        "loadMore": "Ver más",
+        "loadingMore": "Cargando..."
+    },
+    "photo": {
+        "title": "Foto",
+        "alt": "Foto del diario",
+        "open": "Ampliar la foto"
+    },
+    "edit": {
+        "title": "Editar la entrada",
+        "contentLabel": "Texto",
+        "dateLabel": "Fecha y hora"
+    },
+    "actions": {
+        "edit": "Editar la entrada",
+        "delete": "Eliminar la entrada"
+    },
+    "empty": {
+        "title": "Aún no hay ninguna entrada",
+        "description": "Cuente una visita, una observación o una medición: así todo el círculo se mantiene informado.",
+        "filtered": "No hay entradas de este tipo."
+    },
+    "confirmDelete": "¿Eliminar esta entrada?",
+    "voice": {
+        "record": "Dictar",
+        "stop": "Detener la grabación",
+        "transcribing": "Transcribiendo…",
+        "autoFile": "Archivar automáticamente",
+        "autoFiling": "Archivando…",
+        "filedTitle": "Entrada «{{type}}» creada",
+        "filedShopping": "Compras añadidas: {{items}}",
+        "emptyTranscript": "No se reconoció ningún texto en la grabación.",
+        "tooLong": "La grabación es demasiado larga para enviarla. Dicte notas más cortas.",
+        "micDeniedTitle": "Micrófono no disponible",
+        "micDeniedBody": "Permita el acceso al micrófono para dictar una nota.",
+        "notConfiguredTitle": "Transcripción no configurada",
+        "notConfiguredBody": "Conecte la integración «Transcripción de voz (Whisper)» en la página Integraciones para dictar sus notas.",
+        "transcribeError": "No se pudo transcribir la grabación.",
+        "fileError": "No se pudo archivar la nota automáticamente."
+    },
+    "toasts": {
+        "published": "Entrada publicada",
+        "updated": "Entrada modificada",
+        "deleted": "Entrada eliminada"
+    },
+    "errors": {
+        "load": "No se pudo cargar el diario.",
+        "publish": "No se pudo publicar la entrada.",
+        "update": "No se pudo modificar la entrada.",
+        "delete": "No se pudo eliminar la entrada.",
+        "valueRequired": "Introduzca un valor numérico válido.",
+        "photoTooLarge": "La foto pesa demasiado después de comprimirla (1,5 MB máx.).",
+        "photoRead": "No se pudo leer esta imagen."
+    }
+}

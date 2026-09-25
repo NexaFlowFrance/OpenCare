@@ -17,7 +17,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useCircle } from '../contexts/CircleContext';
 import { useWebSocketUpdates } from '../hooks/useWebSocketUpdates';
 import { dateLocale } from '../i18n/format';
-import { Button, Dialog, Select, Textarea } from '../components/ui';
+import { Badge, Button, Dialog, Select, Textarea } from '../components/ui';
 import { EmptyState } from '../components/app';
 import { cn } from '../lib/utils';
 
@@ -69,6 +69,14 @@ interface PendingAttachment {
     data: string;
     mime: string;
 }
+
+interface UnreadCounts {
+    total: number;
+    circle: number;
+    dms: Array<{ user_id: string; count: number }>;
+}
+
+const NO_UNREAD: UnreadCounts = { total: 0, circle: 0, dms: [] };
 
 type View = 'feed' | 'dm';
 
@@ -163,6 +171,15 @@ const UserAvatar: React.FC<{ name: string; avatar?: string | null; className?: s
     );
 };
 
+// Le chiffre seul ne dit rien a un lecteur d'ecran, et il est tronque au dela
+// de 99 : la phrase complete est donc rendue en plus, visuellement masquee.
+const UnreadBadge: React.FC<{ count: number; label: string }> = ({ count, label }) => (
+    <Badge variant="primary" className="min-h-[20px] flex-shrink-0 px-2 py-0 font-semibold">
+        <span aria-hidden="true">{count > 99 ? '99+' : count}</span>
+        <span className="sr-only">{label}</span>
+    </Badge>
+);
+
 const Messages: React.FC = () => {
     const { t } = useTranslation(['messages', 'common']);
     const { user } = useAuth();
@@ -184,6 +201,10 @@ const Messages: React.FC = () => {
     const [dmMessages, setDmMessages] = useState<Message[]>([]);
     const [dmHasMore, setDmHasMore] = useState(false);
     const [newDmUserId, setNewDmUserId] = useState('');
+
+    // Non-lus
+    const [unread, setUnread] = useState<UnreadCounts>(NO_UNREAD);
+    const markedThreadRef = useRef<string | null>(null);
 
     // Saisie
     const [content, setContent] = useState('');
@@ -229,6 +250,17 @@ const Messages: React.FC = () => {
         }
     };
 
+    // Hors ligne ou en demo, la reponse peut ne pas porter les compteurs :
+    // on garde alors l'affichage precedent plutot que de casser la page.
+    const applyUnread = (data: UnreadCounts | null) => {
+        if (data && Array.isArray(data.dms)) setUnread(data);
+    };
+
+    const fetchUnread = async () => {
+        const response = await api.get<{ success: boolean; data: UnreadCounts }>('/api/messages/unread');
+        if (response.success) applyUnread(response.data);
+    };
+
     const fetchMembers = async (circleId: string) => {
         const response = await api.get<{ success: boolean; data: { members: CircleMember[] } }>(
             `/api/circles/${circleId}`
@@ -245,7 +277,11 @@ const Messages: React.FC = () => {
         setDmMessages([]);
         setContent('');
         setPendingAttachments([]);
+        setUnread(NO_UNREAD);
+        markedThreadRef.current = null;
         setLoading(true);
+        // Les compteurs sont secondaires : leur echec ne doit pas masquer le fil.
+        void fetchUnread().catch(() => undefined);
         void Promise.all([fetchFeed(), fetchConversations(), fetchMembers(activeCircle.id)])
             .then(() => scrollToBottom())
             .catch((err) => {
@@ -269,6 +305,45 @@ const Messages: React.FC = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeDmUserId]);
 
+    // Fil reellement ouvert a l'ecran, null sur la liste des conversations.
+    // Le cercle fait partie de la cle : changer de cercle ouvre un autre fil.
+    const openThreadKey = useMemo(() => {
+        if (!activeCircle?.id) return null;
+        if (view !== 'dm') return `${activeCircle.id}:circle`;
+        return activeDmUserId ? `${activeCircle.id}:dm:${activeDmUserId}` : null;
+    }, [activeCircle?.id, view, activeDmUserId]);
+
+    // La cle deja marquee evite de renvoyer l'appel a chaque rendu, et l'onglet
+    // en arriere-plan ne marque rien lu : personne n'a lu quoi que ce soit.
+    const markOpenThreadRead = async () => {
+        if (!openThreadKey || document.visibilityState !== 'visible') return;
+        if (markedThreadRef.current === openThreadKey) return;
+        markedThreadRef.current = openThreadKey;
+        try {
+            const peerUserId = view === 'dm' ? activeDmUserId : null;
+            const response = await api.post<{ success: boolean; data: UnreadCounts }>('/api/messages/read',
+                peerUserId ? { channel: 'dm', peer_user_id: peerUserId } : { channel: 'circle' }
+            );
+            if (response.success) applyUnread(response.data);
+        } catch (err) {
+            // Un echec silencieux: on retentera a la prochaine ouverture du fil.
+            console.error('Failed to mark messages read:', err);
+            markedThreadRef.current = null;
+        }
+    };
+
+    // Marquage a l'ouverture d'un fil, et au retour sur un onglet laisse cache.
+    useEffect(() => {
+        // Revenir a la liste oublie le marquage: rouvrir le fil le refera, ce
+        // qui rattrape les messages arrives entre temps.
+        if (!openThreadKey) markedThreadRef.current = null;
+        void markOpenThreadRead();
+        const onVisibilityChange = () => void markOpenThreadRead();
+        document.addEventListener('visibilitychange', onVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', onVisibilityChange);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [openThreadKey]);
+
     // Temps réel: on recharge la fenêtre déjà affichée (bornée à 200 côté serveur)
     useWebSocketUpdates('messages', () => {
         void fetchFeed(Math.min(Math.max(feedMessages.length, PAGE_SIZE), 200)).catch(() => undefined);
@@ -277,6 +352,14 @@ const Messages: React.FC = () => {
             void fetchDmThread(activeDmUserId, Math.min(Math.max(dmMessages.length, PAGE_SIZE), 200)).catch(
                 () => undefined
             );
+        }
+        // Un message qui arrive dans le fil sous les yeux du lecteur ne doit pas
+        // faire apparaitre une pastille: on le remarque lu, sinon on recompte.
+        if (openThreadKey && document.visibilityState === 'visible') {
+            markedThreadRef.current = null;
+            void markOpenThreadRead();
+        } else {
+            void fetchUnread().catch(() => undefined);
         }
     });
 
@@ -452,6 +535,11 @@ const Messages: React.FC = () => {
         const member = members.find((m) => m.user_id === activeDmUserId);
         return member?.name ?? '';
     }, [activeDmUserId, conversations, members]);
+
+    const dmUnread = useMemo(
+        () => new Map(unread.dms.map((row) => [row.user_id, row.count])),
+        [unread.dms]
+    );
 
     // Membres sans conversation existante, pour en démarrer une nouvelle
     const newDmCandidates = useMemo(
@@ -721,13 +809,19 @@ const Messages: React.FC = () => {
                             onClick={() => setView(value)}
                             aria-pressed={view === value}
                             className={cn(
-                                'min-h-[36px] flex-1 rounded-pill px-4 text-caption font-medium transition-colors duration-fast ease-soft sm:flex-none',
+                                'inline-flex min-h-[36px] flex-1 items-center justify-center gap-2 rounded-pill px-4 text-caption font-medium transition-colors duration-fast ease-soft sm:flex-none',
                                 view === value
                                     ? 'bg-card text-primary shadow-surface'
                                     : 'text-muted-foreground hover:text-foreground'
                             )}
                         >
                             {t(`messages:views.${value}`)}
+                            {value === 'feed' && unread.circle > 0 && (
+                                <UnreadBadge
+                                    count={unread.circle}
+                                    label={t('messages:unread.label', { count: unread.circle })}
+                                />
+                            )}
                         </button>
                     ))}
                 </div>
@@ -789,36 +883,45 @@ const Messages: React.FC = () => {
                         />
                     ) : (
                         <ul className="space-y-2">
-                            {conversations.map((conversation) => (
-                                <li key={conversation.other_user_id}>
-                                    <button
-                                        type="button"
-                                        onClick={() => setActiveDmUserId(conversation.other_user_id)}
-                                        className="flex min-h-[56px] w-full items-center gap-3 rounded-card border border-border bg-card px-3 py-2.5 text-left shadow-surface transition-colors duration-fast ease-soft hover:border-border-strong"
-                                    >
-                                        <UserAvatar
-                                            name={conversation.other_user_name}
-                                            avatar={conversation.other_user_avatar}
-                                            className="h-10 w-10"
-                                        />
-                                        <span className="min-w-0 flex-1">
-                                            <span className="block truncate text-body font-medium text-foreground">
-                                                {conversation.other_user_name}
+                            {conversations.map((conversation) => {
+                                const unreadCount = dmUnread.get(conversation.other_user_id) ?? 0;
+                                return (
+                                    <li key={conversation.other_user_id}>
+                                        <button
+                                            type="button"
+                                            onClick={() => setActiveDmUserId(conversation.other_user_id)}
+                                            className="flex min-h-[56px] w-full items-center gap-3 rounded-card border border-border bg-card px-3 py-2.5 text-left shadow-surface transition-colors duration-fast ease-soft hover:border-border-strong"
+                                        >
+                                            <UserAvatar
+                                                name={conversation.other_user_name}
+                                                avatar={conversation.other_user_avatar}
+                                                className="h-10 w-10"
+                                            />
+                                            <span className="min-w-0 flex-1">
+                                                <span className="block truncate text-body font-medium text-foreground">
+                                                    {conversation.other_user_name}
+                                                </span>
+                                                <span className="block truncate text-caption text-muted-foreground">
+                                                    {conversation.last_author_user_id === user?.id
+                                                        ? t('messages:dm.youPrefix', {
+                                                              message: conversation.last_message,
+                                                          })
+                                                        : conversation.last_message}
+                                                </span>
                                             </span>
-                                            <span className="block truncate text-caption text-muted-foreground">
-                                                {conversation.last_author_user_id === user?.id
-                                                    ? t('messages:dm.youPrefix', {
-                                                          message: conversation.last_message,
-                                                      })
-                                                    : conversation.last_message}
+                                            {unreadCount > 0 && (
+                                                <UnreadBadge
+                                                    count={unreadCount}
+                                                    label={t('messages:unread.label', { count: unreadCount })}
+                                                />
+                                            )}
+                                            <span className="flex-shrink-0 text-micro text-muted-foreground">
+                                                {formatMessageTime(conversation.last_message_at)}
                                             </span>
-                                        </span>
-                                        <span className="flex-shrink-0 text-micro text-muted-foreground">
-                                            {formatMessageTime(conversation.last_message_at)}
-                                        </span>
-                                    </button>
-                                </li>
-                            ))}
+                                        </button>
+                                    </li>
+                                );
+                            })}
                         </ul>
                     )}
                 </div>

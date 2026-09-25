@@ -1,0 +1,118 @@
+{
+  "title": "Perfil del familiar",
+  "subtitle": "La información esencial sobre {{name}}, compartida con el círculo.",
+  "subtitleNoName": "La información esencial sobre su familiar, compartida con el círculo.",
+  "noCircle": "Seleccione un círculo para ver el perfil del familiar.",
+  "notFound": "No hay ningún perfil asociado a este círculo.",
+  "readOnly": "Solo lectura: únicamente los administradores y la familia pueden modificar este perfil.",
+  "notProvided": "Sin indicar",
+  "age_one": "{{count}} año",
+  "age_other": "{{count}} años",
+  "photo": {
+    "alt": "Foto de {{name}}",
+    "change": "Cambiar la foto",
+    "choose": "Añadir una foto",
+    "remove": "Quitar",
+    "updated": "Foto actualizada",
+    "invalid": "Elija un archivo de imagen.",
+    "error": "No se ha podido actualizar la foto."
+  },
+  "identity": {
+    "title": "Identidad",
+    "firstName": "Nombre",
+    "lastName": "Apellidos",
+    "birthDate": "Fecha de nacimiento",
+    "phone": "Teléfono",
+    "address": "Dirección"
+  },
+  "health": {
+    "title": "Salud",
+    "bloodType": "Grupo sanguíneo",
+    "bloodTypeUnknown": "Desconocido",
+    "allergies": "Alergias",
+    "history": "Antecedentes",
+    "mobility": "Movilidad",
+    "diet": "Alimentación",
+    "gpName": "Médico de cabecera",
+    "gpPhone": "Teléfono del médico"
+  },
+  "admin": {
+    "title": "Administrativo",
+    "ssn": "Número de la seguridad social",
+    "insurance": "Seguro médico",
+    "directives": "Instrucciones previas"
+  },
+  "notes": {
+    "title": "Notas libres",
+    "label": "Notas",
+    "placeholder": "Costumbres, indicaciones, lo que le gusta..."
+  },
+  "sensitive": {
+    "show": "Mostrar {{field}}",
+    "hide": "Ocultar {{field}}"
+  },
+  "saved": "Perfil guardado",
+  "errors": {
+    "load": "No se ha podido cargar el perfil.",
+    "save": "No se ha podido guardar.",
+    "firstNameRequired": "El nombre es obligatorio."
+  },
+  "story": {
+    "title": "Quién soy",
+    "description": "El relato de vida de su familiar: lo que una persona nueva necesita saber para acompañarle bien.",
+    "sharedNotice": "Esta página se muestra a los profesionales a través de su enlace.",
+    "inspiration": "Inspirada en el « This is me » de la Alzheimer's Society.",
+    "empty": "Ninguna sección por ahora.",
+    "emptyHint": "Empiece con las secciones propuestas y luego adáptelas libremente.",
+    "startEditing": "Rellenar la página",
+    "addSection": "Añadir una sección",
+    "removeSection": "Quitar la sección {{title}}",
+    "sectionTitle": "Título",
+    "sectionContent": "Contenido",
+    "sectionPlaceholder": "Bastan unas frases sencillas...",
+    "maxSections": "12 secciones como máximo.",
+    "saved": "Página guardada",
+    "defaults": {
+      "work": "Profesión y vida laboral",
+      "pride": "Orgullos",
+      "habits": "Costumbres y rituales",
+      "soothing": "Lo que le calma",
+      "anxious": "Lo que le angustia",
+      "music": "Músicas",
+      "family": "Familia y caras",
+      "beliefs": "Creencias"
+    },
+    "errors": {
+      "load": "No se ha podido cargar la página Quién soy.",
+      "save": "No se ha podido guardar.",
+      "titleRequired": "Cada sección debe tener un título."
+    }
+  },
+  "emergency": {
+    "title": "Ficha de urgencia (QR en la nevera)",
+    "description": "Un código QR para imprimir y pegar en la nevera: los servicios de emergencia lo escanean y ven la ficha vital (tratamientos, alergias, contactos) sin necesidad de cuenta.",
+    "selfContainedNote": "La ficha está contenida en el propio QR: funciona desde cualquier teléfono (datos móviles), sin exponer OpenCare en Internet y sin que se guarde ningún dato en línea.",
+    "tooBig": "La ficha es extensa: el QR puede ser difícil de escanear. Acorte los antecedentes o las instrucciones previas.",
+    "managedByFamily": "La ficha de urgencia la gestiona la familia (administrador).",
+    "preview": "Previsualizar la ficha",
+    "refresh": "Actualizar",
+    "reprintNote": "Vuelva a imprimir el cartel después de cada cambio (medicamentos, contactos...) para que el QR siga al día.",
+    "qrAlt": "Código QR de la ficha de urgencia de {{name}}",
+    "notesLabel": "Notas adicionales",
+    "notesPlaceholder": "Código de la puerta, mascota, vecina que tiene la llave...",
+    "saveNotes": "Guardar las notas",
+    "notesSaved": "Notas guardadas",
+    "printPoster": "Imprimir el cartel",
+    "poster": {
+      "scan": "En caso de urgencia, escanee",
+      "name": "Ficha vital de {{name}}",
+      "numbers": "SAMU 15, Bomberos 18",
+      "print": "Imprimir",
+      "close": "Cerrar"
+    },
+    "errors": {
+      "load": "No se ha podido cargar la ficha de urgencia.",
+      "save": "No se ha podido guardar."
+    }
+  }
+}

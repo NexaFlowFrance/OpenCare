@@ -204,6 +204,10 @@ CREATE TABLE medications (
     reason TEXT,
     -- Aspect (couleur, forme) pour reconnaitre le medicament sans photo
     appearance TEXT,
+    -- Stock restant (dans l'unite des prises) et seuil d'alerte de renouvellement
+    stock_quantity NUMERIC(8, 2),
+    stock_alert_threshold NUMERIC(8, 2),
+    stock_updated_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -282,6 +286,9 @@ CREATE TABLE events (
     end_time TIMESTAMP,
     location TEXT,
     rrule TEXT,
+    -- Exceptions d'occurrence d'un evenement recurrent : [{date, action:'skip'}]
+    -- ou [{date, action:'move', start_time, end_time}] (cf. routes/events.ts)
+    exceptions JSONB NOT NULL DEFAULT '[]'::jsonb,
     member_ids JSONB DEFAULT '[]'::jsonb,
     reminder_30min BOOLEAN DEFAULT FALSE,
     reminder_1hour BOOLEAN DEFAULT FALSE,
@@ -558,6 +565,31 @@ CREATE INDEX idx_visits_circle_in ON visits(circle_id, checked_in_at DESC);
 
 -- Plan de soins : consignes redigees par la famille (routine, repas, mobilite,
 -- toilette, communication, ce qui contrarie, ce qui apaise, urgence)
+-- Seuils d'alerte sur les constantes (tension, poids, glycemie...)
+CREATE TABLE vital_thresholds (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    circle_id UUID NOT NULL REFERENCES care_circles(id) ON DELETE CASCADE,
+    type VARCHAR(20) NOT NULL
+        CHECK (type IN ('weight', 'bp', 'pain', 'mood', 'temperature', 'glucose')),
+    min_value NUMERIC(8, 2),
+    max_value NUMERIC(8, 2),
+    min_value2 NUMERIC(8, 2),
+    max_value2 NUMERIC(8, 2),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE UNIQUE INDEX idx_vital_thresholds_circle_type ON vital_thresholds(circle_id, type);
+
+-- Suivi de lecture des messages : une ligne par fil (cercle ou conversation privee)
+CREATE TABLE message_reads (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    circle_id UUID NOT NULL REFERENCES care_circles(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    peer_user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    last_read_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE UNIQUE INDEX idx_message_reads_circle_thread ON message_reads(circle_id, user_id, COALESCE(peer_user_id, '00000000-0000-0000-0000-000000000000'::uuid));
+
 -- Escalade configurable des alertes (prise en retard, demande d'aide) et
 -- demandes d'aide du bouton "J'ai besoin d'aide" avec leur prise en charge
 CREATE TABLE escalation_rules (

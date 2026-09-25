@@ -4,6 +4,7 @@ import { authMiddleware } from '../middleware/auth';
 import { circleMiddleware, CircleRequest, CircleRole } from '../middleware/circle';
 import { toNullIfEmpty } from '../lib/normalize';
 import { broadcastToCircle } from '../lib/broadcaster';
+import { langFromRequest, t } from '../lib/i18n';
 
 const router = Router();
 
@@ -181,12 +182,56 @@ const expandRRule = (rule: ParsedRRule, dtstart: Date, windowStart: Date, window
     return out;
 };
 
+/**
+ * Exception sur une occurrence precise d'un evenement recurrent, reperee par
+ * sa date d'origine (YYYY-MM-DD local) : soit on la saute, soit on la deplace.
+ * Stockees dans events.exceptions (JSONB) : aucune requete n'a besoin de
+ * changer, la colonne suit l'evenement partout ou il est deja lu.
+ */
+export type EventException =
+    | { date: string; action: 'skip' }
+    | { date: string; action: 'move'; start_time: string; end_time: string | null };
+
+/** Un deplacement reste dans cette fenetre autour de l'occurrence d'origine. */
+export const MOVE_MAX_DAYS = 7;
+const MAX_EXCEPTIONS_PER_EVENT = 200;
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+/** Ne garde que les exceptions bien formees : jamais de confiance au stockage ni au client. */
+export const parseExceptions = (raw: unknown): EventException[] => {
+    if (!Array.isArray(raw)) return [];
+    const out: EventException[] = [];
+    const seen = new Set<string>();
+    for (const item of raw) {
+        if (!item || typeof item !== 'object') continue;
+        const row = item as Record<string, unknown>;
+        const date = typeof row.date === 'string' ? row.date : '';
+        if (!DATE_RE.test(date) || seen.has(date)) continue;
+        if (row.action === 'skip') {
+            seen.add(date);
+            out.push({ date, action: 'skip' });
+        } else if (row.action === 'move' && typeof row.start_time === 'string' && !Number.isNaN(new Date(row.start_time).getTime())) {
+            seen.add(date);
+            out.push({
+                date,
+                action: 'move',
+                start_time: row.start_time,
+                end_time: typeof row.end_time === 'string' && !Number.isNaN(new Date(row.end_time).getTime()) ? row.end_time : null,
+            });
+        }
+        if (out.length >= MAX_EXCEPTIONS_PER_EVENT) break;
+    }
+    return out;
+};
+
 export interface EventOccurrence {
     start: Date;
     end: Date | null;
-    /** Local YYYY-MM-DD of the occurrence */
+    /** Local YYYY-MM-DD of the occurrence, the date it was originally due: its identity */
     occurrenceDate: string;
     isRecurring: boolean;
+    /** True when an exception moved this occurrence away from its original slot */
+    moved?: boolean;
 }
 
 /**
@@ -195,7 +240,7 @@ export interface EventOccurrence {
  * recurring events are expanded with the parent's duration applied to each occurrence.
  */
 export const expandEventOccurrences = (
-    event: { start_time: string; end_time: string | null; rrule: string | null },
+    event: { start_time: string; end_time: string | null; rrule: string | null; exceptions?: unknown },
     windowStart: Date,
     windowEnd: Date
 ): EventOccurrence[] => {
@@ -220,12 +265,50 @@ export const expandEventOccurrences = (
         }];
     }
 
-    return expandRRule(rule, start, windowStart, windowEnd).map((occ) => ({
-        start: occ,
-        end: durationMs !== null ? new Date(occ.getTime() + durationMs) : null,
-        occurrenceDate: toLocalDate(occ),
-        isRecurring: true,
-    }));
+    const exceptions = parseExceptions(event.exceptions);
+    if (exceptions.length === 0) {
+        return expandRRule(rule, start, windowStart, windowEnd).map((occ) => ({
+            start: occ,
+            end: durationMs !== null ? new Date(occ.getTime() + durationMs) : null,
+            occurrenceDate: toLocalDate(occ),
+            isRecurring: true,
+        }));
+    }
+
+    // Une occurrence deplacee peut entrer dans la fenetre ou en sortir : on
+    // elargit l'expansion du deplacement maximal autorise, puis on refiltre.
+    const pad = MOVE_MAX_DAYS * MS_PER_DAY;
+    const byDate = new Map(exceptions.map((e) => [e.date, e]));
+    const out: EventOccurrence[] = [];
+
+    for (const occ of expandRRule(rule, start, new Date(windowStart.getTime() - pad), new Date(windowEnd.getTime() + pad))) {
+        const occurrenceDate = toLocalDate(occ);
+        const exception = byDate.get(occurrenceDate);
+        if (exception?.action === 'skip') continue;
+
+        let occStart = occ;
+        let occEnd = durationMs !== null ? new Date(occ.getTime() + durationMs) : null;
+        if (exception?.action === 'move') {
+            occStart = new Date(exception.start_time);
+            occEnd = exception.end_time
+                ? new Date(exception.end_time)
+                : (durationMs !== null ? new Date(occStart.getTime() + durationMs) : null);
+        }
+
+        if (occStart.getTime() > windowEnd.getTime()) continue;
+        if ((occEnd ?? occStart).getTime() < windowStart.getTime()) continue;
+
+        out.push({
+            start: occStart,
+            end: occEnd,
+            occurrenceDate,
+            isRecurring: true,
+            moved: exception?.action === 'move',
+        });
+    }
+
+    out.sort((a, b) => a.start.getTime() - b.start.getTime());
+    return out;
 };
 
 // ============================================================
@@ -284,6 +367,8 @@ const expandAndSerialize = (events: any[], windowStart: Date, windowEnd: Date) =
                 end_time: occ.end ? toLocalISO(occ.end) : null,
                 occurrence_date: occ.occurrenceDate,
                 is_recurring: occ.isRecurring,
+                // Une exception a deplace cette occurrence hors de son creneau habituel.
+                moved: occ.moved === true,
             });
         }
     }
@@ -582,6 +667,121 @@ router.delete('/:id', async (req: CircleRequest, res: Response) => {
         res.json({ success: true });
     } catch (error) {
         console.error('Delete event error:', error);
+        res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+});
+
+// ============================================================
+// Occurrences d'un evenement recurrent
+// ============================================================
+
+/** Recharge l'evenement et verifie que l'appelant peut le modifier. */
+const loadEditableEvent = async (req: CircleRequest) => {
+    const result = await query('SELECT * FROM events WHERE id = $1 AND circle_id = $2', [req.params.id, req.circleId]);
+    const event = result.rows[0];
+    if (!event) return { error: 404 as const };
+    if (!canManageExisting(req, event)) return { error: 403 as const };
+    if (!event.rrule) return { error: 400 as const };
+    return { event };
+};
+
+/** L'occurrence existe-t-elle vraiment a cette date, exceptions mises de cote ? */
+const occursOnDate = (event: Record<string, unknown>, date: string): boolean => {
+    const dayStart = new Date(`${date}T00:00:00`);
+    if (Number.isNaN(dayStart.getTime())) return false;
+    const dayEnd = new Date(dayStart.getFullYear(), dayStart.getMonth(), dayStart.getDate(), 23, 59, 59);
+    return expandEventOccurrences(
+        { ...(event as any), exceptions: [] },
+        dayStart,
+        dayEnd
+    ).some((occ) => occ.occurrenceDate === date);
+};
+
+const writeExceptions = async (req: CircleRequest, exceptions: EventException[]) => {
+    const result = await query(
+        'UPDATE events SET exceptions = $1::jsonb, updated_at = CURRENT_TIMESTAMP WHERE id = $2 AND circle_id = $3 RETURNING *',
+        [JSON.stringify(exceptions), req.params.id, req.circleId]
+    );
+    await broadcastToCircle(req.circleId!, { type: 'update', entity: 'events', action: 'updated' });
+    return result.rows[0];
+};
+
+// PUT /api/events/:id/occurrences/:date : skip or move a single occurrence of a
+// recurring event, without touching the series. :date is the occurrence's
+// original local day (YYYY-MM-DD), which is its identity.
+router.put('/:id/occurrences/:date', async (req: CircleRequest, res: Response) => {
+    const lang = langFromRequest(req);
+    try {
+        const date = String(req.params.date);
+        const loaded = await loadEditableEvent(req);
+        if (loaded.error === 404) return res.status(404).json({ success: false, error: 'Event not found' });
+        if (loaded.error === 403) return res.status(403).json({ success: false, error: 'Insufficient role' });
+        if (loaded.error === 400) return res.status(400).json({ success: false, error: t(lang, 'events.not_recurring') });
+        const event = loaded.event!;
+
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !occursOnDate(event, date)) {
+            return res.status(400).json({ success: false, error: t(lang, 'events.no_occurrence') });
+        }
+
+        const action = req.body?.action;
+        let exception: EventException;
+
+        if (action === 'skip') {
+            exception = { date, action: 'skip' };
+        } else if (action === 'move') {
+            const start = toNullIfEmpty(req.body?.start_time);
+            const startDate = start ? new Date(start) : null;
+            if (!startDate || Number.isNaN(startDate.getTime())) {
+                return res.status(400).json({ success: false, error: 'Valid start_time is required' });
+            }
+            const origin = new Date(`${date}T00:00:00`);
+            const delta = Math.abs(startDate.getTime() - origin.getTime());
+            if (delta > (MOVE_MAX_DAYS + 1) * 24 * 60 * 60 * 1000) {
+                return res.status(400).json({ success: false, error: t(lang, 'events.move_too_far', { days: String(MOVE_MAX_DAYS) }) });
+            }
+            const end = toNullIfEmpty(req.body?.end_time);
+            if (end) {
+                const endDate = new Date(end);
+                if (Number.isNaN(endDate.getTime())) {
+                    return res.status(400).json({ success: false, error: 'Invalid end_time' });
+                }
+                if (endDate.getTime() <= startDate.getTime()) {
+                    return res.status(400).json({ success: false, error: 'end_time must be after start_time' });
+                }
+            }
+            exception = { date, action: 'move', start_time: toLocalISO(startDate), end_time: end ? toLocalISO(new Date(end)) : null };
+        } else {
+            return res.status(400).json({ success: false, error: 'action must be skip or move' });
+        }
+
+        const exceptions = parseExceptions(event.exceptions).filter((e) => e.date !== date);
+        exceptions.push(exception);
+        exceptions.sort((a, b) => a.date.localeCompare(b.date));
+        res.json({ success: true, data: await writeExceptions(req, exceptions) });
+    } catch (error) {
+        console.error('Update event occurrence error:', error);
+        res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+});
+
+// DELETE /api/events/:id/occurrences/:date : put the occurrence back where the
+// series says it should be.
+router.delete('/:id/occurrences/:date', async (req: CircleRequest, res: Response) => {
+    try {
+        const date = String(req.params.date);
+        const loaded = await loadEditableEvent(req);
+        if (loaded.error === 404) return res.status(404).json({ success: false, error: 'Event not found' });
+        if (loaded.error === 403) return res.status(403).json({ success: false, error: 'Insufficient role' });
+        if (loaded.error === 400) return res.status(400).json({ success: false, error: 'Event is not recurring' });
+
+        const exceptions = parseExceptions(loaded.event!.exceptions);
+        const next = exceptions.filter((e) => e.date !== date);
+        if (next.length === exceptions.length) {
+            return res.status(404).json({ success: false, error: 'No exception on that occurrence' });
+        }
+        res.json({ success: true, data: await writeExceptions(req, next) });
+    } catch (error) {
+        console.error('Delete event occurrence exception error:', error);
         res.status(500).json({ success: false, error: 'Internal server error' });
     }
 });

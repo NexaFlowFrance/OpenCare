@@ -209,6 +209,35 @@ export const runMigrations = async () => {
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );`,
         `CREATE INDEX IF NOT EXISTS idx_visits_circle_in ON visits(circle_id, checked_in_at DESC);`,
+        // Exceptions d'occurrence des evenements recurrents (cf. schema.sql).
+        `ALTER TABLE events ADD COLUMN IF NOT EXISTS exceptions JSONB NOT NULL DEFAULT '[]'::jsonb;`,
+        // Stock de medicaments et seuil de renouvellement.
+        `ALTER TABLE medications ADD COLUMN IF NOT EXISTS stock_quantity NUMERIC(8, 2);`,
+        `ALTER TABLE medications ADD COLUMN IF NOT EXISTS stock_alert_threshold NUMERIC(8, 2);`,
+        `ALTER TABLE medications ADD COLUMN IF NOT EXISTS stock_updated_at TIMESTAMP;`,
+        // Seuils d'alerte sur les constantes.
+        `CREATE TABLE IF NOT EXISTS vital_thresholds (
+            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+            circle_id UUID NOT NULL REFERENCES care_circles(id) ON DELETE CASCADE,
+            type VARCHAR(20) NOT NULL
+                CHECK (type IN ('weight', 'bp', 'pain', 'mood', 'temperature', 'glucose')),
+            min_value NUMERIC(8, 2),
+            max_value NUMERIC(8, 2),
+            min_value2 NUMERIC(8, 2),
+            max_value2 NUMERIC(8, 2),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );`,
+        `CREATE UNIQUE INDEX IF NOT EXISTS idx_vital_thresholds_circle_type ON vital_thresholds(circle_id, type);`,
+        // Suivi de lecture des messages.
+        `CREATE TABLE IF NOT EXISTS message_reads (
+            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+            circle_id UUID NOT NULL REFERENCES care_circles(id) ON DELETE CASCADE,
+            user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            peer_user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+            last_read_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );`,
+        `CREATE UNIQUE INDEX IF NOT EXISTS idx_message_reads_circle_thread ON message_reads(circle_id, user_id, COALESCE(peer_user_id, '00000000-0000-0000-0000-000000000000'::uuid));`,
         // Escalade des alertes (cf. schema.sql).
         `ALTER TABLE medication_intakes ADD COLUMN IF NOT EXISTS reminded_patient_at TIMESTAMP;`,
         `ALTER TABLE medication_intakes ADD COLUMN IF NOT EXISTS escalated_primary_at TIMESTAMP;`,

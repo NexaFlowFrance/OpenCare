@@ -194,7 +194,7 @@ Toutes les routes (sauf mention contraire) exigent un JWT (`Authorization: Beare
 - `GET /api/digests`, `POST /api/digests/generate` : synthèse hebdo IA (résumé, signaux faibles).
 - `GET /api/insights/equity` : équité de la charge (visites, tâches, présences par membre).
 - `GET /api/insights/consultation` : préparation de consultation (événements marquants, courbes, traitements, questions) prête à imprimer.
-- `GET /api/dashboard` : agrégation du tableau de bord. Le champ `attention` (« À traiter ») liste, par gravité, ce qu'un aidant doit regarder en premier : signaux d'alerte des dernières 24 h (bouton d'aide, compagnon), aucun signe de vie avant l'heure limite de la veille passive, prises manquées, ordonnances à renouveler, tâches en retard, visiteur sur place, rendez-vous dans les deux heures. Les éléments de santé sont omis pour le rôle voisin.
+- `GET /api/dashboard` : agrégation du tableau de bord. Le champ `attention` (« À traiter ») liste, par gravité, ce qu'un aidant doit regarder en premier : signaux d'alerte des dernières 24 h (bouton d'aide, compagnon), aucun signe de vie avant l'heure limite de la veille passive, prises manquées, ordonnances à renouveler, tâches en retard, visiteur sur place, rendez-vous dans les deux heures, constantes hors de la plage définie et médicaments bientôt épuisés. Les éléments de santé sont omis pour le rôle voisin.
 
 ### Kiosk (`/api/kiosk`)
 
@@ -214,6 +214,28 @@ Chaque famille choisit son niveau de surveillance (Paramètres, section « Alert
 - **Bouton « J'ai besoin d'aide »** : les aidants principaux sont prévenus immédiatement et la demande est tracée (table `help_requests`). Sans prise en charge (« Je m'en occupe » depuis le bloc « À traiter » du tableau de bord, `POST /api/escalation/help/:id/ack`), les aidants de relais sont prévenus après N minutes.
 - Sans sélection, les aidants principaux sont les **administrateurs** du cercle et les aidants de relais les membres **famille**.
 - Endpoints : `GET /api/escalation/rules` (tout membre), `PUT /api/escalation/rules` (admin), `GET /api/escalation/help`, `POST /api/escalation/help/:id/ack`.
+
+### Occurrences d'un événement récurrent
+
+Une série récurrente n'a plus besoin d'être cassée pour une exception : `PUT /api/events/:id/occurrences/:date` **saute** (`{"action":"skip"}`) ou **déplace** (`{"action":"move","start_time":"...","end_time":"..."}`) une seule occurrence, et `DELETE` sur la même adresse la remet à sa place. La date de l'URL est le jour d'origine de l'occurrence (`YYYY-MM-DD`), qui reste son identité même après un déplacement. Un déplacement est limité à sept jours autour de ce jour. Les exceptions vivent dans la colonne `events.exceptions` (JSONB), donc tout ce qui lit déjà un événement en hérite sans requête supplémentaire : agenda, tableau de bord, écran patient, plan de soins, pack de relais et export iCal.
+
+### Stock de médicaments
+
+Chaque traitement peut suivre sa **réserve restante** et un **seuil de renouvellement**, exprimés dans l'unité d'une prise (`PUT /api/medications/:id/stock`, admin et famille). La réserve baisse toute seule quand une prise est confirmée et remonte si la confirmation est annulée ; un stock non suivi (`NULL`) ne devient jamais un nombre tout seul. Sous le seuil, le médicament remonte dans « À traiter » avec le nombre de doses restantes.
+
+### Seuils sur les constantes
+
+La famille peut fixer une **plage normale** par type de constante (`GET` et `PUT /api/vitals/thresholds`, admin et famille ; la tension utilise les deux bornes, systolique et diastolique). Une mesure hors de cette plage déclenche une notification aux admins et à la famille, et apparaît dans « À traiter » pendant sept jours.
+
+### Messages non lus
+
+Le compteur de messages non lus est réel : `GET /api/messages/unread` renvoie le total, le fil du cercle et le détail par conversation privée, et `POST /api/messages/read` marque un fil comme lu (table `message_reads`, une ligne par fil et par utilisateur). Un message compte comme non lu tant qu'il est postérieur à la dernière lecture du fil et qu'il vient de quelqu'un d'autre.
+
+### Langues et accessibilité
+
+L'interface existe en **français, anglais et espagnol**. Les langues sont découvertes depuis les dossiers de `client/src/i18n/locales/` : déposer un dossier `<code>/` suffit pour qu'une langue apparaisse dans le sélecteur, et une traduction partielle retombe sur l'anglais clé par clé. L'attribut `lang` du document suit la langue choisie, pour que les lecteurs d'écran prononcent correctement.
+
+Côté accessibilité : un lien d'évitement mène directement au contenu dès la première tabulation, les deux barres de navigation sont nommées et la page courante porte `aria-current`, le contenu principal est un repère `main` focalisable, les boutons de langue annoncent le nom de la langue et non son code, et les boîtes de dialogue se ferment à l'échappement en rendant le focus. Les états importants ne passent jamais par la seule couleur : une mesure hors plage, un stock bas ou un message non lu portent aussi un texte lisible par un lecteur d'écran.
 
 ### Divers
 

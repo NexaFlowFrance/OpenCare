@@ -58,6 +58,10 @@ export interface CircleData {
     visits: Json[];
     /** Plan de soins : consignes de la famille (sections texte). */
     carePlan: Json | null;
+    /** Plages normales par type de constante (alerte hors plage). */
+    vitalThresholds: Json[];
+    /** Derniere lecture par fil de messages : 'circle' ou 'dm:<userId>'. */
+    messageReads: Record<string, string>;
     /** Regles d escalade des alertes (prise en retard, demande d aide). */
     escalation: Json;
     /** Demandes d aide du bouton "J ai besoin d aide", avec leur prise en charge. */
@@ -120,7 +124,7 @@ export function createSeed(): DemoStore {
             id: 'med-amlo', circle_id: 'c-jeanne', name: 'Amlodipine', dosage: '5 mg', form: 'tablet',
             instructions: 'Avec un grand verre d\'eau', photo_url: pill('pill-white'), prescriber: 'Dr Martin',
             start_date: dstr(-400), end_date: null, active: true,
-            prn: false, with_food: 'any', reason: 'Pour la tension', appearance: 'Petit comprimé blanc et rond',
+            prn: false, stock_quantity: 26, stock_alert_threshold: 10, with_food: 'any', reason: 'Pour la tension', appearance: 'Petit comprimé blanc et rond',
             schedules: [
                 { id: 'sch-amlo-1', medication_id: 'med-amlo', time_of_day: '08:00', days_of_week: [1, 2, 3, 4, 5, 6, 7], label: 'Matin', quantity: 1, unit: null },
             ],
@@ -138,7 +142,7 @@ export function createSeed(): DemoStore {
             id: 'med-metfo', circle_id: 'c-jeanne', name: 'Metformine', dosage: '500 mg', form: 'tablet',
             instructions: null, photo_url: pill('pill-pink'), prescriber: 'Dr Martin',
             start_date: dstr(-300), end_date: null, active: true,
-            prn: false, with_food: 'with', reason: 'Pour le diabète', appearance: 'Comprimé rose ovale',
+            prn: false, stock_quantity: 7, stock_alert_threshold: 12, with_food: 'with', reason: 'Pour le diabète', appearance: 'Comprimé rose ovale',
             schedules: [
                 { id: 'sch-metfo-1', medication_id: 'med-metfo', time_of_day: '08:00', days_of_week: [1, 2, 3, 4, 5, 6, 7], label: 'Matin', quantity: 2, unit: null },
                 { id: 'sch-metfo-2', medication_id: 'med-metfo', time_of_day: '20:00', days_of_week: [1, 2, 3, 4, 5, 6, 7], label: 'Soir', quantity: 1, unit: null },
@@ -217,6 +221,9 @@ export function createSeed(): DemoStore {
         entry('j-6', -3, 10, 0, 'marie', 'vital',
             'Tension prise ce matin, tout est stable.',
             { vital_type: 'bp', value: 138, value2: 82, unit: 'mmHg' }),
+        entry('j-6b', -2, 9, 15, 'nadia', 'vital',
+            'Tension un peu haute ce matin, Jeanne avait mal dormi. A reprendre demain au calme.',
+            { vital_type: 'bp', value: 158, value2: 96, unit: 'mmHg' }),
         entry('j-7', -4, 8, 25, 'nadia', 'visit',
             'Passage habituel. Jeanne a bien dormi, elle attend la visite de Paul avec impatience.'),
         entry('j-8', -5, 11, 30, 'nadia', 'incident',
@@ -271,6 +278,7 @@ export function createSeed(): DemoStore {
         vital('v-bp8', -19, 9, 'bp', 135, 82, 'mmHg', 'u-marie'),
         vital('v-bp9', -10, 9, 'bp', 138, 83, 'mmHg', 'u-marie'),
         vital('v-bp10', -3, 10, 'bp', 138, 82, 'mmHg', 'u-marie'),
+        vital('v-bp11', -2, 9, 'bp', 158, 96, 'mmHg', 'u-nadia'),
         vital('v-m1', -12, 9, 'mood', 7, null, null, 'u-marie'),
         vital('v-m2', -9, 9, 'mood', 6, null, null, 'u-marie'),
         vital('v-m3', -7, 9, 'mood', 8, null, null, 'u-paul'),
@@ -541,6 +549,11 @@ export function createSeed(): DemoStore {
                         emergency: "Appeler Marie en premier, puis Paul. Médecin traitant : Dr Martin. Carte Vitale et ordonnances dans le tiroir du buffet.",
                     },
                 },
+                vitalThresholds: [
+                    { type: 'bp', min_value: 100, max_value: 145, min_value2: 55, max_value2: 90 },
+                    { type: 'weight', min_value: 54, max_value: 62, min_value2: null, max_value2: null },
+                ],
+                messageReads: {},
                 escalation: { enabled: false, med_patient_min: 15, med_primary_min: 30, med_secondary_min: 60, help_ack_min: 10, primary_member_ids: [], secondary_member_ids: [] },
                 helpRequests: [],
                 visits: [
@@ -671,6 +684,8 @@ export function createSeed(): DemoStore {
                 prnIntakes: [],
                 visits: [],
                 carePlan: null,
+                vitalThresholds: [],
+                messageReads: {},
                 escalation: { enabled: false, med_patient_min: 15, med_primary_min: 30, med_secondary_min: 60, help_ack_min: 10, primary_member_ids: [], secondary_member_ids: [] },
                 helpRequests: [],
                 prescriptions: [],

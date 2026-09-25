@@ -1,0 +1,117 @@
+{
+  "title": "Integraciones",
+  "subtitle": "Conecte sus aplicaciones autoalojadas para centralizar la compra, el calendario y las fotos.",
+  "connected": "Conectadas",
+  "available": "Disponibles",
+  "status": {
+    "error": "Error",
+    "connected": "Conectada"
+  },
+  "lastSync": "Sincronizado {{date}}",
+  "syncTitle": "Sincronizar",
+  "disconnectTitle": "Desconectar",
+  "confirmDisconnect": "¿Desconectar esta integración?",
+  "modal": {
+    "connect": "Conectar {{name}}",
+    "test": "Probar",
+    "testing": "Probando…",
+    "connecting": "Conectando…",
+    "connectBtn": "Conectar",
+    "encrypted": "Las credenciales se cifran con AES-256 y se guardan solo en su servidor.",
+    "error": "Error"
+  },
+  "syncs": {
+    "shopping": "Lista de la compra",
+    "stock": "Existencias",
+    "calendar": "Calendario",
+    "appointments": "Citas",
+    "photos": "Fotos",
+    "voice": "Diario de voz"
+  },
+  "presence": {
+    "title": "Vigilancia pasiva (Home Assistant)",
+    "intro": "Un sensor de puerta, el enchufe de la cafetera o un detector de movimiento bastan para tranquilizar al círculo: sin cámaras ni pulseras.",
+    "normal": "Actividad normal detectada esta mañana",
+    "noSignalYet": "Todavía no hay ninguna señal",
+    "lastSignal": "Última señal: {{source}} ({{kind}}), {{time}}",
+    "noSignals": "Todavía no se ha recibido ninguna señal.",
+    "kinds": {
+      "motion": "movimiento",
+      "door": "puerta",
+      "power": "enchufe",
+      "other": "otro"
+    },
+    "webhookTitle": "URL del webhook",
+    "webhookHelp": "La llama una automatización de Home Assistant (rest_command) cada vez que se detecta una señal de vida en casa de su familiar.",
+    "generate": "Generar la URL",
+    "regenerate": "Regenerar la URL",
+    "copy": "Copiar",
+    "copied": "Copiada",
+    "exampleTitle": "Ejemplo de automatización de Home Assistant",
+    "rule": {
+      "title": "Regla de alerta",
+      "enable": "Avisar si no hay ninguna señal de vida",
+      "beforeLabel": "Antes de la hora",
+      "membersLabel": "Miembros avisados",
+      "membersHint": "Sin selección, se avisa a todos los administradores y a la familia.",
+      "save": "Guardar la regla",
+      "saved": "Regla guardada"
+    },
+    "banner": {
+      "normal": "Actividad normal esta mañana",
+      "waiting": "Todavía no hay ninguna señal",
+      "late": "Todavía no hay ninguna señal: la hora de vigilancia ya pasó"
+    }
+  },
+  "catalog": {
+    "homeassistant": {
+      "tagline": "Casa conectada",
+      "description": "Sincronice su lista de la compra con la lista de Home Assistant.",
+      "urlLabel": "URL de la instancia",
+      "urlPlaceholder": "http://homeassistant.local:8123",
+      "tokenLabel": "Token de larga duración",
+      "tokenPlaceholder": "eyJ… (desde Perfil > Seguridad)",
+      "entityLabel": "Entidad todo (opcional)",
+      "entityPlaceholder": "todo.shopping_list"
+    },
+    "grocy": {
+      "tagline": "Gestión del hogar",
+      "description": "Sincronice su lista de la compra y sus existencias desde Grocy.",
+      "urlLabel": "URL de la instancia",
+      "urlPlaceholder": "https://grocy.midominio.com",
+      "keyLabel": "Clave API",
+      "keyPlaceholder": "Desde Grocy > Gestión > Claves API"
+    },
+    "nextcloud": {
+      "tagline": "Nube personal",
+      "description": "Importe los eventos de su calendario de Nextcloud en sus citas.",
+      "urlLabel": "URL de Nextcloud",
+      "urlPlaceholder": "https://cloud.midominio.com",
+      "userLabel": "Usuario",
+      "userPlaceholder": "su.usuario",
+      "passwordLabel": "Contraseña (o contraseña de aplicación)",
+      "passwordPlaceholder": "****"
+    },
+    "immich": {
+      "tagline": "Fototeca",
+      "description": "Muestre fotos al azar de su biblioteca Immich autoalojada como fondo del modo kiosco.",
+      "urlLabel": "URL de la instancia",
+      "urlPlaceholder": "https://immich.midominio.com",
+      "keyLabel": "Clave API",
+      "keyPlaceholder": "Desde Immich > Ajustes de la cuenta > Claves API"
+    },
+    "whisper": {
+      "name": "Transcripción de voz (Whisper)",
+      "tagline": "Diario de voz transcrito",
+      "description": "Transcriba las notas de voz del diario con un servicio Whisper autoalojado compatible con OpenAI (speaches, faster-whisper-server).",
+      "urlLabel": "URL del servicio",
+      "urlPlaceholder": "http://localhost:8000",
+      "modelLabel": "Modelo (opcional)",
+      "modelPlaceholder": "Systran/faster-whisper-small",
+      "languageLabel": "Idioma (opcional)",
+      "languagePlaceholder": "es",
+      "keyLabel": "Clave API (opcional)",
+      "keyPlaceholder": "Clave Bearer si su servicio la exige"
+    }
+  }
+}

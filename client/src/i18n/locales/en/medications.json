@@ -68,6 +68,24 @@
     "reason": "Why: {{reason}}",
     "appearance": "Looks like: {{appearance}}"
   },
+  "stock": {
+    "remaining": "Stock: {{amount}}",
+    "empty": "Out of stock",
+    "low": "Low stock",
+    "coverage_one": "About {{count}} day of treatment left",
+    "coverage_other": "About {{count}} days of treatment left",
+    "start": "Track the stock",
+    "manage": "Edit the stock",
+    "dialogTitle": "{{name}} stock",
+    "dialogDescription": "Set what is left and the alert threshold, in the unit of one dose.",
+    "quantity": "Remaining quantity",
+    "quantityPlaceholder": "E.g. 30",
+    "threshold": "Alert threshold",
+    "thresholdPlaceholder": "E.g. 7",
+    "hint": "Leave a field empty to stop tracking that value. The stock goes down on its own with every confirmed dose.",
+    "stopTracking": "Stop tracking the stock",
+    "invalid": "Enter a number between 0 and 100000, or leave the field empty."
+  },
   "forms": {
     "tablet": "Tablet",
     "capsule": "Capsule",
@@ -161,7 +179,8 @@
     "archive": "Unable to update the treatment.",
     "photo": "Unable to process the photo.",
     "photoTooLarge": "The photo is still too large after compression (1.5 MB max).",
-    "logPrn": "Could not log this dose."
+    "logPrn": "Could not log this dose.",
+    "saveStock": "Unable to save the stock."
   },
   "restricted": {
     "title": "Restricted access",
