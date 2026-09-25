@@ -26,7 +26,7 @@ export const Select: React.FC<SelectProps> = ({
     return (
         <SelectPrimitive.Root
             value={toInternalValue(value)}
-            onValueChange={(nextValue) => onValueChange(fromInternalValue(nextValue))}
+            onValueChange={(nextValue: string) => onValueChange(fromInternalValue(nextValue))}
         >
             <SelectPrimitive.Trigger
                 className={cn(

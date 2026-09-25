@@ -38,7 +38,7 @@ export const AppToastProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                     <ToastPrimitive.Root
                         key={toast.id}
                         defaultOpen
-                        onOpenChange={(open) => {
+                        onOpenChange={(open: boolean) => {
                             if (!open) removeToast(toast.id);
                         }}
                         duration={4000}
