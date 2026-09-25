@@ -1,0 +1,28 @@
+{
+  "title": "Alerts and escalation",
+  "subtitle": "Who is notified, and after how long, when a dose is late or the loved one asks for help.",
+  "enabled": "Enable escalation",
+  "enabledHint": "Disabled: a late dose triggers nothing more and “I need help” notifies the whole circle, as before.",
+  "minutes": "min",
+  "medication": {
+    "title": "Late medication",
+    "patient": "Remind the loved one on the patient screen after",
+    "primary": "Notify the primary caregivers after",
+    "secondary": "Notify the backup caregivers after",
+    "off": "Set 0 to disable a step. After four hours the dose is marked missed and the escalation stops."
+  },
+  "help": {
+    "title": "“I need help” button",
+    "immediate": "The primary caregivers are notified immediately.",
+    "ack": "If nobody takes charge (“I am on it” on the dashboard), notify the backup caregivers after"
+  },
+  "primary": "Primary caregivers",
+  "primaryHint": "No selection: the circle administrators.",
+  "secondary": "Backup caregivers",
+  "secondaryHint": "No selection: the “family” members.",
+  "saved": "Rules saved.",
+  "errors": {
+    "load": "Could not load the escalation rules.",
+    "save": "Could not save the rules."
+  }
+}

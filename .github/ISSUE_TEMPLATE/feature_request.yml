@@ -1,0 +1,51 @@
+name: Feature request
+description: Suggest something OpenCare should do
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The best feature requests start from a real situation. Tell us about the caregiving
+        moment first, the solution second.
+  - type: textarea
+    id: situation
+    attributes:
+      label: The situation
+      description: What happens today, for whom, and why it is a problem.
+      placeholder: |
+        The nurse comes three mornings a week. Nobody in the family knows whether she came
+        today unless they call.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you would like
+      description: Your idea, even a rough one. Alternatives you considered are useful too.
+    validations:
+      required: true
+  - type: dropdown
+    id: who
+    attributes:
+      label: Who is it for
+      multiple: true
+      options:
+        - The cared-for person
+        - The main caregiver
+        - The wider family
+        - A professional (nurse, home aide, doctor)
+        - The person who self-hosts the server
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else
+      description: Screenshots, sketches, how another app does it.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched the existing issues and the roadmap.
+          required: true

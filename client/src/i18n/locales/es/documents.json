@@ -1,0 +1,60 @@
+{
+  "title": "Documentos",
+  "subtitle": "Recetas, informes y papeles del círculo",
+  "loading": "Cargando los documentos…",
+  "upload": "Subir un documento",
+  "restricted": {
+    "title": "Acceso restringido",
+    "description": "Los documentos del círculo no son accesibles con su rol."
+  },
+  "filters": {
+    "all": "Todos"
+  },
+  "categories": {
+    "prescription": "Receta",
+    "report": "Informe",
+    "insurance": "Seguro médico",
+    "legal": "Jurídico",
+    "other": "Otro"
+  },
+  "empty": {
+    "none": "Ningún documento por el momento.",
+    "noMatch": "Ningún documento en esta categoría."
+  },
+  "meta": {
+    "uploadedBy": "Subido por {{name}}"
+  },
+  "dialog": {
+    "uploadTitle": "Subir un documento",
+    "uploadDescription": "Imagen o PDF, 5 MB máximo. Las imágenes se comprimen automáticamente.",
+    "editTitle": "Editar el documento"
+  },
+  "form": {
+    "titleLabel": "Título",
+    "titlePlaceholder": "Ej.: Receta del Dr. Martín",
+    "category": "Categoría",
+    "notes": "Notas",
+    "file": "Archivo (imagen o PDF)",
+    "processing": "Preparando el archivo…",
+    "ready": "Archivo listo: {{name}}"
+  },
+  "preview": {
+    "open": "Vista previa",
+    "download": "Descargar",
+    "loading": "Cargando el archivo…",
+    "pdfHint": "La vista previa no está disponible para los PDF: descargue el archivo."
+  },
+  "confirm": {
+    "delete": "¿Eliminar este documento?"
+  },
+  "errors": {
+    "load": "No se han podido cargar los documentos.",
+    "save": "No se ha podido guardar el documento.",
+    "delete": "No se ha podido eliminar el documento.",
+    "preview": "No se ha podido abrir el documento.",
+    "fileRequired": "Elija un archivo.",
+    "fileType": "Formato no admitido: elija una imagen o un PDF.",
+    "fileTooLarge": "Archivo demasiado pesado: 5 MB máximo.",
+    "compressFailed": "No se ha podido reducir esta imagen por debajo de 5 MB. Pruebe con una imagen más pequeña."
+  }
+}

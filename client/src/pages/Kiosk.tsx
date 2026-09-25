@@ -208,6 +208,8 @@ const Kiosk: React.FC<KioskProps> = ({ device }) => {
     // Superpositions
     const [companionOpen, setCompanionOpen] = useState(false);
     const [visitorOpen, setVisitorOpen] = useState(false);
+    // Rappel de prise pousse par l escalade (niveau 1) : ecran calme, lu a voix haute.
+    const [reminderOpen, setReminderOpen] = useState(false);
     const [infoOpen, setInfoOpen] = useState(false);
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [leaveOpen, setLeaveOpen] = useState(false);
@@ -262,6 +264,18 @@ const Kiosk: React.FC<KioskProps> = ({ device }) => {
     useWebSocketUpdates('journal', () => void loadToday());
     useWebSocketUpdates('medications', () => void loadToday());
     useWebSocketUpdates('circle', () => void loadToday());
+    useWebSocketUpdates('reminder', () => {
+        void loadToday();
+        setReminderOpen(true);
+        try {
+            if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            const utter = new SpeechSynthesisUtterance(`${t('kiosk:reminder.title')} ${t('kiosk:reminder.spoken')}`);
+            utter.lang = i18n.language.toLowerCase().startsWith('en') ? 'en-US' : 'fr-FR';
+            utter.rate = 0.95;
+            window.speechSynthesis.speak(utter);
+        } catch { /* pas de synthese vocale : le rappel reste a l ecran */ }
+    });
 
     // Persistance des reglages : serveur (appareil) ou localStorage (session membre)
     const updateSettings = (patch: Partial<KioskSettings>) => {
@@ -848,6 +862,31 @@ const Kiosk: React.FC<KioskProps> = ({ device }) => {
             )}
 
             {/* Confirmation plein ecran, exactement 5 secondes */}
+            {/* Rappel de prise (escalade niveau 1) : une seule action, calme */}
+            {reminderOpen && meds.due_now.length > 0 && (
+                <div className="fixed inset-0 z-[95] flex flex-col items-center justify-center gap-6 p-8 text-center font-kiosk" style={{ backgroundColor: C.bg, color: C.text }} role="alertdialog" aria-labelledby="kiosk-reminder-title">
+                    <div className="flex h-36 w-36 items-center justify-center rounded-full" style={{ backgroundColor: C.blue }}>
+                        <Pill className="h-20 w-20 text-white" aria-hidden="true" />
+                    </div>
+                    <p id="kiosk-reminder-title" className="font-bold" style={fs(40)}>{t('kiosk:reminder.title')}</p>
+                    <p style={{ ...fs(26), color: C.muted }}>{t('kiosk:reminder.subtitle', { count: meds.due_now.length })}</p>
+                    <ul className="flex flex-wrap justify-center gap-2">
+                        {meds.due_now.map((i) => (
+                            <li key={i.id} className="rounded-full px-5 py-2 font-bold" style={{ ...fs(22), backgroundColor: C.card, border: `1px solid ${C.border}` }}>{i.medication_name}</li>
+                        ))}
+                    </ul>
+                    <div className="flex w-full max-w-xl flex-col gap-3 sm:flex-row">
+                        <button type="button" onClick={() => { setReminderOpen(false); void confirmAllDue(); }} className="flex min-h-[80px] flex-1 items-center justify-center gap-3 rounded-2xl font-bold text-white shadow-md" style={{ ...fs(26), backgroundColor: C.green }}>
+                            <Check className="h-9 w-9" strokeWidth={3} aria-hidden="true" />
+                            {t('kiosk:reminder.taken')}
+                        </button>
+                        <button type="button" onClick={() => setReminderOpen(false)} className="flex min-h-[80px] flex-1 items-center justify-center rounded-2xl font-bold" style={{ ...fs(24), ...tile }}>
+                            {t('kiosk:reminder.later')}
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {confirmation && (
                 <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-8 p-8 text-center font-kiosk" style={{ backgroundColor: C.bg, color: C.text }} role="alert">
                     <div className="flex h-44 w-44 items-center justify-center rounded-full" style={{ backgroundColor: confirmation === 'sent' ? C.green : C.red }}>

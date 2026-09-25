@@ -56,6 +56,22 @@
   },
   "confirmDelete": "Delete this event?",
   "deleteRecurringHint": "All of its occurrences will be deleted.",
+  "occurrence": {
+    "sectionTitle": "This occurrence",
+    "sectionHint": "These actions only affect this date, the rest of the series stays as it is.",
+    "seriesTitle": "The whole series",
+    "skip": "Skip this time",
+    "move": "Move this time",
+    "restore": "Put it back",
+    "confirmSkip": "Skip this occurrence? The other dates in the series are kept.",
+    "movedBadge": "Moved occurrence",
+    "movedFrom": "Occurrence moved, originally planned on {{date}}.",
+    "moveTitle": "Move this occurrence",
+    "moveDescription": "Pick the new date and time for this date only.",
+    "moveLimit": "It can be moved up to {{days}} days before or after the planned date.",
+    "keepsDuration": "The duration is kept.",
+    "moveConfirm": "Move"
+  },
   "feed": {
     "title": "iCal feed",
     "description": "Subscribe from your calendar app (Apple, Google, Outlook) to see the circle's events.",
@@ -74,6 +90,9 @@
     "endAfterStart": "The end time must be after the start time.",
     "save": "Unable to save this event.",
     "delete": "Unable to delete this event.",
+    "skipOccurrence": "Unable to skip this occurrence.",
+    "moveOccurrence": "Unable to move this occurrence.",
+    "restoreOccurrence": "Unable to put this occurrence back.",
     "feed": "Unable to generate the iCal link."
   }
 }

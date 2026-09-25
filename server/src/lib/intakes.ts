@@ -97,6 +97,8 @@ export interface IntakeForUpdate {
     circle_id: string;
     medication_id: string;
     journal_entry_id: string | null;
+    /** Statut avant la mise a jour : le stock ne bouge qu'au franchissement */
+    status: IntakeWriteStatus | 'missed';
     medication_name: string;
     medication_dosage: string | null;
     quantity: number | null;
@@ -109,7 +111,7 @@ export async function fetchIntakeForUpdate(
     circleId: string
 ): Promise<IntakeForUpdate | undefined> {
     const result = await client.query(
-        `SELECT i.id, i.circle_id, i.medication_id, i.journal_entry_id,
+        `SELECT i.id, i.circle_id, i.medication_id, i.journal_entry_id, i.status,
                 m.name AS medication_name, m.dosage AS medication_dosage,
                 i.quantity, i.unit
          FROM medication_intakes i
@@ -136,6 +138,23 @@ export async function applyIntakeStatus(
 ) {
     if (intake.journal_entry_id) {
         await client.query('DELETE FROM journal_entries WHERE id = $1', [intake.journal_entry_id]);
+    }
+
+    // Reserve restante : une prise confirmee sort du stock, une prise
+    // deconfirmee y retourne. Seul le franchissement compte, jamais une
+    // simple reecriture du meme statut, et un stock non suivi (NULL) ne
+    // devient jamais un nombre tout seul.
+    const dose = Number(intake.quantity);
+    if (Number.isFinite(dose) && dose > 0 && intake.status !== status) {
+        const delta = status === 'taken' ? -dose : (intake.status === 'taken' ? dose : 0);
+        if (delta !== 0) {
+            await client.query(
+                `UPDATE medications
+                 SET stock_quantity = GREATEST(0, stock_quantity + $2), stock_updated_at = CURRENT_TIMESTAMP
+                 WHERE id = $1 AND stock_quantity IS NOT NULL`,
+                [intake.medication_id, delta]
+            );
+        }
     }
 
     if (status === 'pending') {

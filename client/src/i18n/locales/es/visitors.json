@@ -1,0 +1,29 @@
+{
+  "title": "Visitas",
+  "subtitle": "Quién ha pasado a ver a su familiar, registrado desde la pantalla del paciente.",
+  "empty": "Ninguna visita registrada en este periodo.",
+  "emptyHint": "En la pantalla del paciente, el botón « Visita » permite que cada persona que pasa se anuncie en dos gestos.",
+  "range": {
+    "week": "Últimos 7 días",
+    "month": "Últimos 30 días",
+    "quarter": "Últimos 3 meses"
+  },
+  "present": "Presente",
+  "arrived": "Llegó a las {{time}}",
+  "left": "Se fue a las {{time}}",
+  "duration": "{{minutes}} min",
+  "note": "Nota de la visita",
+  "delete": "Eliminar esta visita",
+  "deleted": "Visita eliminada",
+  "types": {
+    "family": "Familia",
+    "friend": "Amigo/a o vecino/a",
+    "caregiver": "Auxiliar a domicilio",
+    "nurse": "Enfermero/a",
+    "doctor": "Médico",
+    "other": "Otro"
+  },
+  "errors": {
+    "load": "No se han podido cargar las visitas."
+  }
+}

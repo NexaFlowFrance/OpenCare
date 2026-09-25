@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { format, formatDistanceToNow, subDays } from 'date-fns';
 import {
     Activity,
+    AlertTriangle,
     Droplet,
     Gauge,
     HeartPulse,
@@ -47,11 +48,36 @@ interface Vital {
     notes: string | null;
 }
 
+/** Plage normale d'une constante, telle que le serveur la renvoie. */
+interface VitalThreshold {
+    type: VitalType;
+    min_value: number | string | null;
+    max_value: number | string | null;
+    min_value2: number | string | null;
+    max_value2: number | string | null;
+}
+
+/** Les memes bornes, normalisees en nombres pour les comparaisons. */
+interface VitalRange {
+    min: number | null;
+    max: number | null;
+    min2: number | null;
+    max2: number | null;
+}
+
+/** Saisie en cours des bornes, gardee en chaines pour accepter la virgule. */
+interface ThresholdDraft {
+    min: string;
+    max: string;
+    min2: string;
+    max2: string;
+}
+
 const VITAL_TYPES: VitalType[] = ['weight', 'bp', 'pain', 'mood', 'temperature', 'glucose'];
 
 const VITAL_UNITS: Record<VitalType, string> = {
     weight: 'kg',
-    bp: 'cmHg',
+    bp: 'mmHg',
     pain: '/10',
     mood: '/10',
     temperature: '°C',
@@ -79,6 +105,25 @@ const RECENT_LIST_SIZE = 15;
 const toLocalInputValue = (date: Date) => format(date, "yyyy-MM-dd'T'HH:mm");
 const parseLocaleNumber = (raw: string): number => Number(raw.trim().replace(',', '.'));
 
+// PostgreSQL renvoie parfois les numeriques en chaine: on normalise avant toute
+// comparaison, sinon '9' serait juge superieur a '10'.
+const toBound = (raw: number | string | null | undefined): number | null => {
+    if (raw === null || raw === undefined || raw === '') return null;
+    const value = Number(raw);
+    return Number.isFinite(value) ? value : null;
+};
+
+const boundToInput = (bound: number | null): string => (bound === null ? '' : String(bound));
+
+const emptyDrafts = (): Record<VitalType, ThresholdDraft> => ({
+    weight: { min: '', max: '', min2: '', max2: '' },
+    bp: { min: '', max: '', min2: '', max2: '' },
+    pain: { min: '', max: '', min2: '', max2: '' },
+    mood: { min: '', max: '', min2: '', max2: '' },
+    temperature: { min: '', max: '', min2: '', max2: '' },
+    glucose: { min: '', max: '', min2: '', max2: '' },
+});
+
 /** Couleur d'un jeton CSS (triplet RGB) résolue pour les attributs SVG de recharts. */
 const themeColor = (token: string, fallback: string): string => {
     const value = getComputedStyle(document.documentElement).getPropertyValue(token).trim();
@@ -90,12 +135,15 @@ const themeColor = (token: string, fallback: string): string => {
 const Health: React.FC = () => {
     const { t } = useTranslation(['health', 'common']);
     const { user } = useAuth();
-    const { activeCircle, canWriteJournal, isAdmin, myRole } = useCircle();
+    const { activeCircle, canWriteContent, canWriteJournal, isAdmin, myRole } = useCircle();
     const { showToast } = useToast();
 
     const [latest, setLatest] = useState<Vital[]>([]);
     const [series, setSeries] = useState<Vital[]>([]);
     const [recent, setRecent] = useState<Vital[]>([]);
+    const [thresholds, setThresholds] = useState<VitalThreshold[]>([]);
+    const [drafts, setDrafts] = useState<Record<VitalType, ThresholdDraft>>(emptyDrafts);
+    const [savingType, setSavingType] = useState<VitalType | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
@@ -137,10 +185,15 @@ const Health: React.FC = () => {
         }
     };
 
+    const loadThresholds = async () => {
+        const response = await api.get<{ success: boolean; data: VitalThreshold[] }>('/api/vitals/thresholds');
+        if (response.success) setThresholds(response.data);
+    };
+
     const refreshAll = async (showSpinner: boolean) => {
         if (showSpinner) setLoading(true);
         try {
-            await Promise.all([loadLatest(), loadSeries(chartType, period), loadRecent()]);
+            await Promise.all([loadLatest(), loadSeries(chartType, period), loadRecent(), loadThresholds()]);
             setError('');
         } catch (err) {
             console.error('Failed to load vitals:', err);
@@ -240,6 +293,102 @@ const Health: React.FC = () => {
         }
     };
 
+    // ─── Plages normales ─────────────────────────────────────────────────────
+
+    const rangeByType = useMemo(() => {
+        const map = new Map<VitalType, VitalRange>();
+        for (const row of thresholds) {
+            map.set(row.type, {
+                min: toBound(row.min_value),
+                max: toBound(row.max_value),
+                min2: toBound(row.min_value2),
+                max2: toBound(row.max_value2),
+            });
+        }
+        return map;
+    }, [thresholds]);
+
+    // Les champs rejouent ce que le serveur a accepte, y compris apres un
+    // rafraichissement declenche par un autre membre du cercle.
+    useEffect(() => {
+        const next = emptyDrafts();
+        rangeByType.forEach((range, type) => {
+            next[type] = {
+                min: boundToInput(range.min),
+                max: boundToInput(range.max),
+                min2: boundToInput(range.min2),
+                max2: boundToInput(range.max2),
+            };
+        });
+        setDrafts(next);
+    }, [rangeByType]);
+
+    const updateDraft = (type: VitalType, field: keyof ThresholdDraft, value: string) => {
+        setDrafts((prev) => ({ ...prev, [type]: { ...prev[type], [field]: value } }));
+    };
+
+    const handleSaveThreshold = async (event: React.FormEvent, type: VitalType) => {
+        event.preventDefault();
+        if (savingType) return;
+
+        const draft = drafts[type];
+        // Un champ vide vaut « pas de borne »: le serveur retire la plage quand tout est vide.
+        const bounds = [draft.min, draft.max, draft.min2, draft.max2].map((raw) =>
+            raw.trim() ? parseLocaleNumber(raw) : null
+        );
+        if (bounds.some((bound) => bound !== null && !Number.isFinite(bound))) {
+            setError(t('health:errors.thresholdInvalid'));
+            return;
+        }
+        const [minValue, maxValue, minValue2, maxValue2] = bounds;
+
+        setSavingType(type);
+        setError('');
+        try {
+            await api.put('/api/vitals/thresholds', {
+                type,
+                min_value: minValue,
+                max_value: maxValue,
+                // Seule la tension porte une seconde valeur, la diastolique.
+                min_value2: type === 'bp' ? minValue2 : null,
+                max_value2: type === 'bp' ? maxValue2 : null,
+            });
+            showToast({ title: t('health:toasts.thresholdSaved') });
+            await refreshAll(false);
+        } catch (err) {
+            console.error('Failed to save vital threshold:', err);
+            setError(err instanceof Error ? err.message : t('health:errors.threshold'));
+        } finally {
+            setSavingType(null);
+        }
+    };
+
+    const isOutOfRange = (vital: Vital): boolean => {
+        const range = rangeByType.get(vital.type);
+        if (!range) return false;
+
+        const value = toBound(vital.value);
+        if (value !== null) {
+            if (range.min !== null && value < range.min) return true;
+            if (range.max !== null && value > range.max) return true;
+        }
+        if (vital.type !== 'bp') return false;
+
+        const value2 = toBound(vital.value2);
+        if (value2 === null) return false;
+        if (range.min2 !== null && value2 < range.min2) return true;
+        return range.max2 !== null && value2 > range.max2;
+    };
+
+    const rangeLabel = (min: number | null, max: number | null, unit: string): string => {
+        if (min !== null && max !== null) {
+            return t('health:thresholds.between', { min: formatNumber(min), max: formatNumber(max), unit });
+        }
+        if (min !== null) return t('health:thresholds.minOnly', { min: formatNumber(min), unit });
+        if (max !== null) return t('health:thresholds.maxOnly', { max: formatNumber(max), unit });
+        return t('health:thresholds.none');
+    };
+
     // ─── Présentation ────────────────────────────────────────────────────────
 
     const formatValue = (vital: Vital): string => {
@@ -268,6 +417,15 @@ const Health: React.FC = () => {
                 value2: vital.value2 !== null && vital.value2 !== undefined ? Number(vital.value2) : null,
             })),
         [series]
+    );
+
+    // La couleur seule ne suffit pas: le repere porte aussi un texte lu par les lecteurs d'ecran.
+    const outOfRangeTag = (
+        <span className="inline-flex items-center gap-1 rounded-pill border border-warning/20 bg-warning/10 px-2 py-0.5 text-micro font-medium text-warning">
+            <AlertTriangle className="h-3 w-3" aria-hidden="true" />
+            {t('health:thresholds.outOfRange')}
+            <span className="sr-only">{t('health:thresholds.outOfRangeLabel')}</span>
+        </span>
     );
 
     const primaryColor = themeColor('--primary', '#3e6b54');
@@ -332,6 +490,7 @@ const Health: React.FC = () => {
                     {latestByType.map((vital) => {
                         const Icon = VITAL_ICONS[vital.type];
                         const active = chartType === vital.type;
+                        const outOfRange = isOutOfRange(vital);
                         return (
                             <button
                                 key={vital.type}
@@ -340,16 +499,26 @@ const Health: React.FC = () => {
                                 onClick={() => setChartType(vital.type)}
                                 className={cn(
                                     'min-h-[44px] rounded-card border bg-card p-4 text-left shadow-surface transition-colors',
-                                    active ? 'border-primary/40' : 'border-border hover:border-border-strong'
+                                    outOfRange
+                                        ? 'border-warning/40'
+                                        : active
+                                          ? 'border-primary/40'
+                                          : 'border-border hover:border-border-strong'
                                 )}
                             >
                                 <div className="flex items-center gap-2 text-muted-foreground">
                                     <Icon className="h-4 w-4" />
                                     <span className="text-micro font-medium">{t(`health:vitalTypes.${vital.type}`)}</span>
                                 </div>
-                                <p className="mt-2 font-serif text-2xl tracking-tight text-foreground">
+                                <p
+                                    className={cn(
+                                        'mt-2 font-serif text-2xl tracking-tight',
+                                        outOfRange ? 'text-warning' : 'text-foreground'
+                                    )}
+                                >
                                     {formatValue(vital)}
                                 </p>
+                                {outOfRange ? <p className="mt-1.5">{outOfRangeTag}</p> : null}
                                 <p className="mt-1 text-micro text-muted-foreground">{relativeDate(vital.measured_at)}</p>
                             </button>
                         );
@@ -460,15 +629,31 @@ const Health: React.FC = () => {
                     <div className="space-y-2">
                         {recent.map((vital) => {
                             const Icon = VITAL_ICONS[vital.type];
+                            const outOfRange = isOutOfRange(vital);
                             return (
                                 <ListRow
                                     key={vital.id}
+                                    className={outOfRange ? 'border-warning/40 bg-warning/5' : undefined}
                                     leading={
-                                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-soft text-primary">
+                                        <div
+                                            className={cn(
+                                                'flex h-9 w-9 items-center justify-center rounded-full',
+                                                outOfRange
+                                                    ? 'bg-warning/10 text-warning'
+                                                    : 'bg-primary-soft text-primary'
+                                            )}
+                                        >
                                             <Icon className="h-4 w-4" />
                                         </div>
                                     }
-                                    title={`${t(`health:vitalTypes.${vital.type}`)}: ${formatValue(vital)}`}
+                                    title={
+                                        <span className="flex flex-wrap items-center gap-2">
+                                            <span className="truncate">
+                                                {`${t(`health:vitalTypes.${vital.type}`)}: ${formatValue(vital)}`}
+                                            </span>
+                                            {outOfRange ? outOfRangeTag : null}
+                                        </span>
+                                    }
                                     meta={
                                         <>
                                             {format(new Date(vital.measured_at), 'd MMM yyyy HH:mm', { locale: dateLocale() })}
@@ -492,6 +677,120 @@ const Health: React.FC = () => {
                         })}
                     </div>
                 )}
+            </section>
+
+            {/* Plages normales par constante */}
+            <section>
+                <h2 className="mb-2 text-caption font-semibold text-muted-foreground">
+                    {t('health:thresholds.title')}
+                </h2>
+                <p className="mb-3 text-caption text-muted-foreground">
+                    {canWriteContent ? t('health:thresholds.description') : t('health:thresholds.readOnly')}
+                </p>
+                <div className="space-y-2">
+                    {VITAL_TYPES.map((type) => {
+                        const Icon = VITAL_ICONS[type];
+                        const range = rangeByType.get(type) ?? null;
+                        const unit = VITAL_UNITS[type];
+                        const draft = drafts[type];
+                        return (
+                            <div
+                                key={type}
+                                className="rounded-card border border-border bg-card p-4 shadow-surface"
+                            >
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-soft text-primary">
+                                        <Icon className="h-4 w-4" />
+                                    </span>
+                                    <span className="text-body font-medium">{t(`health:vitalTypes.${type}`)}</span>
+                                    <span className="text-micro text-muted-foreground">{unit}</span>
+                                </div>
+                                <div className="mt-2 space-y-0.5 text-caption text-muted-foreground">
+                                    {type === 'bp' ? (
+                                        <>
+                                            <p>
+                                                {t('health:thresholds.systolicPrefix')}{' '}
+                                                {rangeLabel(range?.min ?? null, range?.max ?? null, unit)}
+                                            </p>
+                                            <p>
+                                                {t('health:thresholds.diastolicPrefix')}{' '}
+                                                {rangeLabel(range?.min2 ?? null, range?.max2 ?? null, unit)}
+                                            </p>
+                                        </>
+                                    ) : (
+                                        <p>{rangeLabel(range?.min ?? null, range?.max ?? null, unit)}</p>
+                                    )}
+                                </div>
+                                {canWriteContent && (
+                                    <form
+                                        onSubmit={(event) => void handleSaveThreshold(event, type)}
+                                        className="mt-3 space-y-3"
+                                    >
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <Input
+                                                id={`threshold-${type}-min`}
+                                                label={
+                                                    type === 'bp'
+                                                        ? t('health:thresholds.minSystolicLabel')
+                                                        : t('health:thresholds.minLabel')
+                                                }
+                                                type="text"
+                                                inputMode="decimal"
+                                                value={draft.min}
+                                                onChange={(e) => updateDraft(type, 'min', e.target.value)}
+                                            />
+                                            <Input
+                                                id={`threshold-${type}-max`}
+                                                label={
+                                                    type === 'bp'
+                                                        ? t('health:thresholds.maxSystolicLabel')
+                                                        : t('health:thresholds.maxLabel')
+                                                }
+                                                type="text"
+                                                inputMode="decimal"
+                                                value={draft.max}
+                                                onChange={(e) => updateDraft(type, 'max', e.target.value)}
+                                            />
+                                        </div>
+                                        {type === 'bp' && (
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <Input
+                                                    id={`threshold-${type}-min2`}
+                                                    label={t('health:thresholds.minDiastolicLabel')}
+                                                    type="text"
+                                                    inputMode="decimal"
+                                                    value={draft.min2}
+                                                    onChange={(e) => updateDraft(type, 'min2', e.target.value)}
+                                                />
+                                                <Input
+                                                    id={`threshold-${type}-max2`}
+                                                    label={t('health:thresholds.maxDiastolicLabel')}
+                                                    type="text"
+                                                    inputMode="decimal"
+                                                    value={draft.max2}
+                                                    onChange={(e) => updateDraft(type, 'max2', e.target.value)}
+                                                />
+                                            </div>
+                                        )}
+                                        <div className="flex flex-wrap items-center justify-between gap-3">
+                                            <p className="text-micro text-muted-foreground">
+                                                {t('health:thresholds.clearHint')}
+                                            </p>
+                                            <Button
+                                                type="submit"
+                                                variant="secondary"
+                                                size="sm"
+                                                disabled={savingType === type}
+                                            >
+                                                {t('common:actions.save')}
+                                            </Button>
+                                        </div>
+                                    </form>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
             </section>
 
             {/* Saisie rapide */}

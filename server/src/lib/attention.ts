@@ -14,6 +14,8 @@ export type AttentionKind =
     | 'help'
     | 'presence'
     | 'missed_intakes'
+    | 'vitals_out_of_range'
+    | 'medication_stock'
     | 'prescriptions'
     | 'tasks_overdue'
     | 'visitor_present'
@@ -37,19 +39,26 @@ export interface AttentionItem {
     /** presence : heure limite 'HH:MM' ; visitor_present : nom du visiteur. */
     time?: string | null;
     name?: string | null;
+    /** help : demandes d'aide sans prise en charge (bouton "je m'en occupe"). */
+    open_help?: Array<{ id: string; created_at: string }>;
 }
 
 const SEVERITY: Record<AttentionKind, AttentionSeverity> = {
     help: 'urgent',
     presence: 'urgent',
     missed_intakes: 'urgent',
+    vitals_out_of_range: 'warn',
+    medication_stock: 'warn',
     prescriptions: 'warn',
     tasks_overdue: 'warn',
     visitor_present: 'info',
     appointments: 'info',
 };
 
-const ORDER: AttentionKind[] = ['help', 'presence', 'missed_intakes', 'prescriptions', 'tasks_overdue', 'visitor_present', 'appointments'];
+const ORDER: AttentionKind[] = ['help', 'presence', 'missed_intakes', 'vitals_out_of_range', 'medication_stock', 'prescriptions', 'tasks_overdue', 'visitor_present', 'appointments'];
+
+/** Fenetre de rappel des mesures hors plage. */
+const VITALS_WINDOW_DAYS = 7;
 
 /** pg renvoie les timestamps en chaine locale ; on garde une chaine dans tous les cas. */
 const stamp = (value: unknown): string | null => {
@@ -66,7 +75,7 @@ export async function loadAttention(circleId: string, includeHealth: boolean, no
     const soon = new Date(now.getTime() + 2 * 60 * 60 * 1000);
     const none = Promise.resolve({ rows: [] as any[] });
 
-    const [incidents, presence, missed, prescriptions, tasks, visits, events] = await Promise.all([
+    const [incidents, presence, missed, prescriptions, tasks, visits, events, openHelp, lowStock, outOfRange] = await Promise.all([
         query(
             `SELECT id, author_name, content, occurred_at
              FROM journal_entries
@@ -130,6 +139,41 @@ export async function loadAttention(circleId: string, includeHealth: boolean, no
              ORDER BY start_time`,
             [circleId, toLocalISO(dayStart), toLocalISO(dayEnd)]
         ),
+        query(
+            `SELECT id, created_at FROM help_requests
+             WHERE circle_id = $1 AND acknowledged_at IS NULL AND created_at >= NOW() - interval '24 hours'
+             ORDER BY created_at DESC`,
+            [circleId]
+        ),
+        includeHealth
+            ? query(
+                `SELECT id, name AS label, stock_quantity, stock_alert_threshold
+                 FROM medications
+                 WHERE circle_id = $1 AND active = TRUE
+                   AND stock_quantity IS NOT NULL AND stock_alert_threshold IS NOT NULL
+                   AND stock_quantity <= stock_alert_threshold
+                 ORDER BY stock_quantity, name
+                 LIMIT 20`,
+                [circleId]
+            )
+            : none,
+        includeHealth
+            ? query(
+                `SELECT v.id, v.type, v.value, v.value2, v.measured_at
+                 FROM vitals v
+                 JOIN vital_thresholds th ON th.circle_id = v.circle_id AND th.type = v.type
+                 WHERE v.circle_id = $1 AND v.measured_at >= NOW() - make_interval(days => $2::int)
+                   AND (
+                     (th.min_value IS NOT NULL AND v.value < th.min_value)
+                     OR (th.max_value IS NOT NULL AND v.value > th.max_value)
+                     OR (v.value2 IS NOT NULL AND th.min_value2 IS NOT NULL AND v.value2 < th.min_value2)
+                     OR (v.value2 IS NOT NULL AND th.max_value2 IS NOT NULL AND v.value2 > th.max_value2)
+                   )
+                 ORDER BY v.measured_at DESC
+                 LIMIT 20`,
+                [circleId, VITALS_WINDOW_DAYS]
+            )
+            : none,
     ]);
 
     const items: AttentionItem[] = [];
@@ -139,12 +183,29 @@ export async function loadAttention(circleId: string, includeHealth: boolean, no
 
     push('help', incidents.rows.length, '/journal', (incidents.rows as any[]).map((r) => ({
         id: r.id, label: String(r.content || '').slice(0, SNIPPET), when: stamp(r.occurred_at), extra: r.author_name ?? null,
-    })));
+    })), { open_help: (openHelp.rows as any[]).map((r) => ({ id: r.id, created_at: stamp(r.created_at) ?? '' })) });
 
     const before = (presence.rows[0] as { before: string } | undefined)?.before;
     push('presence', before ? 1 : 0, '/', [], { time: before ?? null });
 
     push('missed_intakes', missed.rows.length, '/medications', (missed.rows as any[]).map((r) => ({ id: r.id, label: r.label, when: stamp(r.due_at) })));
+
+    // Mesures hors de la plage fixee par la famille : le type sert de libelle,
+    // le client le traduit ; la valeur lue part dans extra.
+    push('vitals_out_of_range', outOfRange.rows.length, '/health', (outOfRange.rows as any[]).map((r) => ({
+        id: r.id,
+        label: r.type,
+        when: stamp(r.measured_at),
+                // pg rend les NUMERIC en chaine ("176.00") : on repasse par Number pour un affichage lisible.
+        extra: r.value2 !== null && r.value2 !== undefined ? `${Number(r.value)}/${Number(r.value2)}` : String(Number(r.value)),
+    })));
+
+    push('medication_stock', lowStock.rows.length, '/medications', (lowStock.rows as any[]).map((r) => ({
+        id: r.id,
+        label: r.label,
+        when: null,
+        extra: String(r.stock_quantity),
+    })));
 
     push('prescriptions', prescriptions.rows.length, '/medications', (prescriptions.rows as any[]).map((r) => ({
         id: r.id, label: r.label, when: stamp(r.renewal_date)?.slice(0, 10) ?? null,

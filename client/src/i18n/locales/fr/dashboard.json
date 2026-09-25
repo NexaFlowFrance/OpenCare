@@ -74,6 +74,15 @@
     "tasks_overdue_one": "{{count}} tâche en retard",
     "tasks_overdue_other": "{{count}} tâches en retard",
     "visitor_present": "{{name}} est sur place depuis {{time}}",
-    "appointments": "Bientôt : {{title}} à {{time}}"
+    "appointments": "Bientôt : {{title}} à {{time}}",
+    "acknowledge": "Je m'en occupe",
+    "helpOpen_one": "{{count}} demande sans prise en charge",
+    "helpOpen_other": "{{count}} demandes sans prise en charge",
+    "vitals_out_of_range_one": "{{count}} mesure hors de la plage",
+    "vitals_out_of_range_other": "{{count}} mesures hors de la plage",
+    "medication_stock_one": "{{count}} médicament bientôt épuisé",
+    "medication_stock_other": "{{count}} médicaments bientôt épuisés",
+    "stockLeft_one": "{{name}} ({{count}} restant)",
+    "stockLeft_other": "{{name}} ({{count}} restants)"
   }
 }

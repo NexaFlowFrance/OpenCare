@@ -30,6 +30,9 @@ jobs:
       - name: Audit production dependencies
         run: npm audit --omit=dev
 
+      - name: Unit tests
+        run: npm test
+
       - name: Build shared
         run: npm run build:shared
 

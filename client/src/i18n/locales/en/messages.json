@@ -17,6 +17,10 @@
     "pickMember": "Pick a member…",
     "youPrefix": "You: {{message}}"
   },
+  "unread": {
+    "label_one": "{{count}} unread message",
+    "label_other": "{{count}} unread messages"
+  },
   "composer": {
     "label": "Write a message",
     "placeholder": "Write to the circle…",

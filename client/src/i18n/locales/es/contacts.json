@@ -1,0 +1,51 @@
+{
+  "title": "Contactos",
+  "subtitle": "La agenda del círculo",
+  "loading": "Cargando los contactos…",
+  "newContact": "Nuevo contacto",
+  "filters": {
+    "all": "Todos"
+  },
+  "categories": {
+    "doctor": "Médico",
+    "nurse": "Enfermera",
+    "aide": "Auxiliar",
+    "physio": "Fisio",
+    "pharmacy": "Farmacia",
+    "family": "Familia",
+    "neighbor": "Vecino",
+    "other": "Otro"
+  },
+  "hasKey": "Tiene llave",
+  "empty": {
+    "none": "Ningún contacto por el momento.",
+    "noMatch": "Ningún contacto en esta categoría.",
+    "action": "Añadir el primer contacto"
+  },
+  "dialog": {
+    "createTitle": "Nuevo contacto",
+    "editTitle": "Editar el contacto"
+  },
+  "form": {
+    "name": "Nombre",
+    "namePlaceholder": "Ej.: Dr. Martín",
+    "category": "Categoría",
+    "organization": "Organización",
+    "organizationPlaceholder": "Ej.: Centro médico Las Lilas",
+    "phone": "Teléfono",
+    "phone2": "Teléfono secundario",
+    "email": "Correo electrónico",
+    "address": "Dirección",
+    "hasKey": "Esta persona tiene una llave del domicilio",
+    "notes": "Notas",
+    "notesPlaceholder": "Ej.: pasa los martes por la mañana"
+  },
+  "confirm": {
+    "delete": "¿Eliminar este contacto?"
+  },
+  "errors": {
+    "load": "No se han podido cargar los contactos.",
+    "save": "No se ha podido guardar el contacto.",
+    "delete": "No se ha podido eliminar el contacto."
+  }
+}

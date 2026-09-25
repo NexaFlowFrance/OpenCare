@@ -68,6 +68,24 @@
     "reason": "Pourquoi : {{reason}}",
     "appearance": "Aspect : {{appearance}}"
   },
+  "stock": {
+    "remaining": "Stock : {{amount}}",
+    "empty": "Stock épuisé",
+    "low": "Stock bas",
+    "coverage_one": "Environ {{count}} jour de traitement restant",
+    "coverage_other": "Environ {{count}} jours de traitement restants",
+    "start": "Suivre le stock",
+    "manage": "Modifier le stock",
+    "dialogTitle": "Stock de {{name}}",
+    "dialogDescription": "Indiquez ce qu'il reste et le seuil d'alerte, dans l'unité d'une prise.",
+    "quantity": "Quantité restante",
+    "quantityPlaceholder": "Ex. 30",
+    "threshold": "Seuil d'alerte",
+    "thresholdPlaceholder": "Ex. 7",
+    "hint": "Laissez un champ vide pour ne pas suivre cette valeur. Le stock diminue tout seul à chaque prise confirmée.",
+    "stopTracking": "Ne plus suivre le stock",
+    "invalid": "Indiquez un nombre entre 0 et 100000, ou laissez le champ vide."
+  },
   "forms": {
     "tablet": "Comprimé",
     "capsule": "Gélule",
@@ -161,7 +179,8 @@
     "archive": "Impossible de mettre à jour le traitement.",
     "photo": "Impossible de traiter la photo.",
     "photoTooLarge": "La photo reste trop volumineuse après compression (1,5 Mo maximum).",
-    "logPrn": "Impossible de noter cette prise."
+    "logPrn": "Impossible de noter cette prise.",
+    "saveStock": "Impossible d'enregistrer le stock."
   },
   "restricted": {
     "title": "Accès réservé",

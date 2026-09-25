@@ -1,0 +1,73 @@
+{
+  "loading": "Cargando las tareas…",
+  "title": "Tareas",
+  "subtitle_one": "{{count}} tarea por hacer en el círculo",
+  "subtitle_other": "{{count}} tareas por hacer en el círculo",
+  "newTask": "Nueva tarea",
+  "categories": {
+    "shopping": "Compras",
+    "pharmacy": "Farmacia",
+    "laundry": "Colada",
+    "admin": "Papeleo",
+    "transport": "Transporte",
+    "other": "Otro"
+  },
+  "frequencies": {
+    "Une fois": "Una vez",
+    "Quotidien": "Todos los días",
+    "Hebdomadaire": "Todas las semanas",
+    "Mensuel": "Todos los meses",
+    "Annuel": "Todos los años"
+  },
+  "priorities": {
+    "Haute": "Prioridad alta",
+    "Moyenne": "Prioridad media",
+    "Basse": "Prioridad baja"
+  },
+  "filters": {
+    "statusLabel": "Filtrar por estado",
+    "todo": "Por hacer",
+    "done": "Hechas",
+    "all": "Todas",
+    "allAssignees": "Todos los miembros"
+  },
+  "row": {
+    "markDone": "Marcar como hecha",
+    "markPending": "Marcar como por hacer",
+    "due": "Para el {{date}}",
+    "overdue": "Con retraso ({{date}})"
+  },
+  "completedSection_one": "Tareas terminadas ({{count}})",
+  "completedSection_other": "Tareas terminadas ({{count}})",
+  "empty": {
+    "title": "Ninguna tarea por ahora",
+    "description": "Cree la primera tarea para organizar quién hace qué en el círculo.",
+    "noMatch": "Ninguna tarea coincide con los filtros.",
+    "doneTitle": "Ninguna tarea terminada"
+  },
+  "dialog": {
+    "createTitle": "Nueva tarea",
+    "editTitle": "Modificar la tarea",
+    "description": "Una tarea se puede asignar a uno o varios miembros del círculo."
+  },
+  "form": {
+    "title": "Título",
+    "titlePlaceholder": "Ej.: Renovar la receta",
+    "description": "Descripción (opcional)",
+    "descriptionPlaceholder": "Detalles útiles para la persona que se encarga…",
+    "category": "Categoría",
+    "dueDate": "Fecha límite (opcional)",
+    "priority": "Prioridad",
+    "frequency": "Repetición",
+    "assignees": "Asignar a (opcional)",
+    "noMembers": "Ningún miembro en el círculo por ahora."
+  },
+  "confirmDelete": "¿Eliminar esta tarea?",
+  "errors": {
+    "load": "No se han podido cargar las tareas.",
+    "loadMembers": "No se han podido cargar los miembros del círculo.",
+    "toggle": "No se ha podido actualizar esta tarea.",
+    "save": "No se ha podido guardar esta tarea.",
+    "delete": "No se ha podido eliminar esta tarea."
+  }
+}

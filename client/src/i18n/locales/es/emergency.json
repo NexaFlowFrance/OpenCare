@@ -1,0 +1,37 @@
+{
+  "title": "Ficha de urgencias",
+  "updatedAt": "Actualizada automáticamente el {{date}}",
+  "fields": {
+    "birthDate": "Fecha de nacimiento",
+    "age": "{{age}} años",
+    "bloodType": "Grupo sanguíneo",
+    "address": "Dirección",
+    "insurance": "Seguro médico",
+    "gp": "médico de cabecera"
+  },
+  "sections": {
+    "allergies": "Alergias",
+    "medications": "Tratamientos en curso",
+    "noMedications": "Ningún tratamiento registrado.",
+    "history": "Antecedentes",
+    "directives": "Voluntades anticipadas",
+    "notes": "Información complementaria",
+    "contacts": "Contactos"
+  },
+  "categories": {
+    "doctor": "médico",
+    "nurse": "enfermera",
+    "aide": "auxiliar a domicilio",
+    "physio": "fisioterapeuta",
+    "pharmacy": "farmacia",
+    "family": "familia",
+    "neighbor": "vecino",
+    "other": "otro"
+  },
+  "errors": {
+    "title": "Ficha no disponible",
+    "notFound": "Esta ficha no existe o ha sido desactivada.",
+    "network": "No se ha podido conectar. Compruebe la red y vuelva a intentarlo."
+  },
+  "footer": "Ficha generada automáticamente por OpenCare a partir de la información que la familia mantiene actualizada."
+}

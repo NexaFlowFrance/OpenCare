@@ -5,6 +5,7 @@ import { circleMiddleware, CircleRequest } from '../middleware/circle';
 import { toLocalISO } from './events';
 import { ensureTodayIntakes } from '../lib/intakes';
 import { loadAttention } from '../lib/attention';
+import { unreadCounts } from './messages';
 
 const router = Router();
 router.use(authMiddleware);
@@ -99,6 +100,7 @@ router.get('/', async (req: CircleRequest, res: Response) => {
             intakesResult,
             vitalsResult,
             attention,
+            unread,
         ] = await Promise.all([
             query('SELECT first_name, photo_url FROM care_recipients WHERE circle_id = $1', [circleId]),
             query(
@@ -157,6 +159,7 @@ router.get('/', async (req: CircleRequest, res: Response) => {
                 )
                 : Promise.resolve(null),
             loadAttention(circleId, includeHealth),
+            unreadCounts(circleId, req.userId!),
         ]);
 
         // Recurring occurrences of today, computed from a minimal RRULE subset
@@ -181,9 +184,7 @@ router.get('/', async (req: CircleRequest, res: Response) => {
                 },
                 medication_intakes_today: includeHealth ? intakesResult!.rows : null,
                 latest_vitals: includeHealth ? vitalsResult!.rows : null,
-                // TODO: no per-user read tracking on messages yet, so the
-                // unread counter is always 0 until a read-marker table exists.
-                unread_messages_count: 0,
+                unread_messages_count: unread.total,
                 // "Needs attention": what a caregiver should look at first.
                 attention,
             },

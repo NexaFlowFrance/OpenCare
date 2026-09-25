@@ -12,7 +12,7 @@
     "Maison": "Home",
     "Autre": "Other"
   },
-  "readOnly": "Read-only mode. Only parents can edit the budget.",
+  "readOnly": "Read-only mode. Only administrators and family can edit the budget.",
   "alerts": {
     "title": "Limits reached",
     "over": " · exceeded",

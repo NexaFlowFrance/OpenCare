@@ -1,0 +1,46 @@
+{
+  "title": "Plan de cuidados",
+  "titleFor": "Plan de cuidados de {{name}}",
+  "theLovedOne": "su familiar",
+  "subtitle": "Todo lo que hace falta saber para cuidar de {{name}}, en un mismo sitio: las rutinas, los medicamentos, el equipo y la semana.",
+  "updated": "Indicaciones actualizadas {{when}} por {{name}}",
+  "neverUpdated": "Las indicaciones todavía no se han escrito.",
+  "readOnly": "Solo los administradores y la familia pueden modificarlas.",
+  "print": "Imprimir",
+  "complete": "Completar",
+  "saved": "Indicaciones guardadas.",
+  "sections": {
+    "morning": { "title": "Rutina de la mañana", "hint": "Levantarse, desayuno, lo que ayuda a empezar bien el día." },
+    "meals": { "title": "Comidas", "hint": "Horarios, preferencias, texturas, lo que hay que evitar, ayuda necesaria." },
+    "mobility": { "title": "Ayuda para moverse", "hint": "Andador, traslados, escaleras, riesgo de caídas, lo que no debe hacer sin ayuda." },
+    "personal_care": { "title": "Aseo y cuidado personal", "hint": "Aseo, vestirse, continencia, productos, pudor y costumbres." },
+    "communication": { "title": "Comunicación", "hint": "Audición, vista, idioma, palabras que usar, cómo asegurarse de que le entienden." },
+    "triggers": { "title": "Lo que le altera", "hint": "Situaciones, temas o momentos que provocan agitación o ansiedad." },
+    "calming": { "title": "Lo que le calma", "hint": "Música, recuerdos, objetos, gestos, personas que le tranquilizan." },
+    "emergency": { "title": "En caso de urgencia", "hint": "A quién llamar primero, dónde están los papeles, alergias, indicaciones del médico." }
+  },
+  "medications": {
+    "title": "Rutina de medicación",
+    "empty": "Ningún tratamiento en curso.",
+    "nothing": "Nada",
+    "prn": "Si hace falta",
+    "slots": { "morning": "Mañana", "midday": "Mediodía", "evening": "Tarde", "night": "Al acostarse" },
+    "withFood": { "with": "durante la comida", "without": "fuera de las comidas" },
+    "manage": "Gestionar los medicamentos"
+  },
+  "professionals": {
+    "title": "Profesionales habituales",
+    "empty": "Ningún profesional en los contactos (médico, enfermería, ayuda a domicilio, fisioterapia, farmacia).",
+    "manage": "Ver los contactos"
+  },
+  "week": {
+    "title": "Semana a la vista",
+    "empty": "Nada previsto.",
+    "recurring": "Recurrente",
+    "manage": "Abrir la agenda"
+  },
+  "errors": {
+    "load": "No se puede cargar el plan de cuidados.",
+    "save": "No se pueden guardar las indicaciones."
+  }
+}

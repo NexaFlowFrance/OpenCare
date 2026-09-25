@@ -1,0 +1,110 @@
+{
+  "title": "Gastos compartidos",
+  "subtitle": "Siga los gastos del círculo y equilibre las cuentas",
+  "loading": "Cargando los gastos…",
+  "newExpense": "Nuevo gasto",
+  "restricted": {
+    "title": "Solo para la familia",
+    "description": "Los gastos compartidos solo son visibles para los miembros de la familia y los administradores del círculo."
+  },
+  "categories": {
+    "pharmacy": "Farmacia",
+    "aide": "Auxiliar",
+    "equipment": "Equipamiento",
+    "works": "Obras",
+    "food": "Alimentación",
+    "transport": "Transporte",
+    "other": "Otro"
+  },
+  "balances": {
+    "title": "Saldos",
+    "subtitle": "Quién ha pagado qué, quién debe qué",
+    "paid": "Pagado",
+    "owed": "Debe",
+    "net": "Saldo",
+    "settleTitle": "Para equilibrar",
+    "suggestion": "{{from}} debe {{amount}} a {{to}}",
+    "allSettled": "Las cuentas están equilibradas.",
+    "markSettled": "Marcar como pagado",
+    "settledToast": "Pago registrado"
+  },
+  "list": {
+    "title": "Gastos",
+    "empty": "Aún no hay gastos. Añada el primero para empezar el seguimiento.",
+    "paidBy": "pagado por {{name}}",
+    "customSplit": "Reparto personalizado"
+  },
+  "dialog": {
+    "createTitle": "Nuevo gasto",
+    "editTitle": "Editar el gasto",
+    "description": "El gasto se reparte entre los miembros de la familia del círculo."
+  },
+  "form": {
+    "amount": "Importe ({{currency}})",
+    "category": "Categoría",
+    "descriptionLabel": "Descripción",
+    "descriptionPlaceholder": "Ej.: farmacia del 3 de marzo",
+    "date": "Fecha",
+    "paidBy": "Pagado por",
+    "split": "Reparto",
+    "splitEqual": "Igual",
+    "splitCustom": "Personalizado",
+    "shareOf": "Parte de {{name}}",
+    "splitTotal": "Total de las partes: {{sum}} de {{total}}"
+  },
+  "aids": {
+    "title": "Ayudas",
+    "subtitle": "APA, CESU, crédito fiscal",
+    "add": "Añadir una ayuda",
+    "empty": "No hay ninguna ayuda registrada.",
+    "yearTotal": "Total de ayudas {{year}}",
+    "createTitle": "Nueva ayuda",
+    "editTitle": "Editar la ayuda",
+    "types": {
+      "apa": "APA",
+      "cesu": "CESU",
+      "tax_credit": "Crédito fiscal",
+      "other": "Otra"
+    },
+    "form": {
+      "type": "Tipo",
+      "label": "Concepto",
+      "labelPlaceholder": "Ej.: APA del consejo departamental",
+      "amount": "Importe ({{currency}})",
+      "periodStart": "Inicio del periodo",
+      "periodEnd": "Fin del periodo",
+      "notes": "Notas"
+    },
+    "periodBoth": "Del {{start}} al {{end}}",
+    "periodFrom": "Desde el {{start}}",
+    "periodTo": "Hasta el {{end}}"
+  },
+  "summary": {
+    "title": "Resumen {{year}}",
+    "subtitle": "Total por categoría del año",
+    "totalExpenses": "Total de gastos",
+    "totalAids": "Total de ayudas",
+    "empty": "No hay gastos este año."
+  },
+  "settlements": {
+    "title": "Historial de pagos",
+    "show": "Mostrar",
+    "hide": "Ocultar",
+    "empty": "Aún no hay ningún pago.",
+    "row": "{{from}} ha reembolsado a {{to}}"
+  },
+  "confirm": {
+    "deleteExpense": "¿Eliminar este gasto?",
+    "deleteAid": "¿Eliminar esta ayuda?",
+    "deleteSettlement": "¿Eliminar este pago?"
+  },
+  "errors": {
+    "load": "No se pudieron cargar los gastos.",
+    "save": "No se pudo guardar el gasto.",
+    "saveAid": "No se pudo guardar la ayuda.",
+    "saveSettlement": "No se pudo guardar el pago.",
+    "delete": "No se pudo eliminar.",
+    "amountInvalid": "El importe debe ser mayor que cero.",
+    "splitSum": "La suma de las partes debe ser igual al importe."
+  }
+}

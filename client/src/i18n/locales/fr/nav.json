@@ -69,5 +69,8 @@
       "photoTooLarge": "Photo trop volumineuse pour être enregistrée hors ligne. Réessayez au retour du réseau."
     }
   },
-  "pageTitleFallback": "Tableau de bord"
+  "pageTitleFallback": "Tableau de bord",
+  "skipToContent": "Aller au contenu",
+  "primaryNav": "Navigation principale",
+  "mobileNav": "Navigation rapide"
 }

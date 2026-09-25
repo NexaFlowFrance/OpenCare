@@ -12,7 +12,7 @@
     "Maison": "Maison",
     "Autre": "Autre"
   },
-  "readOnly": "Mode lecture seule. Seuls les parents peuvent modifier le budget.",
+  "readOnly": "Mode lecture seule. Seuls les administrateurs et la famille peuvent modifier le budget.",
   "alerts": {
     "title": "Plafonds atteints",
     "over": " · dépassé",

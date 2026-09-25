@@ -231,5 +231,13 @@
       "calming": "What calms",
       "emergency": "In an emergency"
     }
+  },
+  "reminder": {
+    "title": "It is time for your medication",
+    "spoken": "Look at what to take and tap the green button when it is done.",
+    "subtitle_one": "{{count}} dose to take now",
+    "subtitle_other": "{{count}} doses to take now",
+    "taken": "I took everything",
+    "later": "Okay, in a moment"
   }
 }

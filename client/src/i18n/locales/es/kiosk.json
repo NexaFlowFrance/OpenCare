@@ -1,0 +1,243 @@
+{
+  "greeting": "¡Hola, {{name}}!",
+  "greetingEvening": "¡Buenas tardes, {{name}}!",
+  "greetingNoName": "¡Hola!",
+  "exit": "Salir",
+  "fullscreen": "Pantalla completa",
+  "exitFullscreen": "Salir de pantalla completa",
+  "and": "y",
+  "hero": {
+    "tagline": "Cuidemos tu día",
+    "cheer": "¡Lo estás haciendo muy bien!"
+  },
+  "today": {
+    "title": "Hoy",
+    "empty": "Hoy no hay ninguna visita prevista."
+  },
+  "visit": {
+    "one": "{{name}} viene a verte a las {{time}}",
+    "many": "{{names}} vienen a verte a las {{time}}",
+    "nurse": "La enfermera viene a las {{time}}",
+    "aide": "La auxiliar a domicilio viene a las {{time}}",
+    "medical": "Cita a las {{time}}: {{title}}",
+    "other": "{{title}} a las {{time}}"
+  },
+  "visitors": {
+    "title": "Quién viene hoy",
+    "empty": "Hoy no viene nadie.",
+    "nurse": "Enfermero/a",
+    "aide": "Auxiliar a domicilio",
+    "someone": "Viene alguien",
+    "roles": {
+      "admin": "Familia",
+      "family": "Familia",
+      "professional": "Profesional",
+      "neighbor": "Vecino/a",
+      "viewer": "Persona cercana"
+    }
+  },
+  "appointments": {
+    "title": "Citas de hoy",
+    "empty": "Hoy no hay ninguna cita."
+  },
+  "meds": {
+    "title": "Tus medicamentos",
+    "timeTitle": "Es la hora de tus medicamentos",
+    "empty": "Hoy no hay medicamentos.",
+    "at": "a las {{time}}",
+    "taken": "Ya está tomado, muy bien",
+    "take": "Toma {{amount}}",
+    "takeAll": "Ya lo tomé todo",
+    "takeAllHint": "¡Muy bien! Queda registrado.",
+    "confirmed": "¡Queda anotado, muy bien!",
+    "nothingTitle": "Ahora no hay nada que tomar",
+    "nextAt": "Próxima toma a las {{time}}",
+    "allDone": "Ya tomaste todos tus medicamentos de hoy",
+    "someDone": "{{taken}} de {{total}} tomas hechas hoy"
+  },
+  "actions": {
+    "ask": "Pregúntame",
+    "askHint": "Medicamentos, visitas, citas",
+    "info": "Mi información",
+    "infoHint": "Dirección, médico, contactos",
+    "settings": "Ajustes",
+    "settingsHint": "Texto, tiempo, fotos"
+  },
+  "status": {
+    "ok": "Todo va bien",
+    "okHint": "Hoy me encuentro bien",
+    "help": "Necesito ayuda",
+    "helpHint": "Avisar a mi familia ahora",
+    "sentTitle": "Ya está enviado.",
+    "sentDetail": "Tu familia está avisada.",
+    "errorTitle": "No ha funcionado.",
+    "errorDetail": "Pulsa el botón otra vez."
+  },
+  "heat": {
+    "banner": "Hoy hace calor. Acuérdate de beber agua a menudo.",
+    "drink": "Ya bebí agua",
+    "thanks": "Muy bien, queda anotado"
+  },
+  "companion": {
+    "open": "Charlar un rato"
+  },
+  "info": {
+    "title": "Mi información",
+    "name": "Me llamo",
+    "address": "Mi dirección",
+    "phone": "Mi teléfono",
+    "contacts": "Personas a las que puedo llamar",
+    "empty": "Todavía no hay ninguna información.",
+    "close": "Cerrar",
+    "categories": {
+      "doctor": "Médico",
+      "nurse": "Enfermero/a",
+      "pharmacy": "Farmacia",
+      "aide": "Auxiliar a domicilio",
+      "physio": "Fisioterapeuta"
+    }
+  },
+  "pin": {
+    "title": "Código de cuidador",
+    "hint": "Este ajuste es para los cuidadores. Escribe el código.",
+    "placeholder": "Código",
+    "submit": "Validar",
+    "wrong": "Código incorrecto",
+    "cancel": "Cancelar"
+  },
+  "leave": {
+    "title": "Salir de la pantalla del paciente",
+    "unpairHint": "Este dispositivo quedará desvinculado del círculo. Un cuidador podrá vincularlo de nuevo desde los ajustes.",
+    "unpair": "Desvincular este dispositivo",
+    "back": "Volver a la aplicación del cuidador"
+  },
+  "pair": {
+    "title": "Vincular este dispositivo",
+    "subtitle": "Escribe el código que aparece en OpenCare (Ajustes, Pantalla del paciente).",
+    "codeLabel": "Código de vinculación",
+    "submit": "Vincular",
+    "error": "Código no válido o caducado. Pide un código nuevo a un cuidador.",
+    "caregiver": "Soy cuidador: iniciar sesión",
+    "success": "¡Ya está! Este dispositivo está listo para {{name}}."
+  },
+  "weather": {
+    "clear": "Hace buen tiempo",
+    "partlyCloudy": "Hay algunas nubes",
+    "cloudy": "El cielo está nublado",
+    "fog": "Hay niebla",
+    "drizzle": "Llueve un poco",
+    "rain": "Está lloviendo",
+    "snow": "Está nevando",
+    "storm": "Hay tormenta"
+  },
+  "displaySettings": {
+    "open": "Ajustes de la pantalla",
+    "title": "Ajustes de la pantalla",
+    "close": "Cerrar",
+    "location": "Lugar para el tiempo",
+    "searchPlaceholder": "Buscar una ciudad…",
+    "noResults": "Sin resultados",
+    "noLocation": "Elija un lugar para mostrar el tiempo en esta pantalla.",
+    "change": "Cambiar",
+    "photoBackground": "Fotos de familia",
+    "photoBackgroundHint": "Muestra las fotos de familia en la banda de bienvenida. Requiere una integración Immich conectada.",
+    "fontSize": "Tamaño del texto",
+    "fontNormal": "Normal",
+    "fontLarge": "Grande",
+    "fontXL": "Muy grande",
+    "language": "Idioma de la pantalla",
+    "deviceName": "Este dispositivo: {{name}}",
+    "browserSpeech": "Dictado por el navegador",
+    "browserSpeechHint": "Sin un servidor Whisper, la voz de « Pregúntame » la reconoce el navegador (Google, Apple o Microsoft según el dispositivo) y por lo tanto sale de su servidor. Si se desactiva, solo se usa el dictado local."
+  },
+  "settings": {
+    "title": "Pantalla del paciente (tableta y teléfono)",
+    "subtitle": "La pantalla de la tableta de pared y del teléfono de su familiar: lo que hay que tomar ahora, quién viene, las citas, el asistente y los botones « Todo va bien » / « Necesito ayuda ».",
+    "open": "Abrir la pantalla del paciente",
+    "devices": "Dispositivos vinculados",
+    "noDevices": "Ningún dispositivo vinculado. Vincule la tableta de pared o el teléfono de su familiar: no necesitarán ninguna cuenta.",
+    "pairKiosk": "Vincular una tableta",
+    "pairPhone": "Vincular un teléfono",
+    "deviceName": "Nombre del dispositivo",
+    "deviceNamePlaceholder": "Ej.: Tableta del salón",
+    "kinds": {
+      "kiosk": "Tableta de pared",
+      "phone": "Teléfono del familiar"
+    },
+    "lastSeen": "Visto {{when}}",
+    "neverSeen": "Nunca se ha conectado",
+    "revoke": "Desvincular",
+    "revoked": "Dispositivo desvinculado",
+    "pairingTitle": "Código de vinculación",
+    "pairingHint": "En el dispositivo, abra {{url}} y escriba este código, o escanee el código QR. Válido 15 minutos, de un solo uso.",
+    "pairingDone": "Cerrar",
+    "pin": "Código de cuidador (PIN)",
+    "pinHint": "Protege los ajustes y la salida de la pantalla del paciente, sobre todo cuando las visitas tocan la tableta. De 4 a 8 cifras.",
+    "pinSet": "Hay un código definido.",
+    "pinNotSet": "Sin código: los ajustes de la pantalla del paciente están al alcance de cualquiera.",
+    "pinPlaceholder": "Ej.: 2468",
+    "setPin": "Definir el código",
+    "changePin": "Cambiar el código",
+    "removePin": "Eliminar el código",
+    "pinSaved": "Código guardado",
+    "pinRemoved": "Código eliminado",
+    "pinInvalid": "El código debe tener de 4 a 8 cifras."
+  },
+  "visitor": {
+    "button": "Visita",
+    "title": "¿Quién viene hoy?",
+    "subtitle": "Elige el tipo de visita.",
+    "nameTitle": "¿Cómo te llamas?",
+    "namePlaceholder": "Tu nombre",
+    "namePick": "O elige tu nombre",
+    "back": "Volver",
+    "continue": "Continuar",
+    "checkIn": "Ya llegué",
+    "welcome": "¡Hola {{name}}!",
+    "thanks": "Gracias por visitar hoy a {{recipient}}.",
+    "thanksNoName": "Gracias por tu visita de hoy.",
+    "recorded": "Tu llegada queda anotada, la familia ya está avisada.",
+    "present": "{{name}} está aquí desde las {{time}}",
+    "checkOut": "Ya me voy",
+    "checkedOut": "¡Buen día {{name}}, hasta pronto!",
+    "done": "Queda anotado",
+    "proTitle": "Durante tu visita",
+    "writeNote": "Escribir una nota de la visita",
+    "notePlaceholder": "Lo que hiciste, lo que observaste...",
+    "sendNote": "Enviar la nota",
+    "noteSent": "Nota enviada a la familia.",
+    "confirmMeds": "Confirmar los medicamentos",
+    "confirmMedsHint": "{{count}} toma(s) por confirmar ahora",
+    "medsConfirmed": "Medicamentos confirmados, gracias.",
+    "nothingToConfirm": "Ahora no hay ningún medicamento por confirmar.",
+    "types": {
+      "family": "Familia",
+      "friend": "Amigo/a o vecino/a",
+      "caregiver": "Auxiliar a domicilio",
+      "nurse": "Enfermero/a",
+      "doctor": "Médico o cita",
+      "other": "Otro"
+    },
+    "error": "No ha funcionado, inténtalo otra vez.",
+    "instructions": "Indicaciones para la visita",
+    "instructionsEmpty": "Sin indicaciones especiales.",
+    "instructionSections": {
+      "morning": "Por la mañana",
+      "meals": "Comidas",
+      "mobility": "Movilidad",
+      "personal_care": "Aseo",
+      "communication": "Comunicación",
+      "triggers": "Lo que le molesta",
+      "calming": "Lo que le calma",
+      "emergency": "En caso de urgencia"
+    }
+  },
+  "reminder": {
+    "title": "Es la hora de tus medicamentos",
+    "spoken": "Mira lo que hay que tomar y pulsa el botón verde cuando esté hecho.",
+    "subtitle_one": "{{count}} toma pendiente ahora",
+    "subtitle_other": "{{count}} tomas pendientes ahora",
+    "taken": "Ya lo tomé todo",
+    "later": "De acuerdo, en un momento"
+  }
+}

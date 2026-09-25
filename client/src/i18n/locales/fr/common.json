@@ -6,7 +6,8 @@
     "star": "Mettre une étoile sur GitHub"
   },
   "language": {
-    "syncError": "Impossible d'enregistrer votre préférence de langue."
+    "syncError": "Impossible d'enregistrer votre préférence de langue.",
+    "label": "Langue"
   },
   "actions": {
     "add": "Ajouter",

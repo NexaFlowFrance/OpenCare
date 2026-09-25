@@ -32,6 +32,23 @@ const namespaces = Array.from(
     new Set(Object.values(resources).flatMap((r) => Object.keys(r)))
 );
 
+/** Noms natifs des langues, pour le selecteur et les lecteurs d'ecran. */
+export const LANGUAGE_NAMES: Record<string, string> = {
+    en: 'English',
+    fr: 'Français',
+    es: 'Español',
+    de: 'Deutsch',
+    it: 'Italiano',
+    nl: 'Nederlands',
+    pt: 'Português',
+};
+
+/** Tient a jour l'attribut lang de <html> : un lecteur d'ecran s'y fie pour la prononciation. */
+const syncDocumentLanguage = (lng: string): void => {
+    if (typeof document === 'undefined') return;
+    document.documentElement.lang = (lng || 'en').split('-')[0];
+};
+
 void i18n
     .use(LanguageDetector)
     .use(initReactI18next)
@@ -60,3 +77,7 @@ void i18n
     });
 
 export default i18n;
+
+// L'attribut lang est pose au demarrage puis a chaque changement de langue.
+syncDocumentLanguage(i18n.resolvedLanguage || i18n.language || 'en');
+i18n.on('languageChanged', syncDocumentLanguage);

@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/NexaFlowFrance/OpenCare/blob/main/SECURITY.md
+    about: Please report it privately, not in a public issue.
+  - name: Question or installation help
+    url: https://github.com/NexaFlowFrance/OpenCare/blob/main/DOCUMENTATION.md
+    about: The documentation covers installation, integrations and every module.
+  - name: Translate OpenCare
+    url: https://github.com/NexaFlowFrance/OpenCare/blob/main/CONTRIBUTING.md
+    about: Copy the English locale folder, translate the values, open a pull request.

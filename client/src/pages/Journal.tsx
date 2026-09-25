@@ -71,7 +71,7 @@ const VITAL_TYPES: VitalType[] = ['weight', 'bp', 'pain', 'mood', 'temperature',
 
 const VITAL_UNITS: Record<VitalType, string> = {
     weight: 'kg',
-    bp: 'cmHg',
+    bp: 'mmHg',
     pain: '/10',
     mood: '/10',
     temperature: '°C',

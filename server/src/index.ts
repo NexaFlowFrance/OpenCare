@@ -8,6 +8,7 @@ import { clients, broadcast, registerDeviceSocket, unregisterDeviceSocket } from
 import { resolveKioskDevice } from './middleware/kioskDevice';
 import { startReminderScheduler } from './lib/reminderScheduler';
 import { startPresenceMonitor } from './lib/presenceMonitor';
+import { startEscalationScheduler } from './lib/escalation';
 import { startDigestScheduler } from './lib/digestScheduler';
 import { getJwtSecret } from './config/loadEnv';
 
@@ -109,6 +110,7 @@ const startServer = async () => {
 
         startReminderScheduler();
         startPresenceMonitor();
+        startEscalationScheduler();
         startDigestScheduler();
 
         server.listen(PORT, () => {

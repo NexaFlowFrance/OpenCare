@@ -17,6 +17,10 @@
     "pickMember": "Choisir un membre…",
     "youPrefix": "Vous : {{message}}"
   },
+  "unread": {
+    "label_one": "{{count}} message non lu",
+    "label_other": "{{count}} messages non lus"
+  },
   "composer": {
     "label": "Écrire un message",
     "placeholder": "Écrire au cercle…",

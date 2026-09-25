@@ -10,6 +10,14 @@
   [![CI](https://img.shields.io/github/actions/workflow/status/NexaFlowFrance/OpenCare/ci.yml?branch=main&label=CI)](https://github.com/NexaFlowFrance/OpenCare/actions/workflows/ci.yml)
   [![License: AGPL v3](https://img.shields.io/badge/License-AGPL--v3-blue.svg)](licence.md)
   [![PWA](https://img.shields.io/badge/PWA-ready-3E6B54)](https://github.com/NexaFlowFrance/OpenCare)
+
+  <p>
+    <a href="https://nexaflowfrance.github.io/OpenCare/demo/"><strong>Live demo</strong></a> ·
+    <a href="https://nexaflowfrance.github.io/OpenCare/"><strong>Project site</strong></a> ·
+    <a href="DOCUMENTATION.md"><strong>Documentation</strong></a> ·
+    <a href="ROADMAP.md"><strong>Roadmap</strong></a>
+  </p>
+  <p><em>The demo runs entirely in your browser with sample data. Nothing is saved, nothing is sent anywhere.</em></p>
 </div>
 
 ---
@@ -59,7 +67,7 @@ All on **your** server: the health data of a vulnerable person should not live o
 - **Offline-friendly PWA**: works in a nursing-home room with poor signal
 - **Local-first AI**: Ollama on your machine, or your own Anthropic / OpenAI-compatible key, encrypted at rest
 - **Full export** of all circle data, **AGPL-3.0** licensed
-- **French and English** interface
+- **French, English and Spanish** interface, keyboard reachable and screen reader friendly
 
 ## 🚀 Quick start
 
@@ -81,6 +89,18 @@ docker-compose up -d --build
 
 - Frontend: http://localhost:3000
 - Backend API: http://localhost:3001
+
+### 💾 Backups
+
+Everything lives in PostgreSQL, so one dump is a full backup.
+
+```bash
+bash scripts/backup.sh              # writes a checked, compressed dump to ./backups
+bash scripts/restore.sh <file>      # restores it, after a safety backup
+```
+
+Put it in cron, and copy the files off the machine. See
+[DOCUMENTATION.md](DOCUMENTATION.md) for the options.
 
 ### 🛠️ Development
 
@@ -133,9 +153,14 @@ CORS · server-side input validation · AI keys encrypted at rest (AES-256-GCM) 
 
 ## 🤝 Contributing
 
-Contributions are welcome! The product spec lives in [docs/SPEC.md](docs/SPEC.md). Open an
-[issue](https://github.com/NexaFlowFrance/OpenCare/issues) or a
-[pull request](https://github.com/NexaFlowFrance/OpenCare/pulls).
+Contributions are welcome! Start with [CONTRIBUTING.md](CONTRIBUTING.md): it covers the local setup,
+the checks to run before opening a pull request, and the invariants not to break. The product spec lives
+in [docs/SPEC.md](docs/SPEC.md).
+
+Looking for a first contribution? The
+[good first issue](https://github.com/NexaFlowFrance/OpenCare/issues?q=is%3Aopen+label%3A%22good+first+issue%22)
+label is the place to start. Translations into a new language are especially welcome: drop a
+`client/src/i18n/locales/<code>/` folder and the language appears in the switcher on its own.
 
 ## 📄 License
 
@@ -145,6 +170,10 @@ GNU Affero General Public License v3.0 (AGPL-3.0-only), see [licence.md](licence
 
 Built and maintained by [NexaFlow France](https://nexaflow.fr), and offered to every family
 that takes care of someone.
+
+OpenCare is built on the open-source foundation of [OpenFamily](https://github.com/NexaFlowFrance/OpenFamily),
+the self-hosted family organizer by NexaFlow. The care circles, the real-time layer, the offline-first
+client and the self-hosting story all come from that base, rebuilt around family caregiving.
 
 Special thanks to [thecybermacgyver](https://github.com/thecybermacgyver), whose thorough product review
 and kiosk mockups shaped the patient experience of version 1.2.

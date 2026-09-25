@@ -1,0 +1,54 @@
+{
+  "loading": "Cargando los mensajes…",
+  "title": "Mensajes",
+  "viewLabel": "Elegir el hilo",
+  "views": {
+    "feed": "Hilo del círculo",
+    "dm": "Mensajes directos"
+  },
+  "feed": {
+    "empty": "Todavía no hay mensajes en el hilo del círculo."
+  },
+  "dm": {
+    "empty": "Todavía no hay ninguna conversación directa.",
+    "emptyHint": "Elija a un miembro del círculo para empezar una conversación.",
+    "emptyThread": "Todavía no hay mensajes en esta conversación.",
+    "newConversation": "Nueva conversación",
+    "pickMember": "Elegir a un miembro…",
+    "youPrefix": "Usted: {{message}}"
+  },
+  "unread": {
+    "label_one": "{{count}} mensaje sin leer",
+    "label_other": "{{count}} mensajes sin leer"
+  },
+  "composer": {
+    "label": "Escribir un mensaje",
+    "placeholder": "Escribir al círculo…",
+    "placeholderDm": "Escribir a {{name}}…",
+    "attach": "Adjuntar una imagen o un PDF"
+  },
+  "attachments": {
+    "viewImage": "Ver la imagen {{name}}",
+    "remove": "Quitar el archivo adjunto {{name}}"
+  },
+  "menu": {
+    "label": "Acciones del mensaje"
+  },
+  "edited": "(modificado)",
+  "readOnly": "Puede leer los mensajes, pero su rol no permite escribir.",
+  "confirmDelete": "¿Eliminar este mensaje?",
+  "editDialog": {
+    "title": "Modificar el mensaje",
+    "description": "El mensaje aparecerá como modificado para todo el mundo."
+  },
+  "errors": {
+    "load": "No se pueden cargar los mensajes.",
+    "send": "No se puede enviar este mensaje.",
+    "edit": "No se puede modificar este mensaje.",
+    "delete": "No se puede eliminar este mensaje.",
+    "tooManyAttachments": "{{max}} archivos adjuntos como máximo por mensaje.",
+    "attachmentTooLarge": "{{name}} supera 1,5 MB incluso después de comprimirla.",
+    "unsupportedFile": "{{name}} no es ni una imagen ni un PDF.",
+    "attachmentFailed": "No se puede preparar el archivo adjunto {{name}}."
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "title": "Unirse a un círculo de cuidados",
+  "loggedInAs": "Conectado como",
+  "checking": "Comprobando la invitación…",
+  "missing": "Enlace de invitación incompleto: no se encontró ningún token. Compruebe el enlace que recibió.",
+  "invalid": "Invitación no válida o caducada. Pida un nuevo enlace a la persona que le invitó.",
+  "invitedBy": "{{inviter}} le invita a unirse al círculo de {{recipient}}.",
+  "someone": "Un miembro del círculo",
+  "roleLabel": "Su rol en el círculo:",
+  "expiresOn": "Invitación válida hasta el {{date}}",
+  "join": "Unirse al círculo",
+  "joining": "Uniéndose…",
+  "joinError": "No se pudo unir al círculo. Inténtelo de nuevo."
+}

@@ -69,5 +69,8 @@
       "photoTooLarge": "Photo too large to be saved offline. Try again once the connection is back."
     }
   },
-  "pageTitleFallback": "Dashboard"
+  "pageTitleFallback": "Dashboard",
+  "skipToContent": "Skip to content",
+  "primaryNav": "Main navigation",
+  "mobileNav": "Quick navigation"
 }

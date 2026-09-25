@@ -1,0 +1,73 @@
+name: Bug report
+description: Something does not work the way it should
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time. Please do not paste real health data, real names or
+        photos of a cared-for person: anonymise anything you copy in here.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, what you got instead.
+      placeholder: |
+        1. Open the Medications page
+        2. Confirm the 8 am dose
+        3. The dose stays pending after a refresh
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where
+      options:
+        - Caregiver app (browser)
+        - Patient screen (tablet or phone)
+        - Public page (magic link, emergency sheet, handover)
+        - Server or API
+        - Installation (Docker, Windows installer, Proxmox)
+        - Somewhere else
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The release tag, or the commit you are running.
+      placeholder: v1.2.0
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: How it is installed
+      options:
+        - Docker Compose
+        - Windows installer
+        - Proxmox LXC script
+        - From source (npm run dev)
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and device
+      placeholder: Firefox 142 on Android, Safari on an iPad
+  - type: textarea
+    id: logs
+    attributes:
+      label: Errors
+      description: Browser console and server logs, if you have them. They are formatted as code, no backticks needed.
+      render: shell
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched the existing issues.
+          required: true
+        - label: I removed any real personal or health data from this report.
+          required: true

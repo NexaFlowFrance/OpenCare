@@ -1,0 +1,28 @@
+{
+  "title": "Alertas y escalado",
+  "subtitle": "Quién recibe el aviso, y al cabo de cuánto tiempo, cuando una toma se retrasa o su familiar pide ayuda.",
+  "enabled": "Activar el escalado",
+  "enabledHint": "Desactivado: una toma con retraso no desencadena nada más y «Necesito ayuda» avisa a todo el círculo, como antes.",
+  "minutes": "min",
+  "medication": {
+    "title": "Toma de medicamento con retraso",
+    "patient": "Recordatorio a su familiar en la pantalla del paciente después de",
+    "primary": "Avisar a los cuidadores principales después de",
+    "secondary": "Avisar a los cuidadores de relevo después de",
+    "off": "Ponga 0 para desactivar un nivel. Después de cuatro horas, la toma se marca como no realizada y el escalado se detiene."
+  },
+  "help": {
+    "title": "Botón «Necesito ayuda»",
+    "immediate": "Los cuidadores principales reciben el aviso inmediatamente.",
+    "ack": "Si nadie se hace cargo («Me ocupo yo» en el panel), avisar a los cuidadores de relevo después de"
+  },
+  "primary": "Cuidadores principales",
+  "primaryHint": "Sin selección: los administradores del círculo.",
+  "secondary": "Cuidadores de relevo",
+  "secondaryHint": "Sin selección: los miembros «familia».",
+  "saved": "Reglas guardadas.",
+  "errors": {
+    "load": "No se han podido cargar las reglas de escalado.",
+    "save": "No se han podido guardar las reglas."
+  }
+}

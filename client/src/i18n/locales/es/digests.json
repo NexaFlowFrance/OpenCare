@@ -1,0 +1,22 @@
+{
+  "title": "La semana",
+  "weekOf": "Semana del {{date}}",
+  "stats": {
+    "visits_one": "{{count}} visita",
+    "visits_other": "{{count}} visitas",
+    "entries_one": "{{count}} entrada del diario",
+    "entries_other": "{{count}} entradas del diario"
+  },
+  "attentionPoints": "Puntos de atención",
+  "weakSignals": "Señales débiles",
+  "empty": "Todavía no hay resumen. Se prepara cada domingo a las 18:00 a partir del diario, las constantes y los medicamentos.",
+  "generateNow": "Generar ahora",
+  "generating": "Generando...",
+  "history": "Semanas anteriores",
+  "historyTitle": "Semanas anteriores",
+  "historyEmpty": "Ningún resumen anterior por el momento.",
+  "errors": {
+    "notConfigured": "La IA del círculo no está configurada o está desactivada. Vaya a Ajustes para activarla.",
+    "generate": "No se ha podido generar el resumen. Compruebe el proveedor de IA y vuelva a intentarlo."
+  }
+}
