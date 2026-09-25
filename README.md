@@ -10,6 +10,14 @@
   [![CI](https://img.shields.io/github/actions/workflow/status/NexaFlowFrance/OpenCare/ci.yml?branch=main&label=CI)](https://github.com/NexaFlowFrance/OpenCare/actions/workflows/ci.yml)
   [![License: AGPL v3](https://img.shields.io/badge/License-AGPL--v3-blue.svg)](licence.md)
   [![PWA](https://img.shields.io/badge/PWA-ready-3E6B54)](https://github.com/NexaFlowFrance/OpenCare)
+
+  <p>
+    <a href="https://nexaflowfrance.github.io/OpenCare/demo/"><strong>Live demo</strong></a> ·
+    <a href="https://nexaflowfrance.github.io/OpenCare/"><strong>Project site</strong></a> ·
+    <a href="DOCUMENTATION.md"><strong>Documentation</strong></a> ·
+    <a href="ROADMAP.md"><strong>Roadmap</strong></a>
+  </p>
+  <p><em>The demo runs entirely in your browser with sample data. Nothing is saved, nothing is sent anywhere.</em></p>
 </div>
 
 ---
@@ -133,9 +141,14 @@ CORS · server-side input validation · AI keys encrypted at rest (AES-256-GCM) 
 
 ## 🤝 Contributing
 
-Contributions are welcome! The product spec lives in [docs/SPEC.md](docs/SPEC.md). Open an
-[issue](https://github.com/NexaFlowFrance/OpenCare/issues) or a
-[pull request](https://github.com/NexaFlowFrance/OpenCare/pulls).
+Contributions are welcome! Start with [CONTRIBUTING.md](CONTRIBUTING.md): it covers the local setup,
+the checks to run before opening a pull request, and the invariants not to break. The product spec lives
+in [docs/SPEC.md](docs/SPEC.md).
+
+Looking for a first contribution? The
+[good first issue](https://github.com/NexaFlowFrance/OpenCare/issues?q=is%3Aopen+label%3A%22good+first+issue%22)
+label is the place to start. Translations into a new language are especially welcome: drop a
+`client/src/i18n/locales/<code>/` folder and the language appears in the switcher on its own.
 
 ## 📄 License
 
@@ -145,6 +158,10 @@ GNU Affero General Public License v3.0 (AGPL-3.0-only), see [licence.md](licence
 
 Built and maintained by [NexaFlow France](https://nexaflow.fr), and offered to every family
 that takes care of someone.
+
+OpenCare is built on the open-source foundation of [OpenFamily](https://github.com/NexaFlowFrance/OpenFamily),
+the self-hosted family organizer by NexaFlow. The care circles, the real-time layer, the offline-first
+client and the self-hosting story all come from that base, rebuilt around family caregiving.
 
 Special thanks to [thecybermacgyver](https://github.com/thecybermacgyver), whose thorough product review
 and kiosk mockups shaped the patient experience of version 1.2.
