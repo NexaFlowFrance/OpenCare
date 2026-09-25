@@ -179,7 +179,7 @@ stock=$(request PUT "/api/medications/$med_id/stock" '{"stock_quantity":10,"stoc
 echo "$stock" | jq -e '(.data.stock_quantity | tonumber) == 10 and (.data.stock_alert_threshold | tonumber) == 4' >/dev/null
 bad_stock=$(curl -sS -o /dev/null -w "%{http_code}" -X PUT "$API_BASE/api/medications/$med_id/stock" -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -H "X-Circle-Id: $CIRCLE_ID" -d '{"stock_quantity":-2}')
 [[ "$bad_stock" == "400" ]]
-request POST "/api/kiosk/intakes/confirm" "{"intake_ids":["$second_id"]}" >/dev/null
+request POST "/api/kiosk/intakes/confirm" "{\"intake_ids\":[\"$second_id\"]}" >/dev/null
 after_stock=$(request GET "/api/medications" | jq -r --arg id "$med_id" '.data[] | select(.id == $id) | .stock_quantity')
 awk -v a="$after_stock" -v q="$second_qty" 'BEGIN { exit !(a + 0 == 10 - q) }'
 
