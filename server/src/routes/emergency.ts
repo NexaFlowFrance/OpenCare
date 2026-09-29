@@ -4,6 +4,7 @@ import { query } from '../db';
 import { authMiddleware } from '../middleware/auth';
 import { circleMiddleware, requireContentWriter, CircleRequest } from '../middleware/circle';
 import { langFromRequest, t } from '../lib/i18n';
+import { buildEmergencyData } from '../lib/emergencySheet';
 
 const router = Router();
 
@@ -17,52 +18,6 @@ const router = Router();
  *  - LIVE (instances exposees sur Internet): GET /public/:token sert la fiche en
  *    direct par token. Conserve pour qui a choisi d'exposer OpenCare.
  */
-
-/** Assemble la fiche vitale d'un cercle (identite, traitements actifs, contacts). */
-const buildEmergencyData = async (circleId: string) => {
-    const [recipientResult, medsResult, contactsResult] = await Promise.all([
-        query(
-            `SELECT first_name, last_name, birth_date, photo_url, address, phone,
-                    blood_type, allergies, medical_history, advance_directives,
-                    gp_name, gp_phone, insurance_info
-             FROM care_recipients WHERE circle_id = $1`,
-            [circleId]
-        ),
-        query(
-            `SELECT m.name, m.dosage, m.form,
-                    COALESCE(
-                        json_agg(json_build_object('time', to_char(s.time_of_day, 'HH24:MI'), 'label', s.label))
-                            FILTER (WHERE s.id IS NOT NULL),
-                        '[]'::json
-                    ) AS schedules
-             FROM medications m
-             LEFT JOIN medication_schedules s ON s.medication_id = m.id
-             WHERE m.circle_id = $1 AND m.active = TRUE
-             GROUP BY m.id
-             ORDER BY m.name`,
-            [circleId]
-        ),
-        query(
-            `SELECT name, category, organization, phone, phone2
-             FROM contacts
-             WHERE circle_id = $1 AND phone IS NOT NULL
-             ORDER BY CASE category
-                 WHEN 'doctor' THEN 0
-                 WHEN 'nurse' THEN 1
-                 WHEN 'family' THEN 2
-                 ELSE 3
-             END, name
-             LIMIT 8`,
-            [circleId]
-        ),
-    ]);
-
-    return {
-        recipient: recipientResult.rows[0] ?? null,
-        medications: medsResult.rows,
-        contacts: contactsResult.rows,
-    };
-};
 
 // Lecture publique par token (mode LIVE, instances exposees). Pas d'auth.
 router.get('/public/:token', async (req, res) => {

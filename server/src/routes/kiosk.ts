@@ -10,6 +10,7 @@ import { createNotification } from '../lib/notifications';
 import { applyIntakeStatus, fetchIntakeForUpdate, IntakeSource } from '../lib/intakes';
 import { loadTodaySnapshot } from '../lib/todaySnapshot';
 import { loadCarePlan, filledSections } from '../lib/carePlan';
+import { loadEmergencySheet } from '../lib/emergencySheet';
 import { loadRules, createHelpRequest, resolveTargets } from '../lib/escalation';
 import { fetchImmichRandomPhoto } from '../services/integrations/immich';
 import { checkIn, checkOut, addVisitNote, VISITOR_TYPES, VisitorType } from '../lib/visits';
@@ -565,6 +566,19 @@ router.get('/care-plan', kioskOrMember(), async (req: KioskRequest, res: Respons
         res.json({ success: true, data: { sections: filledSections(plan.sections), updated_at: plan.updated_at } });
     } catch (error) {
         console.error('Kiosk care plan error:', error);
+        res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+});
+
+// GET /api/kiosk/emergency : the emergency sheet, readable from the patient
+// screen. A responder arriving at the home reads it on the spot, or scans the
+// QR the screen shows to take it along. Same data as the fridge QR, and the
+// device sees nothing more than what that printed sheet already carries.
+router.get('/emergency', kioskOrMember(), async (req: KioskRequest, res: Response) => {
+    try {
+        res.json({ success: true, data: await loadEmergencySheet(req.circleId!) });
+    } catch (error) {
+        console.error('Kiosk emergency sheet error:', error);
         res.status(500).json({ success: false, error: 'Internal server error' });
     }
 });

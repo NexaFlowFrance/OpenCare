@@ -176,5 +176,8 @@ OpenCare est bâti sur la base open source d'[OpenFamily](https://github.com/Nex
 l'organiseur familial auto-hébergé de NexaFlow. Les cercles, la couche temps réel, le client hors ligne
 et toute la partie auto-hébergement viennent de là, repensés autour de l'aide à un proche.
 
+Merci à [mpking828](https://github.com/mpking828) pour l'alignement du fuseau entre le serveur et la base,
+la fiche urgence multilingue, et des rapports de bugs précis depuis un foyer hors de France.
+
 Un grand merci à [thecybermacgyver](https://github.com/thecybermacgyver), dont la revue produit approfondie
 et les maquettes du kiosk ont façonné l'expérience patient de la version 1.2.

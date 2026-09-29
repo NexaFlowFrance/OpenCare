@@ -239,5 +239,30 @@
     "subtitle_other": "{{count}} doses to take now",
     "taken": "I took everything",
     "later": "Okay, in a moment"
+  },
+  "emergency": {
+    "button": "Emergency",
+    "title": "Emergency sheet",
+    "subtitle": "Show this to the responders. Scan the code to take it along.",
+    "close": "Close",
+    "loading": "One moment...",
+    "unavailable": "The sheet is not available. Ask the family.",
+    "birth": "Born on",
+    "age_one": "{{count}} year old",
+    "age_other": "{{count}} years old",
+    "bloodType": "Blood type",
+    "allergies": "Allergies",
+    "noAllergies": "No known allergy",
+    "medications": "Current medications",
+    "noMedications": "No medication recorded",
+    "history": "Medical history",
+    "directives": "Advance directives",
+    "extra": "Additional information",
+    "contacts": "Who to call",
+    "gp": "primary care doctor",
+    "scanTitle": "Take the sheet along",
+    "scanHint": "Scan with a phone. The sheet opens offline, nothing is sent.",
+    "qrAlt": "QR code of the emergency sheet",
+    "tooBig": "Long sheet: the code may be hard to scan. Shorten the medical history in the app."
   }
 }

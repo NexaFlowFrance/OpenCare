@@ -1656,6 +1656,20 @@ async function route(method: string, path: string, q: Record<string, string>, bo
 
     // ── Kiosk ────────────────────────────────────────────────────────────────
     if (path === '/api/kiosk/today') return ok(kioskToday(c));
+    if (path === '/api/kiosk/emergency' && method === 'GET') {
+        const r = c.recipient ?? {};
+        return ok({
+            recipient: r,
+            medications: c.medications.filter((m) => m.active !== false).map((m) => ({
+                name: m.name, dosage: m.dosage ?? null, form: m.form ?? null,
+                schedules: ((m.schedules as Json[]) || []).map((s) => ({ time: s.time_of_day, label: s.label ?? null })),
+            })),
+            contacts: c.contacts.filter((k) => k.phone).slice(0, 8).map((k) => ({
+                name: k.name, category: k.category, organization: k.organization ?? null, phone: k.phone ?? null, phone2: k.phone2 ?? null,
+            })),
+            extra_notes: c.emergencySheet?.extra_notes ?? null,
+        });
+    }
     if (path === '/api/kiosk/care-plan') return ok({ sections: Object.fromEntries(Object.entries((c.carePlan?.sections ?? {}) as Record<string, string>).filter(([, v]) => v)), updated_at: c.carePlan?.updated_at ?? null });
     // Plan de soins : consignes (texte) + routine medicamenteuse + professionnels + semaine
     // Escalade : regles du cercle et demandes d aide sans prise en charge

@@ -155,7 +155,7 @@
       return '<a href="tel:' + esc(clean) + '">' + esc(num) + '</a>';
     }
 
-    // Normalise le format compact v2 (positions fixes, voir Recipient.tsx encodeSheet).
+    // Normalise le format compact v2 (positions fixes, voir client/src/lib/emergencySheet.ts).
     function normalize(d) {
       if (!d) return null;
       var r = Array.isArray(d.r) ? d.r : [];

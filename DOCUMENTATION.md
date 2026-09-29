@@ -337,6 +337,7 @@ La page `/kiosk` (alias `/myday`) est l'**écran patient** : un mode plein écra
 - **Qu'est-ce que je dois faire maintenant ?** Uniquement les médicaments dus maintenant, avec photo, nom, dosage et « Prends 2 comprimés », puis un seul bouton « J'ai tout pris ». Les prises futures ne sont pas montrées (« Prochaine prise à 20 h »), les prises manquées restent côté aidant.
 - **Qui vient aujourd'hui ?** Les visites du jour avec la photo et le rôle des membres, ou l'infirmière et l'aide à domicile.
 - **Est-ce que j'ai un rendez-vous ?** Les rendez-vous médicaux du jour, avec l'heure et le lieu.
+- **Urgences** : un bouton rouge dans la barre du haut ouvre la **fiche urgence** en grand, à montrer aux secours qui arrivent chez le proche : identité, âge, groupe sanguin, allergies en rouge, traitements en cours, antécédents, directives anticipées et qui appeler. Un QR code à côté permet au secouriste de l'emporter dans son téléphone. Ce QR contient la fiche dans le fragment de son URL, il s'ouvre donc hors ligne, dans l'ambulance, sans exposer OpenCare. `GET /api/kiosk/emergency`, accessible à un appareil appairé comme à un membre : c'est la même fiche que le QR du frigo.
 - **Comment demander ?** « Demandez-moi » (réponses sur la journée, puis compagnon de conversation), « Mes informations » (nom, adresse, téléphone, médecin, pharmacie, infirmière, aide à domicile), et les deux gros boutons « Tout va bien » (entrée de journal de type humeur) et « J'ai besoin d'aide » (entrée incident + notification urgente, y compris Web Push, à tout le cercle).
 
 ### Demandez-moi
@@ -348,6 +349,8 @@ La dictée passe par le serveur Whisper auto-hébergé du cercle quand il est co
 ### Visiteurs
 
 Le bouton **« Visiteur »** de l'écran patient permet à quiconque arrive de se signaler en deux gestes : type (famille, ami ou voisin, aide à domicile, infirmier, médecin, autre), prénom, arrivée notée. Le proche sait qui est là, la famille reçoit une notification (« Nadia est arrivée à 8 h ») et une entrée de journal de type visite est écrite au nom du visiteur. Un **professionnel** peut, depuis le même écran, lire les consignes du plan de soins, laisser une note de passage et confirmer les médicaments dus maintenant (la confirmation est alors à son nom), puis signaler son départ, sans jamais voir le reste des données du cercle. La page **Visiteurs** de l'app aidant liste les passages (durée, notes) ; un admin peut supprimer une visite erronée. Endpoints : `POST /api/kiosk/visits/check-in`, `POST /api/kiosk/visits/:id/note`, `POST /api/kiosk/visits/:id/check-out` (appareil ou membre), `GET /api/visits`, `DELETE /api/visits/:id` (membres).
+
+En **plein écran**, l'écran patient occupe toute la largeur de la dalle : une tablette murale ou un téléviseur n'a pas à garder des marges vides. Hors plein écran, la largeur reste bornée pour rester lisible dans une fenêtre de navigateur.
 
 Le bandeau d'accueil affiche les **photos de famille** de votre instance Immich quand l'option est activée (la clé API ne quitte jamais le serveur, les photos sont proxifiées par `/api/kiosk/photo`), sinon une image calme. La **météo** du jour apparaît quand un lieu est réglé.
 

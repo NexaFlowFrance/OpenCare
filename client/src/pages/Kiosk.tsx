@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-    CalendarDays, Check, Hand, MapPin, Maximize2, Minimize2, Pill, Search, Users, BookUser,
+    CalendarDays, Check, Hand, MapPin, Maximize2, Minimize2, Pill, Search, Siren, Users, BookUser,
     Settings as SettingsIcon, X, ThermometerSun, GlassWater, MessageCircle, Phone, Stethoscope, LogOut, KeyRound,
     Sun, Moon, CloudSun, CloudMoon, Cloud, CloudFog, CloudDrizzle, CloudRain, CloudSnow, CloudLightning,
 } from 'lucide-react';
@@ -13,6 +13,7 @@ import { useWebSocketUpdates } from '../hooks/useWebSocketUpdates';
 import { intlLocale } from '../i18n/format';
 import { cn } from '../lib/utils';
 import KioskCompanion from '../components/app/KioskCompanion';
+import KioskEmergency from '../components/app/KioskEmergency';
 import KioskVisitor, { type Visit as KioskVisit } from '../components/app/KioskVisitor';
 
 // Ecran patient OpenCare : la tablette murale chez le proche, et le meme ecran
@@ -208,6 +209,7 @@ const Kiosk: React.FC<KioskProps> = ({ device }) => {
     // Superpositions
     const [companionOpen, setCompanionOpen] = useState(false);
     const [visitorOpen, setVisitorOpen] = useState(false);
+    const [emergencyOpen, setEmergencyOpen] = useState(false);
     // Rappel de prise pousse par l escalade (niveau 1) : ecran calme, lu a voix haute.
     const [reminderOpen, setReminderOpen] = useState(false);
     const [infoOpen, setInfoOpen] = useState(false);
@@ -508,10 +510,14 @@ const Kiosk: React.FC<KioskProps> = ({ device }) => {
     const tile: React.CSSProperties = { backgroundColor: C.card, border: `1px solid ${C.border}`, color: C.text };
     const sectionTitle = (color: string): React.CSSProperties => ({ ...fs(24), color, fontWeight: 800 });
     const isPhone = device?.kind === 'phone';
+    // En plein ecran, la tablette murale occupe toute la largeur : des marges
+    // vides sur un ecran de 55 pouces ne servent personne. Hors plein ecran, la
+    // largeur reste bornee pour rester lisible dans une fenetre de navigateur.
+    const widthClass = isPhone ? 'max-w-[640px]' : isFullscreen ? 'max-w-none' : 'max-w-[1400px]';
 
     return (
         <div className="relative min-h-screen font-kiosk" style={rootStyle}>
-            <div className={cn('mx-auto flex min-h-screen w-full max-w-[1400px] flex-col gap-4 px-4 pb-40 pt-3 sm:gap-5 sm:px-6 lg:px-8', isPhone && 'max-w-[640px]')}>
+            <div className={cn('mx-auto flex min-h-screen w-full flex-col gap-4 px-4 pb-40 pt-3 sm:gap-5 sm:px-6 lg:px-8', widthClass)}>
                 {/* Barre du haut : marque, date, heure, plein ecran */}
                 <header className="flex flex-wrap items-center justify-between gap-3 rounded-2xl px-4 py-2 sm:px-5" style={tile}>
                     <div className="flex items-center gap-3">
@@ -527,6 +533,17 @@ const Kiosk: React.FC<KioskProps> = ({ device }) => {
                         >
                             <Users className="h-6 w-6" aria-hidden="true" />
                             <span className="hidden sm:inline">{activeVisit ? firstNameOf(activeVisit.visitor_name) : t('kiosk:visitor.button')}</span>
+                        </button>
+                        {/* Urgences : la fiche vitale en deux secondes quand les secours arrivent */}
+                        <button
+                            type="button"
+                            onClick={() => setEmergencyOpen(true)}
+                            aria-label={t('kiosk:emergency.button')}
+                            className="flex min-h-[48px] items-center gap-2 rounded-xl px-3 font-bold text-white"
+                            style={{ ...fs(18), backgroundColor: C.red }}
+                        >
+                            <Siren className="h-6 w-6" aria-hidden="true" />
+                            <span className="hidden sm:inline">{t('kiosk:emergency.button')}</span>
                         </button>
                     </div>
                     <div className="flex items-center gap-4">
@@ -803,7 +820,7 @@ const Kiosk: React.FC<KioskProps> = ({ device }) => {
                 className="fixed inset-x-0 bottom-0 z-20 px-4 pb-4 pt-6 sm:px-6"
                 style={{ background: `linear-gradient(to top, ${C.bg} 70%, transparent)` }}
             >
-                <div className={cn('mx-auto grid max-w-[1400px] grid-cols-2 gap-3 sm:gap-5', isPhone && 'max-w-[640px]')}>
+                <div className={cn('mx-auto grid w-full grid-cols-2 gap-3 sm:gap-5', widthClass)}>
                     <button
                         type="button"
                         onClick={() => void sendStatus('ok')}
@@ -836,6 +853,11 @@ const Kiosk: React.FC<KioskProps> = ({ device }) => {
                     </button>
                 </div>
             </div>
+
+            {/* Fiche urgence (plein ecran) */}
+            {emergencyOpen && (
+                <KioskEmergency fontScale={settings.fontScale} onClose={() => setEmergencyOpen(false)} />
+            )}
 
             {/* Parcours visiteur (plein ecran) */}
             {visitorOpen && (

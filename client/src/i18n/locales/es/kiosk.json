@@ -239,5 +239,30 @@
     "subtitle_other": "{{count}} tomas pendientes ahora",
     "taken": "Ya lo tomé todo",
     "later": "De acuerdo, en un momento"
+  },
+  "emergency": {
+    "button": "Emergencia",
+    "title": "Ficha de emergencia",
+    "subtitle": "Muéstrela a los servicios de emergencia. Escanee el código para llevársela.",
+    "close": "Cerrar",
+    "loading": "Un momento...",
+    "unavailable": "La ficha no está disponible. Pregunte a la familia.",
+    "birth": "Fecha de nacimiento",
+    "age_one": "{{count}} año",
+    "age_other": "{{count}} años",
+    "bloodType": "Grupo sanguíneo",
+    "allergies": "Alergias",
+    "noAllergies": "Ninguna alergia conocida",
+    "medications": "Tratamientos actuales",
+    "noMedications": "Ningún tratamiento registrado",
+    "history": "Antecedentes",
+    "directives": "Voluntades anticipadas",
+    "extra": "Información complementaria",
+    "contacts": "A quién llamar",
+    "gp": "médico de cabecera",
+    "scanTitle": "Llevarse la ficha",
+    "scanHint": "Escanee con un teléfono. La ficha se abre sin conexión, no se envía nada.",
+    "qrAlt": "Código QR de la ficha de emergencia",
+    "tooBig": "Ficha larga: el código puede ser difícil de escanear. Acorte los antecedentes en la aplicación."
   }
 }

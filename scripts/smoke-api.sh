@@ -218,6 +218,8 @@ plan=$(request PUT "/api/care-plan" '{"sections":{"morning":"Lever vers 7 h 30",
 echo "$plan" | jq -e '.success == true and .data.sections.morning == "Lever vers 7 h 30" and (.data.sections | has("bogus") | not)' >/dev/null
 plan=$(request GET "/api/care-plan")
 echo "$plan" | jq -e '.data.sections.emergency == "Appeler Alice en premier" and (.data.week.days | length == 7) and (.data.medications | type == "array") and (.data.professionals | type == "array")' >/dev/null
+kurg=$(curl -sS "$API_BASE/api/kiosk/emergency" -H "X-Kiosk-Token: $kiosk_token")
+echo "$kurg" | jq -e '.success == true and .data.recipient.first_name == "Jeanne" and (.data.medications | type == "array") and (.data.contacts | type == "array")' >/dev/null
 kplan=$(curl -sS "$API_BASE/api/kiosk/care-plan" -H "X-Kiosk-Token: $kiosk_token")
 echo "$kplan" | jq -e '.data.sections.morning == "Lever vers 7 h 30"' >/dev/null
 ask=$(curl -sS -X POST "$API_BASE/api/companion/message" -H "Content-Type: application/json" -H "X-Kiosk-Token: $kiosk_token" -d '{"messages":[{"role":"user","content":"Qui est venu aujourd hui ?"}]}')

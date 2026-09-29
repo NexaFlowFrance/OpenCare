@@ -239,5 +239,30 @@
     "subtitle_other": "{{count}} prises à prendre maintenant",
     "taken": "J'ai tout pris",
     "later": "D'accord, dans un instant"
+  },
+  "emergency": {
+    "button": "Urgences",
+    "title": "Fiche urgence",
+    "subtitle": "À montrer aux secours. Scannez le code pour l'emporter.",
+    "close": "Fermer",
+    "loading": "Un instant...",
+    "unavailable": "La fiche n'est pas disponible. Demandez à la famille.",
+    "birth": "Né(e) le",
+    "age_one": "{{count}} an",
+    "age_other": "{{count}} ans",
+    "bloodType": "Groupe sanguin",
+    "allergies": "Allergies",
+    "noAllergies": "Aucune allergie connue",
+    "medications": "Traitements en cours",
+    "noMedications": "Aucun traitement enregistré",
+    "history": "Antécédents",
+    "directives": "Directives anticipées",
+    "extra": "Informations complémentaires",
+    "contacts": "Qui appeler",
+    "gp": "médecin traitant",
+    "scanTitle": "Emporter la fiche",
+    "scanHint": "Scannez avec un téléphone. La fiche s'ouvre hors ligne, rien n'est envoyé.",
+    "qrAlt": "QR code de la fiche urgence",
+    "tooBig": "Fiche longue : le code peut être difficile à scanner. Raccourcissez les antécédents depuis l'app."
   }
 }

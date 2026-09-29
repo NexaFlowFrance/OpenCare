@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Camera, Copy, Eye, EyeOff, Loader2, Pencil, Plus, Printer, RefreshCw, Trash2 } from 'lucide-react';
 import QRCode from 'qrcode';
 import { api } from '../lib/api';
+import { EMERGENCY_VIEWER_URL, MAX_QR_URL_LENGTH, encodeSheet, type EmergencyPayload } from '../lib/emergencySheet';
 import { useCircle } from '../contexts/CircleContext';
 import { useWebSocketUpdates } from '../hooks/useWebSocketUpdates';
 import {
@@ -279,50 +280,7 @@ const StoryCard: React.FC<{ circleId: string | null; canWriteContent: boolean }>
 };
 
 // ── Fiche urgence (QR frigo) ────────────────────────────────────────────────
-
-// Page publique de lecture de la fiche (hebergee sur la GitHub Page du projet).
-// Elle ne contient AUCUNE donnee: la fiche voyage dans le fragment d'URL (#...),
-// jamais envoye au serveur. Fonctionne donc en 4G sans exposer OpenCare.
-const EMERGENCY_VIEWER_URL = 'https://nexaflowfrance.github.io/OpenCare/urgence.html';
-
-interface EmergencyPayload {
-    recipient: Record<string, unknown> | null;
-    medications: Array<Record<string, unknown>>;
-    contacts: Array<Record<string, unknown>>;
-    extra_notes: string | null;
-}
-
-// Format compact v2 (positions fixes) pour garder le QR peu dense donc scannable.
-// r: [nom, naissance, groupe, allergies, directives, medecin, telMedecin, mutuelle, adresse, antecedents]
-// m item: [nom, dosage, forme, heures] ; c item: [nom, organisation, telephone]
-// Le lecteur docs/urgence.html decode exactement ces positions.
-const encodeSheet = (payload: EmergencyPayload): string => {
-    const r = (payload.recipient ?? {}) as Record<string, unknown>;
-    const s = (v: unknown, max = 0) => {
-        if (typeof v !== 'string' || !v.trim()) return '';
-        return max && v.length > max ? v.slice(0, max).trimEnd() + '…' : v;
-    };
-    const fullName = [s(r.first_name), s(r.last_name)].filter(Boolean).join(' ');
-    const compact = {
-        v: 2,
-        r: [
-            fullName, s(r.birth_date), s(r.blood_type), s(r.allergies, 150), s(r.advance_directives, 200),
-            s(r.gp_name), s(r.gp_phone), s(r.insurance_info, 60), s(r.address, 80), s(r.medical_history, 150),
-        ],
-        m: payload.medications.slice(0, 15).map((m) => [
-            s(m.name), s(m.dosage), s(m.form),
-            Array.isArray(m.schedules)
-                ? (m.schedules as Array<Record<string, unknown>>).map((x) => s(x.time)).filter(Boolean).join(' ')
-                : '',
-        ]),
-        c: payload.contacts.slice(0, 8).map((c) => [s(c.name), s(c.organization), s(c.phone)]),
-        x: s(payload.extra_notes, 120),
-        u: new Date().toISOString().slice(0, 10),
-    };
-    const json = JSON.stringify(compact);
-    const b64 = btoa(unescape(encodeURIComponent(json)));
-    return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-};
+// L'encodage vit dans lib/emergencySheet : l'ecran patient fabrique le meme QR.
 
 const EmergencyCard: React.FC<{ circleId: string | null; canWriteContent: boolean; recipientName: string }> = ({
     circleId, canWriteContent, recipientName,
@@ -375,7 +333,7 @@ const EmergencyCard: React.FC<{ circleId: string | null; canWriteContent: boolea
         const url = `${EMERGENCY_VIEWER_URL}#${encoded}`;
         setSheetUrl(url);
         // Un QR au-dela de ~2300 caracteres devient difficile a scanner.
-        setTooBig(url.length > 2300);
+        setTooBig(url.length > MAX_QR_URL_LENGTH);
         QRCode.toDataURL(url, { width: 512, margin: 2, errorCorrectionLevel: 'L' })
             .then((dataUrl) => { if (!cancelled) setQr(dataUrl); })
             .catch(() => { if (!cancelled) setQr(null); });

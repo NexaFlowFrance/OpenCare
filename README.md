@@ -175,5 +175,8 @@ OpenCare is built on the open-source foundation of [OpenFamily](https://github.c
 the self-hosted family organizer by NexaFlow. The care circles, the real-time layer, the offline-first
 client and the self-hosting story all come from that base, rebuilt around family caregiving.
 
+Thanks to [mpking828](https://github.com/mpking828) for the time zone alignment between the server and
+the database, the multilingual emergency sheet, and careful bug reports from a household outside France.
+
 Special thanks to [thecybermacgyver](https://github.com/thecybermacgyver), whose thorough product review
 and kiosk mockups shaped the patient experience of version 1.2.
