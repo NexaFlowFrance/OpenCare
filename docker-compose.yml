@@ -37,6 +37,10 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD doit etre defini dans .env}
       SERVER_PORT: 3001
       NODE_ENV: production
+      # Fuseau du serveur : les planificateurs (rappels, veille, synthese) le
+      # lisent, et la session PostgreSQL s'aligne dessus (lib/dbTimeZone).
+      # Sans valeur dans .env, le conteneur reste en UTC comme avant.
+      TZ: ${TZ:-UTC}
       JWT_SECRET: ${JWT_SECRET}
       VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY}
       VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY}

@@ -237,6 +237,25 @@ L'interface existe en **français, anglais et espagnol**. Les langues sont déco
 
 Côté accessibilité : un lien d'évitement mène directement au contenu dès la première tabulation, les deux barres de navigation sont nommées et la page courante porte `aria-current`, le contenu principal est un repère `main` focalisable, les boutons de langue annoncent le nom de la langue et non son code, et les boîtes de dialogue se ferment à l'échappement en rendant le focus. Les états importants ne passent jamais par la seule couleur : une mesure hors plage, un stock bas ou un message non lu portent aussi un texte lisible par un lecteur d'écran.
 
+### Fuseau horaire
+
+Les horodatages d'OpenCare sont des heures locales sans fuseau : « 8 h », c'est 8 h chez le proche, quoi qu'en pense le serveur. Deux choses les écrivent, le serveur applicatif quand il envoie une date, et PostgreSQL quand il remplit un `CURRENT_TIMESTAMP`. Si les deux ne sont pas dans le même fuseau, une même journée affiche des heures décalées de quelques heures selon la ligne.
+
+Réglez donc **un seul** fuseau, celui du proche, dans `.env` :
+
+```
+TZ=Europe/Paris
+```
+
+Il sert à tout : le serveur, les planificateurs (rappels de rendez-vous, veille passive, synthèse hebdomadaire) et, depuis la connexion, la session PostgreSQL, qui s'aligne automatiquement sur le fuseau du serveur. Aucune commande n'est à passer sur la base, et il n'y a rien à reconfigurer si vous changez d'avis : redémarrez le serveur, les nouvelles connexions suivent.
+
+Deux précisions utiles :
+
+- **Docker** : `TZ` est transmis au conteneur du serveur par `docker-compose.yml`. Sans valeur, tout reste en UTC, comme avant.
+- **Windows** : Node ignore la variable `TZ` sur ce système. L'installateur utilise donc le fuseau de la machine, et la base s'aligne dessus, ce qui donne le bon résultat tant que la machine est à l'heure du proche.
+
+Les horodatages déjà enregistrés ne sont pas réécrits : changer de fuseau ne corrige pas le passé, il aligne la suite.
+
 ### Sauvegarde et restauration
 
 Tout vit dans PostgreSQL : le journal, les photos, les documents, les médicaments. Sauvegarder la base, c'est donc tout sauvegarder.
