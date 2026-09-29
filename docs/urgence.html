@@ -69,6 +69,58 @@
   <div id="app"></div>
 
   <script>
+    // Langue du lecteur : ?lang=fr|en|es force la langue, sinon celle du
+    // telephone qui scanne (le secouriste), avec l'anglais par defaut.
+    var STRINGS = {
+      fr: {
+        title: 'Fiche urgence', unreadableTitle: 'Fiche illisible',
+        unreadableBody: 'Ce QR code semble incomplet ou abime. Demandez une nouvelle impression a la famille.',
+        noneTitle: 'Aucune fiche', noneBody: 'Ce lien ne contient pas de fiche urgence.',
+        generated: 'Generee le {date} par la famille via OpenCare',
+        birth: 'Naissance', years: 'ans', bloodType: 'Groupe sanguin', address: 'Adresse', insurance: 'Mutuelle',
+        allergies: 'Allergies', medications: 'Traitements en cours', noMedications: 'Aucun traitement enregistre.',
+        history: 'Antecedents', directives: 'Directives anticipees', extra: 'Informations complementaires',
+        contacts: 'Contacts', gp: 'medecin traitant', print: 'Imprimer', colon: ' :',
+        privacy: 'Fiche affichee uniquement sur cet appareil. Aucune donnee n\'est transmise ni enregistree en ligne.'
+      },
+      en: {
+        title: 'Emergency sheet', unreadableTitle: 'Unreadable sheet',
+        unreadableBody: 'This QR code looks incomplete or damaged. Ask the family for a new printout.',
+        noneTitle: 'No sheet', noneBody: 'This link does not contain an emergency sheet.',
+        generated: 'Generated on {date} by the family with OpenCare',
+        birth: 'Date of birth', years: 'years old', bloodType: 'Blood type', address: 'Address', insurance: 'Insurance',
+        allergies: 'Allergies', medications: 'Current medications', noMedications: 'No medications recorded.',
+        history: 'Medical history', directives: 'Advance directives', extra: 'Additional information',
+        contacts: 'Contacts', gp: 'primary care doctor', print: 'Print', colon: ':',
+        privacy: 'This sheet is shown on this device only. No data is sent or stored online.'
+      },
+      es: {
+        title: 'Ficha de emergencia', unreadableTitle: 'Ficha ilegible',
+        unreadableBody: 'Este código QR parece incompleto o dañado. Pida a la familia una nueva impresión.',
+        noneTitle: 'Sin ficha', noneBody: 'Este enlace no contiene ninguna ficha de emergencia.',
+        generated: 'Generada el {date} por la familia con OpenCare',
+        birth: 'Fecha de nacimiento', years: 'años', bloodType: 'Grupo sanguíneo', address: 'Dirección', insurance: 'Seguro',
+        allergies: 'Alergias', medications: 'Tratamientos actuales', noMedications: 'Ningún tratamiento registrado.',
+        history: 'Antecedentes', directives: 'Voluntades anticipadas', extra: 'Información complementaria',
+        contacts: 'Contactos', gp: 'médico de cabecera', print: 'Imprimir', colon: ':',
+        privacy: 'Ficha mostrada solo en este dispositivo. Ningún dato se envía ni se guarda en línea.'
+      }
+    };
+
+    function pickLang() {
+      var forced = (new URLSearchParams(location.search).get('lang') || '').toLowerCase().slice(0, 2);
+      if (STRINGS[forced]) return forced;
+      var prefs = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || ''];
+      for (var i = 0; i < prefs.length; i++) {
+        var code = String(prefs[i]).toLowerCase().slice(0, 2);
+        if (STRINGS[code]) return code;
+      }
+      return 'en';
+    }
+
+    var LANG = pickLang();
+    function t(key) { return STRINGS[LANG][key]; }
+
     function decodeData() {
       var raw = (location.hash || '').replace(/^#/, '');
       if (!raw) return null;
@@ -127,12 +179,12 @@
     function render(raw) {
       var app = document.getElementById('app');
       if (raw === undefined) {
-        app.innerHTML = '<div class="empty"><h1>Fiche illisible</h1><p>Ce QR code semble incomplet ou abime. Demandez une nouvelle impression a la famille.</p></div>';
+        app.innerHTML = '<div class="empty"><h1>' + t('unreadableTitle') + '</h1><p>' + t('unreadableBody') + '</p></div>';
         return;
       }
       var d = normalize(raw);
       if (!d || !d.recipient.name) {
-        app.innerHTML = '<div class="empty"><h1>Aucune fiche</h1><p>Ce lien ne contient pas de fiche urgence.</p></div>';
+        app.innerHTML = '<div class="empty"><h1>' + t('noneTitle') + '</h1><p>' + t('noneBody') + '</p></div>';
         return;
       }
       var r = d.recipient;
@@ -142,27 +194,27 @@
 
       h += '<header><div class="row">';
       h += '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>';
-      h += '<h1>Fiche urgence</h1></div>';
-      if (d.generated_at) h += '<p class="upd">Generee le ' + esc(d.generated_at) + ' par la famille via OpenCare</p>';
+      h += '<h1>' + t('title') + '</h1></div>';
+      if (d.generated_at) h += '<p class="upd">' + t('generated').replace('{date}', esc(d.generated_at)) + '</p>';
       h += '</header>';
 
       h += '<main>';
 
       // Identite
       h += '<section class="card"><p class="name">' + esc(fullName) + '</p><dl>';
-      if (r.birth_date) h += '<div><dt>Naissance :</dt> <dd>' + esc(r.birth_date) + (a != null ? ' (' + a + ' ans)' : '') + '</dd></div>';
-      if (r.blood_type) h += '<div><dt>Groupe sanguin :</dt> <dd class="blood">' + esc(r.blood_type) + '</dd></div>';
-      if (r.address) h += '<div><dt>Adresse :</dt> <dd>' + esc(r.address) + '</dd></div>';
-      if (r.insurance_info) h += '<div><dt>Mutuelle :</dt> <dd>' + esc(r.insurance_info) + '</dd></div>';
+      if (r.birth_date) h += '<div><dt>' + t('birth') + t('colon') + '</dt> <dd>' + esc(r.birth_date) + (a != null ? ' (' + a + ' ' + t('years') + ')' : '') + '</dd></div>';
+      if (r.blood_type) h += '<div><dt>' + t('bloodType') + t('colon') + '</dt> <dd class="blood">' + esc(r.blood_type) + '</dd></div>';
+      if (r.address) h += '<div><dt>' + t('address') + t('colon') + '</dt> <dd>' + esc(r.address) + '</dd></div>';
+      if (r.insurance_info) h += '<div><dt>' + t('insurance') + t('colon') + '</dt> <dd>' + esc(r.insurance_info) + '</dd></div>';
       h += '</dl></section>';
 
       // Allergies
       if (r.allergies) {
-        h += '<section class="card alert"><h2 class="alert">Allergies</h2><p class="alvalue">' + esc(r.allergies) + '</p></section>';
+        h += '<section class="card alert"><h2 class="alert">' + t('allergies') + '</h2><p class="alvalue">' + esc(r.allergies) + '</p></section>';
       }
 
       // Traitements
-      h += '<section class="card"><h2>Traitements en cours</h2>';
+      h += '<section class="card"><h2>' + t('medications') + '</h2>';
       if (d.medications && d.medications.length) {
         h += '<ul>';
         d.medications.forEach(function (m) {
@@ -172,27 +224,27 @@
         });
         h += '</ul>';
       } else {
-        h += '<p class="sub">Aucun traitement enregistre.</p>';
+        h += '<p class="sub">' + t('noMedications') + '</p>';
       }
       h += '</section>';
 
       // Antecedents
       if (r.medical_history) {
-        h += '<section class="card"><h2>Antecedents</h2><p class="pre">' + esc(r.medical_history) + '</p></section>';
+        h += '<section class="card"><h2>' + t('history') + '</h2><p class="pre">' + esc(r.medical_history) + '</p></section>';
       }
       // Directives anticipees
       if (r.advance_directives) {
-        h += '<section class="card"><h2>Directives anticipees</h2><p class="pre">' + esc(r.advance_directives) + '</p></section>';
+        h += '<section class="card"><h2>' + t('directives') + '</h2><p class="pre">' + esc(r.advance_directives) + '</p></section>';
       }
       // Notes complementaires
       if (d.extra_notes) {
-        h += '<section class="card"><h2>Informations complementaires</h2><p class="pre">' + esc(d.extra_notes) + '</p></section>';
+        h += '<section class="card"><h2>' + t('extra') + '</h2><p class="pre">' + esc(d.extra_notes) + '</p></section>';
       }
 
       // Contacts
-      h += '<section class="card"><h2>Contacts</h2><ul>';
+      h += '<section class="card"><h2>' + t('contacts') + '</h2><ul>';
       if (r.gp_name) {
-        h += '<li><strong>' + esc(r.gp_name) + '</strong> <span class="sub">(medecin traitant)</span>' + (r.gp_phone ? ' &middot; ' + telLink(r.gp_phone) : '') + '</li>';
+        h += '<li><strong>' + esc(r.gp_name) + '</strong> <span class="sub">(' + t('gp') + ')</span>' + (r.gp_phone ? ' &middot; ' + telLink(r.gp_phone) : '') + '</li>';
       }
       (d.contacts || []).forEach(function (c) {
         h += '<li><strong>' + esc(c.name) + '</strong>' + (c.organization ? ' <span class="sub">(' + esc(c.organization) + ')</span>' : '') + (c.phone ? ' &middot; ' + telLink(c.phone) : '') + '</li>';
@@ -200,11 +252,14 @@
       h += '</ul></section>';
 
       h += '</main>';
-      h += '<div class="toolbar"><button onclick="window.print()">Imprimer</button></div>';
-      h += '<footer>Fiche affichee uniquement sur cet appareil. Aucune donnee n\'est transmise ni enregistree en ligne.</footer>';
+      h += '<div class="toolbar"><button onclick="window.print()">' + t('print') + '</button></div>';
+      h += '<footer>' + t('privacy') + '</footer>';
 
       app.innerHTML = h;
     }
+
+    document.documentElement.lang = LANG;
+    document.title = t('title');
 
     render(decodeData());
     window.addEventListener('hashchange', function () { render(decodeData()); });
