@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { loadEnv } from './config/loadEnv';
 import logger from './lib/logger';
+import { nodeTimeZone, pgTimeZoneOptions } from './lib/dbTimeZone';
 
 loadEnv();
 
@@ -28,7 +29,18 @@ if (!process.env.POSTGRES_PASSWORD) {
     });
 }
 
+// Keep CURRENT_TIMESTAMP defaults in the same zone as the Date parameters node-pg
+// sends, whatever TimeZone the database was initialized with (see lib/dbTimeZone).
+const sessionTimeZone = nodeTimeZone();
+const timeZoneOptions = pgTimeZoneOptions(sessionTimeZone);
+if (!timeZoneOptions) {
+    logger.warn('db.timezone_not_applied', {
+        message: `Time zone "${sessionTimeZone}" was not passed to PostgreSQL : stored times follow the database default.`,
+    });
+}
+
 const pool = new Pool({
+    options: timeZoneOptions,
     host: process.env.POSTGRES_HOST || 'localhost',
     port: parseInt(process.env.POSTGRES_PORT || '5432'),
     database: process.env.POSTGRES_DB || 'opencare',
