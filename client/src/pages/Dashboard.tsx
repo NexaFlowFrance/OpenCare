@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import {
-    CalendarDays, Pill, BookOpen, CheckSquare, Activity, ChevronRight, MessageCircle,
+    CalendarDays, Pill, BookOpen, CheckSquare, Activity, ChevronRight, MessageCircle, MonitorPlay,
 } from 'lucide-react';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { api } from '../lib/api';
@@ -11,6 +11,7 @@ import { formatAmount } from '../lib/medications';
 import { useCircle } from '../contexts/CircleContext';
 import { useWebSocketUpdates } from '../hooks/useWebSocketUpdates';
 import { dateLocale, intlLocale } from '../i18n/format';
+import { formatVital, type UnitSystem } from '../lib/units';
 import WeeklyDigestCard from '../components/app/WeeklyDigestCard';
 import PresenceBanner from '../components/app/PresenceBanner';
 import HeatwaveBanner from '../components/app/HeatwaveBanner';
@@ -111,11 +112,27 @@ const relativeTime = (value: string): string => {
 
 const VITAL_ORDER: Vital['type'][] = ['weight', 'bp', 'temperature', 'glucose', 'pain', 'mood'];
 
-const vitalValue = (vital: Vital): string => {
-    const base = vital.value2 !== null && vital.value2 !== undefined && vital.value2 !== ''
-        ? `${vital.value}/${vital.value2}`
-        : String(vital.value);
-    return vital.unit ? `${base} ${vital.unit}` : base;
+/**
+ * Systeme d'unites du cercle, lu sans faire confiance au reglage stocke: un
+ * cercle cree avant l'option, ou un reglage abime, doit retomber en metrique
+ * plutot que d'afficher des livres sur des kilos.
+ */
+const circleUnitSystem = (circle: { settings?: { unit_system?: string } } | null): UnitSystem =>
+    circle?.settings?.unit_system === 'imperial' ? 'imperial' : 'metric';
+
+/**
+ * Le serveur renvoie toujours du metrique, y compris l'unite jointe a la
+ * mesure: on la reconstruit depuis le type pour suivre le choix du cercle.
+ * Une valeur illisible est rendue brute plutot que masquee.
+ */
+const vitalValue = (vital: Vital, system: UnitSystem): string => {
+    const value = Number(vital.value);
+    if (!Number.isFinite(value)) return String(vital.value);
+    const raw2 = vital.value2 !== null && vital.value2 !== undefined && vital.value2 !== ''
+        ? Number(vital.value2)
+        : null;
+    const value2 = raw2 !== null && Number.isFinite(raw2) ? raw2 : null;
+    return formatVital(vital.type, value, value2, system, intlLocale());
 };
 
 // ─── Card shell ───────────────────────────────────────────────────────────────
@@ -165,7 +182,7 @@ const CardEmpty: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 const Dashboard: React.FC = () => {
     const { t } = useTranslation(['dashboard', 'common', 'medications']);
     const navigate = useNavigate();
-    const { activeCircle, circles } = useCircle();
+    const { activeCircle, circles, myRole } = useCircle();
 
     const [data, setData] = useState<DashboardData | null>(null);
     const [loading, setLoading] = useState(true);
@@ -233,6 +250,7 @@ const Dashboard: React.FC = () => {
     const vitals = data?.latest_vitals
         ? [...data.latest_vitals].sort((a, b) => VITAL_ORDER.indexOf(a.type) - VITAL_ORDER.indexOf(b.type))
         : null;
+    const unitSystem = circleUnitSystem(activeCircle);
 
     return (
         <div className="mx-auto max-w-6xl space-y-6">
@@ -278,7 +296,7 @@ const Dashboard: React.FC = () => {
             {/* single-recipient dashboard */}
 
             {/* Warm header: recipient photo or initial + greeting + full date */}
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-4">
                 {photoUrl ? (
                     <img
                         src={photoUrl}
@@ -298,6 +316,19 @@ const Dashboard: React.FC = () => {
                     </h1>
                     <p className="text-caption text-muted-foreground first-letter:uppercase">{todayLabel}</p>
                 </div>
+                {/* Le mode Kiosk s'ouvre d'ici : c'est l'ecran qu'on lance en
+                    arrivant chez le proche, pas un reglage qu'on va chercher.
+                    Masque au role voisin, qui ne voit aucune donnee de sante. */}
+                {myRole !== 'neighbor' && (
+                    <button
+                        type="button"
+                        onClick={() => navigate('/kiosk')}
+                        className="ml-auto flex min-h-[44px] shrink-0 items-center gap-2 rounded-card border border-border bg-card px-4 text-caption font-medium text-foreground transition-colors duration-fast hover:bg-surface-2"
+                    >
+                        <MonitorPlay className="h-4 w-4 text-primary" aria-hidden="true" />
+                        {t('dashboard:openKiosk')}
+                    </button>
+                )}
             </div>
 
             {/* Ce qui demande l'attention d'un aidant, avant tout le reste */}
@@ -467,7 +498,7 @@ const Dashboard: React.FC = () => {
                                             {t(`dashboard:vitals.types.${vital.type}`, { defaultValue: vital.type })}
                                         </span>
                                         <span className="min-w-0 truncate text-right">
-                                            <span className="font-medium text-foreground">{vitalValue(vital)}</span>
+                                            <span className="font-medium text-foreground">{vitalValue(vital, unitSystem)}</span>
                                             <span className="ml-1.5 text-micro text-muted-foreground">
                                                 {relativeTime(vital.measured_at)}
                                             </span>

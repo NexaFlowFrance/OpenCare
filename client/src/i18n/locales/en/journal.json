@@ -12,7 +12,7 @@
         "publish": "Publish",
         "publishing": "Publishing...",
         "vitalTypeLabel": "Vital type",
-        "valueLabel": "Value",
+        "valueWithUnit": "Value ({{unit}})",
         "systolicLabel": "Systolic",
         "diastolicLabel": "Diastolic"
     },
@@ -32,6 +32,7 @@
         "temperature": "Temperature",
         "glucose": "Blood sugar"
     },
+    "vitalSummary": "{{label}}: {{measure}}",
     "filters": {
         "all": "All"
     },

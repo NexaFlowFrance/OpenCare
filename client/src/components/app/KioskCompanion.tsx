@@ -12,7 +12,7 @@ import { cn } from '../../lib/utils';
 // serveur depuis les donnees du cercle, sans IA ; la conversation libre passe
 // par l'IA du cercle quand elle est configuree. Repli clavier si pas de micro.
 //
-// Palette claire codee en dur, comme le reste de l'ecran patient (pages/Kiosk.tsx).
+// Palette claire codee en dur, comme le reste du mode Kiosk (pages/Kiosk.tsx).
 const C = {
     bg: '#f5f7fb',
     card: '#ffffff',

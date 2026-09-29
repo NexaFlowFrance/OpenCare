@@ -41,6 +41,7 @@
     "maxSystolicLabel": "Systolic maximum",
     "minDiastolicLabel": "Diastolic minimum",
     "maxDiastolicLabel": "Diastolic maximum",
+    "unitHint": "Bounds in {{unit}}.",
     "clearHint": "Clear the fields to remove the range.",
     "outOfRange": "Out of range",
     "outOfRangeLabel": "Measurement outside the normal range"

@@ -25,12 +25,19 @@ import { useCircle } from '../contexts/CircleContext';
 import { useWebSocketUpdates } from '../hooks/useWebSocketUpdates';
 import { Badge, Button, Card, CardContent, Dialog, Input, Select, Textarea, useToast } from '../components/ui';
 import { EmptyState } from '../components/app';
-import { dateLocale, formatNumber } from '../i18n/format';
+import { dateLocale, intlLocale } from '../i18n/format';
+import {
+    displayUnit,
+    formatVital,
+    storageUnit,
+    toStorageValue,
+    type UnitSystem,
+    type VitalType,
+} from '../lib/units';
 
 // ─── Types alignés sur server/src/routes/journal.ts ─────────────────────────
 
 type EntryType = 'visit' | 'note' | 'vital' | 'medication' | 'incident' | 'mood';
-type VitalType = 'weight' | 'bp' | 'pain' | 'mood' | 'temperature' | 'glucose';
 
 interface JournalPhoto {
     id: string;
@@ -69,15 +76,6 @@ const COMPOSER_TYPES: EntryType[] = ['visit', 'note', 'vital', 'incident', 'mood
 const FILTER_TYPES: EntryType[] = ['visit', 'note', 'vital', 'medication', 'incident', 'mood'];
 const VITAL_TYPES: VitalType[] = ['weight', 'bp', 'pain', 'mood', 'temperature', 'glucose'];
 
-const VITAL_UNITS: Record<VitalType, string> = {
-    weight: 'kg',
-    bp: 'mmHg',
-    pain: '/10',
-    mood: '/10',
-    temperature: '°C',
-    glucose: 'g/L',
-};
-
 const TYPE_ICONS: Record<EntryType, LucideIcon> = {
     visit: Footprints,
     note: StickyNote,
@@ -90,6 +88,14 @@ const TYPE_ICONS: Record<EntryType, LucideIcon> = {
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const toLocalInputValue = (date: Date) => format(date, "yyyy-MM-dd'T'HH:mm");
+
+/**
+ * Systeme d'unites du cercle, lu sans faire confiance au reglage stocke: un
+ * cercle cree avant l'option, ou un reglage abime, doit retomber en metrique
+ * plutot que d'afficher des livres sur des kilos.
+ */
+const circleUnitSystem = (circle: { settings?: { unit_system?: string } } | null): UnitSystem =>
+    circle?.settings?.unit_system === 'imperial' ? 'imperial' : 'metric';
 
 /** Taille décodée approximative d'une data URL base64, sans allouer de buffer. */
 const dataUrlBytes = (dataUrl: string): number => {
@@ -169,6 +175,7 @@ const Journal: React.FC = () => {
     const composerTypes = myRole === 'neighbor'
         ? COMPOSER_TYPES.filter((type) => type !== 'vital')
         : COMPOSER_TYPES;
+    const unitSystem = circleUnitSystem(activeCircle);
     const { showToast } = useToast();
 
     const [entries, setEntries] = useState<JournalEntry[]>([]);
@@ -450,20 +457,24 @@ const Journal: React.FC = () => {
 
         let vitalData: EntryData | null = null;
         if (entryType === 'vital') {
-            const value = parseLocaleNumber(vitalValue);
-            if (!vitalValue.trim() || !Number.isFinite(value)) {
+            const typed = parseLocaleNumber(vitalValue);
+            if (!vitalValue.trim() || !Number.isFinite(typed)) {
                 setError(t('journal:errors.valueRequired'));
                 return;
             }
-            let value2: number | null = null;
+            let typed2: number | null = null;
             if (vitalType === 'bp') {
-                value2 = parseLocaleNumber(vitalValue2);
-                if (!vitalValue2.trim() || !Number.isFinite(value2)) {
+                typed2 = parseLocaleNumber(vitalValue2);
+                if (!vitalValue2.trim() || !Number.isFinite(typed2)) {
                     setError(t('journal:errors.valueRequired'));
                     return;
                 }
             }
-            vitalData = { vital_type: vitalType, value, value2, unit: VITAL_UNITS[vitalType] };
+            // L'aidant saisit dans le systeme du cercle, la base reste metrique:
+            // sans cette conversion, 130 livres seraient enregistrees comme 130 kilos.
+            const value = toStorageValue(vitalType, typed, unitSystem);
+            const value2 = typed2 === null ? null : toStorageValue(vitalType, typed2, unitSystem);
+            vitalData = { vital_type: vitalType, value, value2, unit: storageUnit(vitalType) };
         } else if (!trimmed && photos.length === 0) {
             return;
         }
@@ -560,12 +571,14 @@ const Journal: React.FC = () => {
         if (!data?.vital_type || !VITAL_TYPES.includes(data.vital_type)) return null;
         const value = Number(data.value);
         if (!Number.isFinite(value)) return null;
-        const value2 = data.value2 !== null && data.value2 !== undefined ? Number(data.value2) : null;
-        const formatted = value2 !== null && Number.isFinite(value2)
-            ? `${formatNumber(value)}/${formatNumber(value2)}`
-            : formatNumber(value);
-        const unit = typeof data.unit === 'string' && data.unit ? ` ${data.unit}` : '';
-        return `${t(`journal:vitalTypes.${data.vital_type}`)}: ${formatted}${unit}`;
+        const raw2 = data.value2 !== null && data.value2 !== undefined ? Number(data.value2) : null;
+        const value2 = raw2 !== null && Number.isFinite(raw2) ? raw2 : null;
+        // L'unite enregistree avec l'entree est toujours metrique: on ne la
+        // rend pas telle quelle, on convertit vers le systeme du cercle.
+        return t('journal:vitalSummary', {
+            label: t(`journal:vitalTypes.${data.vital_type}`),
+            measure: formatVital(data.vital_type, value, value2, unitSystem, intlLocale()),
+        });
     };
 
     const badgeVariant = (type: EntryType) => (type === 'incident' ? 'danger' : 'secondary');
@@ -654,7 +667,9 @@ const Journal: React.FC = () => {
                                         label={
                                             vitalType === 'bp'
                                                 ? t('journal:composer.systolicLabel')
-                                                : `${t('journal:composer.valueLabel')} (${VITAL_UNITS[vitalType]})`
+                                                : t('journal:composer.valueWithUnit', {
+                                                    unit: displayUnit(vitalType, unitSystem),
+                                                })
                                         }
                                         type="text"
                                         inputMode="decimal"

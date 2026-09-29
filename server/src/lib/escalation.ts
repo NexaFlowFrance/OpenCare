@@ -6,7 +6,7 @@ import logger from './logger';
 
 /**
  * Escalade configurable des alertes (regles par cercle, table escalation_rules) :
- *  - prise de medicament en retard : rappel au proche sur l'ecran patient
+ *  - prise de medicament en retard : rappel au proche en mode Kiosk
  *    (message WebSocket "reminder"), puis aidants principaux, puis aidants de
  *    relais, chacun apres un delai en minutes (0 = palier desactive) ;
  *  - "J'ai besoin d'aide" : aidants principaux tout de suite (route kiosk),

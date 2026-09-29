@@ -6,7 +6,7 @@
   "minutes": "min",
   "medication": {
     "title": "Prise de médicament en retard",
-    "patient": "Rappel au proche sur l'écran patient après",
+    "patient": "Rappel au proche sur le Kiosk après",
     "primary": "Prévenir les aidants principaux après",
     "secondary": "Prévenir les aidants de relais après",
     "off": "Mettre 0 pour désactiver un palier. Après quatre heures, la prise est marquée manquée et l'escalade s'arrête."

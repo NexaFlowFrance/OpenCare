@@ -54,7 +54,7 @@ export interface CircleData {
     intakeOverrides: Json;
     /** Prises ponctuelles des médicaments "si besoin" (créées à la demande). */
     prnIntakes: Json[];
-    /** Visites déclarées depuis l'écran patient (bouton « Visiteur »). */
+    /** Visites déclarées depuis le mode Kiosk (bouton « Visiteur »). */
     visits: Json[];
     /** Plan de soins : consignes de la famille (sections texte). */
     carePlan: Json | null;
@@ -490,7 +490,7 @@ export function createSeed(): DemoStore {
                 id: 'c-jeanne',
                 name: 'Jeanne',
                 currency: 'EUR',
-                settings: {},
+                settings: { unit_system: 'metric' },
                 created_at: dstr(-200),
                 role: 'admin',
                 color: '#2563EB',
@@ -635,7 +635,7 @@ export function createSeed(): DemoStore {
                 id: 'c-papa',
                 name: 'Papa',
                 currency: 'EUR',
-                settings: {},
+                settings: { unit_system: 'metric' },
                 created_at: dstr(-90),
                 role: 'admin',
                 color: '#D97706',

@@ -1,8 +1,8 @@
 {
   "title": "Visitas",
-  "subtitle": "Quién ha pasado a ver a su familiar, registrado desde la pantalla del paciente.",
+  "subtitle": "Quién ha pasado a ver a su familiar, registrado desdel modo Kiosco.",
   "empty": "Ninguna visita registrada en este periodo.",
-  "emptyHint": "En la pantalla del paciente, el botón « Visita » permite que cada persona que pasa se anuncie en dos gestos.",
+  "emptyHint": "En el modo Kiosco, el botón « Visita » permite que cada persona que pasa se anuncie en dos gestos.",
   "range": {
     "week": "Últimos 7 días",
     "month": "Últimos 30 días",

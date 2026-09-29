@@ -31,7 +31,17 @@ import { useCircle } from '../contexts/CircleContext';
 import { useWebSocketUpdates } from '../hooks/useWebSocketUpdates';
 import { Button, Dialog, Input, Select, Textarea, useToast } from '../components/ui';
 import { ChartCard, EmptyState, ListRow } from '../components/app';
-import { dateLocale, formatNumber } from '../i18n/format';
+import { dateLocale, formatNumber, intlLocale } from '../i18n/format';
+import {
+    decimalsFor,
+    displayUnit,
+    formatVital,
+    storageUnit,
+    toDisplayValue,
+    toInputValue,
+    toStorageValue,
+    type UnitSystem,
+} from '../lib/units';
 
 // ─── Types alignés sur server/src/routes/vitals.ts ──────────────────────────
 
@@ -75,15 +85,6 @@ interface ThresholdDraft {
 
 const VITAL_TYPES: VitalType[] = ['weight', 'bp', 'pain', 'mood', 'temperature', 'glucose'];
 
-const VITAL_UNITS: Record<VitalType, string> = {
-    weight: 'kg',
-    bp: 'mmHg',
-    pain: '/10',
-    mood: '/10',
-    temperature: '°C',
-    glucose: 'g/L',
-};
-
 const VITAL_ICONS: Record<VitalType, LucideIcon> = {
     weight: Scale,
     bp: HeartPulse,
@@ -113,7 +114,15 @@ const toBound = (raw: number | string | null | undefined): number | null => {
     return Number.isFinite(value) ? value : null;
 };
 
-const boundToInput = (bound: number | null): string => (bound === null ? '' : String(bound));
+// Le reglage vit dans les settings du cercle, tapes de facon generique: on le
+// lit ici sans elargir le type partage, dont une autre page a la charge.
+const readUnitSystem = (settings: unknown): UnitSystem => {
+    if (settings !== null && typeof settings === 'object') {
+        const raw = (settings as { unit_system?: unknown }).unit_system;
+        if (raw === 'imperial') return 'imperial';
+    }
+    return 'metric';
+};
 
 const emptyDrafts = (): Record<VitalType, ThresholdDraft> => ({
     weight: { min: '', max: '', min2: '', max2: '' },
@@ -137,6 +146,10 @@ const Health: React.FC = () => {
     const { user } = useAuth();
     const { activeCircle, canWriteContent, canWriteJournal, isAdmin, myRole } = useCircle();
     const { showToast } = useToast();
+
+    // Le cercle decide du systeme d'unites: la base reste metrique, seuls la
+    // saisie et l'affichage suivent ce choix.
+    const unitSystem = readUnitSystem(activeCircle?.settings);
 
     const [latest, setLatest] = useState<Vital[]>([]);
     const [series, setSeries] = useState<Vital[]>([]);
@@ -257,11 +270,13 @@ const Health: React.FC = () => {
         setSaving(true);
         setError('');
         try {
+            // La saisie est ramenee a l'unite de stockage avant l'envoi: sans
+            // cela, 150 lb seraient enregistrees comme 150 kg.
             const payload: Record<string, unknown> = {
                 type: formType,
-                value,
-                value2,
-                unit: VITAL_UNITS[formType],
+                value: toStorageValue(formType, value, unitSystem),
+                value2: value2 === null ? null : toStorageValue(formType, value2, unitSystem),
+                unit: storageUnit(formType),
             };
             if (formMeasuredAt) payload.measured_at = new Date(formMeasuredAt).toISOString();
             if (formNotes.trim()) payload.notes = formNotes.trim();
@@ -309,19 +324,20 @@ const Health: React.FC = () => {
     }, [thresholds]);
 
     // Les champs rejouent ce que le serveur a accepte, y compris apres un
-    // rafraichissement declenche par un autre membre du cercle.
+    // rafraichissement declenche par un autre membre du cercle. Les bornes sont
+    // stockees en metrique: on les prerempli dans l'unite affichee.
     useEffect(() => {
         const next = emptyDrafts();
         rangeByType.forEach((range, type) => {
             next[type] = {
-                min: boundToInput(range.min),
-                max: boundToInput(range.max),
-                min2: boundToInput(range.min2),
-                max2: boundToInput(range.max2),
+                min: toInputValue(type, range.min, unitSystem),
+                max: toInputValue(type, range.max, unitSystem),
+                min2: toInputValue(type, range.min2, unitSystem),
+                max2: toInputValue(type, range.max2, unitSystem),
             };
         });
         setDrafts(next);
-    }, [rangeByType]);
+    }, [rangeByType, unitSystem]);
 
     const updateDraft = (type: VitalType, field: keyof ThresholdDraft, value: string) => {
         setDrafts((prev) => ({ ...prev, [type]: { ...prev[type], [field]: value } }));
@@ -340,7 +356,11 @@ const Health: React.FC = () => {
             setError(t('health:errors.thresholdInvalid'));
             return;
         }
-        const [minValue, maxValue, minValue2, maxValue2] = bounds;
+        // Les plages sont comparees a des mesures metriques: on les convertit
+        // avant l'envoi, jamais a la lecture.
+        const [minValue, maxValue, minValue2, maxValue2] = bounds.map((bound) =>
+            bound === null ? null : toStorageValue(type, bound, unitSystem)
+        );
 
         setSavingType(type);
         setError('');
@@ -380,24 +400,38 @@ const Health: React.FC = () => {
         return range.max2 !== null && value2 > range.max2;
     };
 
-    const rangeLabel = (min: number | null, max: number | null, unit: string): string => {
+    const rangeLabel = (type: VitalType, min: number | null, max: number | null): string => {
+        const unit = displayUnit(type, unitSystem);
+        // Les bornes viennent du serveur en metrique: elles se lisent converties.
+        const shown = (bound: number) =>
+            formatNumber(toDisplayValue(type, bound, unitSystem), {
+                maximumFractionDigits: decimalsFor(type, unitSystem),
+            });
         if (min !== null && max !== null) {
-            return t('health:thresholds.between', { min: formatNumber(min), max: formatNumber(max), unit });
+            return t('health:thresholds.between', { min: shown(min), max: shown(max), unit });
         }
-        if (min !== null) return t('health:thresholds.minOnly', { min: formatNumber(min), unit });
-        if (max !== null) return t('health:thresholds.maxOnly', { max: formatNumber(max), unit });
+        if (min !== null) return t('health:thresholds.minOnly', { min: shown(min), unit });
+        if (max !== null) return t('health:thresholds.maxOnly', { max: shown(max), unit });
         return t('health:thresholds.none');
     };
 
     // ─── Présentation ────────────────────────────────────────────────────────
 
-    const formatValue = (vital: Vital): string => {
+    // L'unite enregistree par le serveur est ignoree a l'affichage: la valeur
+    // est toujours metrique, c'est le cercle qui decide de sa lecture.
+    const formatMeasure = (vital: Vital): string => {
         const value = Number(vital.value);
-        const value2 = vital.value2 !== null && vital.value2 !== undefined ? Number(vital.value2) : null;
-        const main = value2 !== null && Number.isFinite(value2)
-            ? `${formatNumber(value)}/${formatNumber(value2)}`
-            : formatNumber(value);
-        return vital.unit ? `${main} ${vital.unit}` : main;
+        const raw2 = vital.value2 !== null && vital.value2 !== undefined ? Number(vital.value2) : null;
+        const value2 = raw2 !== null && Number.isFinite(raw2) ? raw2 : null;
+        return formatVital(vital.type, value, value2, unitSystem, intlLocale());
+    };
+
+    // L'infobulle lit un point de la courbe, deja converti: on l'habille de son
+    // unite sans le reconvertir, sinon la valeur serait doublement changee.
+    const formatShown = (type: VitalType, shown: number): string => {
+        const text = formatNumber(shown, { maximumFractionDigits: decimalsFor(type, unitSystem) });
+        const unit = displayUnit(type, unitSystem);
+        return type === 'pain' || type === 'mood' ? `${text}${unit}` : `${text} ${unit}`;
     };
 
     const relativeDate = (iso: string) =>
@@ -409,14 +443,22 @@ const Health: React.FC = () => {
         return VITAL_TYPES.filter((type) => map.has(type)).map((type) => map.get(type)!);
     }, [latest]);
 
+    // La serie est tracee dans l'unite affichee: l'echelle de l'axe suit donc
+    // le systeme du cercle, sans conversion au moment du rendu.
     const chartData = useMemo(
         () =>
-            series.map((vital) => ({
-                time: new Date(vital.measured_at).getTime(),
-                value: Number(vital.value),
-                value2: vital.value2 !== null && vital.value2 !== undefined ? Number(vital.value2) : null,
-            })),
-        [series]
+            series.map((vital) => {
+                const raw2 = vital.value2 !== null && vital.value2 !== undefined ? Number(vital.value2) : null;
+                return {
+                    time: new Date(vital.measured_at).getTime(),
+                    value: toDisplayValue(vital.type, Number(vital.value), unitSystem),
+                    value2:
+                        raw2 !== null && Number.isFinite(raw2)
+                            ? toDisplayValue(vital.type, raw2, unitSystem)
+                            : null,
+                };
+            }),
+        [series, unitSystem]
     );
 
     // La couleur seule ne suffit pas: le repere porte aussi un texte lu par les lecteurs d'ecran.
@@ -516,7 +558,7 @@ const Health: React.FC = () => {
                                         outOfRange ? 'text-warning' : 'text-foreground'
                                     )}
                                 >
-                                    {formatValue(vital)}
+                                    {formatMeasure(vital)}
                                 </p>
                                 {outOfRange ? <p className="mt-1.5">{outOfRangeTag}</p> : null}
                                 <p className="mt-1 text-micro text-muted-foreground">{relativeDate(vital.measured_at)}</p>
@@ -580,12 +622,21 @@ const Health: React.FC = () => {
                                     tick={{ fontSize: 11 }}
                                     stroke={borderColor}
                                 />
-                                <YAxis tick={{ fontSize: 11 }} stroke={borderColor} domain={['auto', 'auto']} />
+                                <YAxis
+                                    tick={{ fontSize: 11 }}
+                                    stroke={borderColor}
+                                    domain={['auto', 'auto']}
+                                    tickFormatter={(value) =>
+                                        formatNumber(Number(value), {
+                                            maximumFractionDigits: decimalsFor(chartType, unitSystem),
+                                        })
+                                    }
+                                />
                                 <Tooltip
                                     labelFormatter={(value) =>
                                         format(new Date(Number(value)), 'd MMM yyyy HH:mm', { locale: dateLocale() })
                                     }
-                                    formatter={(value) => formatNumber(Number(value))}
+                                    formatter={(value) => formatShown(chartType, Number(value))}
                                     contentStyle={{ fontSize: 12, borderRadius: 8 }}
                                 />
                                 {chartType === 'bp' && <Legend wrapperStyle={{ fontSize: 12 }} />}
@@ -649,7 +700,7 @@ const Health: React.FC = () => {
                                     title={
                                         <span className="flex flex-wrap items-center gap-2">
                                             <span className="truncate">
-                                                {`${t(`health:vitalTypes.${vital.type}`)}: ${formatValue(vital)}`}
+                                                {`${t(`health:vitalTypes.${vital.type}`)}: ${formatMeasure(vital)}`}
                                             </span>
                                             {outOfRange ? outOfRangeTag : null}
                                         </span>
@@ -691,7 +742,7 @@ const Health: React.FC = () => {
                     {VITAL_TYPES.map((type) => {
                         const Icon = VITAL_ICONS[type];
                         const range = rangeByType.get(type) ?? null;
-                        const unit = VITAL_UNITS[type];
+                        const unit = displayUnit(type, unitSystem);
                         const draft = drafts[type];
                         return (
                             <div
@@ -710,15 +761,15 @@ const Health: React.FC = () => {
                                         <>
                                             <p>
                                                 {t('health:thresholds.systolicPrefix')}{' '}
-                                                {rangeLabel(range?.min ?? null, range?.max ?? null, unit)}
+                                                {rangeLabel(type, range?.min ?? null, range?.max ?? null)}
                                             </p>
                                             <p>
                                                 {t('health:thresholds.diastolicPrefix')}{' '}
-                                                {rangeLabel(range?.min2 ?? null, range?.max2 ?? null, unit)}
+                                                {rangeLabel(type, range?.min2 ?? null, range?.max2 ?? null)}
                                             </p>
                                         </>
                                     ) : (
-                                        <p>{rangeLabel(range?.min ?? null, range?.max ?? null, unit)}</p>
+                                        <p>{rangeLabel(type, range?.min ?? null, range?.max ?? null)}</p>
                                     )}
                                 </div>
                                 {canWriteContent && (
@@ -774,6 +825,7 @@ const Health: React.FC = () => {
                                         )}
                                         <div className="flex flex-wrap items-center justify-between gap-3">
                                             <p className="text-micro text-muted-foreground">
+                                                {t('health:thresholds.unitHint', { unit })}{' '}
                                                 {t('health:thresholds.clearHint')}
                                             </p>
                                             <Button
@@ -816,11 +868,9 @@ const Health: React.FC = () => {
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <Input
-                            label={
-                                formType === 'bp'
-                                    ? t('health:form.systolicLabel')
-                                    : `${t('health:form.valueLabel')} (${VITAL_UNITS[formType]})`
-                            }
+                            label={`${
+                                formType === 'bp' ? t('health:form.systolicLabel') : t('health:form.valueLabel')
+                            } (${displayUnit(formType, unitSystem)})`}
                             type="text"
                             inputMode="decimal"
                             value={formValue}
@@ -829,7 +879,7 @@ const Health: React.FC = () => {
                         />
                         {formType === 'bp' && (
                             <Input
-                                label={t('health:form.diastolicLabel')}
+                                label={`${t('health:form.diastolicLabel')} (${displayUnit(formType, unitSystem)})`}
                                 type="text"
                                 inputMode="decimal"
                                 value={formValue2}

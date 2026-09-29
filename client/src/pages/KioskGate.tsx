@@ -8,8 +8,8 @@ import KioskPair from './KioskPair';
 /**
  * Entree des ecrans patient (/kiosk, /myday, /kiosk/pair), rendue AVANT la
  * logique d'authentification de l'application :
- *  - appareil appaire (token en localStorage) : ecran patient, sans compte ;
- *  - membre du cercle connecte : ecran patient avec sa session (usage historique) ;
+ *  - appareil appaire (token en localStorage) : mode Kiosk, sans compte ;
+ *  - membre du cercle connecte : mode Kiosk avec sa session (usage historique) ;
  *  - sinon : appairage.
  */
 const KioskGate: React.FC = () => {

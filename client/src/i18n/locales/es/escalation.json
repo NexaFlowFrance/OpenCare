@@ -6,7 +6,7 @@
   "minutes": "min",
   "medication": {
     "title": "Toma de medicamento con retraso",
-    "patient": "Recordatorio a su familiar en la pantalla del paciente después de",
+    "patient": "Recordatorio a su familiar en el modo Kiosco después de",
     "primary": "Avisar a los cuidadores principales después de",
     "secondary": "Avisar a los cuidadores de relevo después de",
     "off": "Ponga 0 para desactivar un nivel. Después de cuatro horas, la toma se marca como no realizada y el escalado se detiene."

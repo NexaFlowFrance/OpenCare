@@ -7,7 +7,7 @@ import { savePairedDevice, type PairedDevice } from '../lib/kioskDevice';
 
 /**
  * Appairage d'un appareil patient (tablette murale ou telephone du proche) :
- * saisie du code a usage unique genere par un aidant (Reglages, Ecran patient).
+ * saisie du code a usage unique genere par un aidant (Reglages, Mode Kiosk).
  * Ecran volontairement simple et en gros caracteres : il peut etre fait par
  * l'aidant sur place, ou lu a haute voix au proche.
  */

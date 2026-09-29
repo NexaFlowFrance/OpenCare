@@ -19,7 +19,7 @@ interface PairedDeviceRow {
 interface PairingResult { code: string; kind: 'kiosk' | 'phone'; name: string; expires_at: string }
 
 /**
- * Carte "Ecran patient" des reglages : ouvrir l'ecran, appairer la tablette
+ * Carte "Mode Kiosk" des reglages : ouvrir l'ecran, appairer la tablette
  * murale ou le telephone du proche (code a usage unique + QR code), detacher
  * un appareil, definir le code aidant (PIN) qui protege les reglages du kiosk.
  */

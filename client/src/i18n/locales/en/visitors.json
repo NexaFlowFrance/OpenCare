@@ -1,8 +1,8 @@
 {
   "title": "Visitors",
-  "subtitle": "Who came to see your loved one, as declared on the patient screen.",
+  "subtitle": "Who came to see your loved one, as declared on the Kiosk mode.",
   "empty": "No visit declared over this period.",
-  "emptyHint": "On the patient screen, the \"Visitor\" button lets anyone who comes by check in with two taps.",
+  "emptyHint": "On the Kiosk mode, the \"Visitor\" button lets anyone who comes by check in with two taps.",
   "range": {
     "week": "Last 7 days",
     "month": "Last 30 days",

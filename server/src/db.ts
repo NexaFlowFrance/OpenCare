@@ -205,7 +205,7 @@ export const runMigrations = async () => {
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );`,
         `CREATE INDEX IF NOT EXISTS idx_kiosk_pairings_circle ON kiosk_pairings(circle_id);`,
-        // Visites declarees depuis l'ecran patient (bouton "Visiteur", cf. schema.sql).
+        // Visites declarees depuis le mode Kiosk (bouton "Visiteur", cf. schema.sql).
         `CREATE TABLE IF NOT EXISTS visits (
             id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
             circle_id UUID NOT NULL REFERENCES care_circles(id) ON DELETE CASCADE,

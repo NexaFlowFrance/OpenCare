@@ -85,7 +85,7 @@ good explanation.
   route needs lives in `server/src/lib/`.
 - The client is React with Tailwind. Colors and spacing come from the design tokens in
   `client/src/design/tokens.css`, not from raw hex values, with one deliberate exception:
-  the patient screen (`client/src/pages/Kiosk.tsx` and its overlays) has its own high
+  Kiosk mode (`client/src/pages/Kiosk.tsx` and its overlays) has its own high
   contrast palette in the file itself.
 - Comments explain why, not what. They are welcome on anything a future reader could get
   wrong, especially timezone handling, permissions and recurrence.

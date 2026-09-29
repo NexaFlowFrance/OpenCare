@@ -22,7 +22,7 @@ const RANGE_DAYS: Record<Range, number> = { week: 7, month: 30, quarter: 92 };
 
 const toDay = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
-/** Qui est passe voir le proche : les visites declarees sur l'ecran patient. */
+/** Qui est passe voir le proche : les visites declarees en mode Kiosk. */
 const Visitors: React.FC = () => {
     const { t } = useTranslation(['visitors', 'common']);
     const { activeCircle, isAdmin } = useCircle();

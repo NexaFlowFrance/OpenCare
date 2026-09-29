@@ -43,7 +43,7 @@
     "prnToday_other": "{{count}} tomas hoy",
     "source": {
       "caregiver": "confirmada por un cuidador",
-      "kiosk": "confirmada en la pantalla del paciente",
+      "kiosk": "confirmada en el modo Kiosco",
       "phone": "confirmada en el teléfono",
       "link": "confirmada mediante un enlace de cuidador"
     }

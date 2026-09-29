@@ -6,7 +6,7 @@
   "minutes": "min",
   "medication": {
     "title": "Late medication",
-    "patient": "Remind the loved one on the patient screen after",
+    "patient": "Remind the loved one on the Kiosk after",
     "primary": "Notify the primary caregivers after",
     "secondary": "Notify the backup caregivers after",
     "off": "Set 0 to disable a step. After four hours the dose is marked missed and the escalation stops."

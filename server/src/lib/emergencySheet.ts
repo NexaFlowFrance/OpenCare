@@ -4,7 +4,7 @@ import { query } from '../db';
  * Fiche urgence : identite, traitements en cours, contacts a appeler.
  *
  * Servie a deux endroits, d'ou cette lib partagee : la page aidant qui fabrique
- * le QR du frigo (routes/emergency.ts) et l'ecran patient, ou un secouriste
+ * le QR du frigo (routes/emergency.ts) et le mode Kiosk, ou un secouriste
  * arrive chez le proche peut la lire tout de suite (routes/kiosk.ts).
  */
 

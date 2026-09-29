@@ -12,7 +12,7 @@
         "publish": "Publier",
         "publishing": "Publication...",
         "vitalTypeLabel": "Type de constante",
-        "valueLabel": "Valeur",
+        "valueWithUnit": "Valeur ({{unit}})",
         "systolicLabel": "Systolique",
         "diastolicLabel": "Diastolique"
     },
@@ -32,6 +32,7 @@
         "temperature": "Température",
         "glucose": "Glycémie"
     },
+    "vitalSummary": "{{label}} : {{measure}}",
     "filters": {
         "all": "Tout"
     },

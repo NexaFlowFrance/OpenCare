@@ -16,7 +16,7 @@ import KioskCompanion from '../components/app/KioskCompanion';
 import KioskEmergency from '../components/app/KioskEmergency';
 import KioskVisitor, { type Visit as KioskVisit } from '../components/app/KioskVisitor';
 
-// Ecran patient OpenCare : la tablette murale chez le proche, et le meme ecran
+// Mode Kiosk OpenCare : la tablette murale chez le proche, et le meme ecran
 // sur son telephone (mode poche). Concu d'apres les maquettes de la revue
 // produit : un ecran qui repond a quatre questions seulement
 //   A. Qu'est-ce que je dois faire maintenant ?   (medicaments dus maintenant)
@@ -1163,7 +1163,7 @@ const Kiosk: React.FC<KioskProps> = ({ device }) => {
                             </button>
                         </div>
 
-                        {/* Quitter l'ecran patient */}
+                        {/* Quitter le mode Kiosk */}
                         <div className="mt-8 border-t pt-5" style={{ borderColor: C.border }}>
                             <button
                                 type="button"

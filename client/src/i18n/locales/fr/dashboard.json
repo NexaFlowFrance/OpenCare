@@ -84,5 +84,6 @@
     "medication_stock_other": "{{count}} médicaments bientôt épuisés",
     "stockLeft_one": "{{name}} ({{count}} restant)",
     "stockLeft_other": "{{name}} ({{count}} restants)"
-  }
+  },
+  "openKiosk": "Mode Kiosk"
 }

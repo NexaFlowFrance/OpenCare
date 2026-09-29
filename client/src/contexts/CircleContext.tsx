@@ -9,7 +9,9 @@ export interface CircleSummary {
     id: string;
     name: string;
     currency: string;
-    settings: Record<string, unknown>;
+    /** Reglages publics du cercle. Le serveur ne renvoie que ceux-la : les
+     *  secrets, comme l'empreinte du code aidant, ne sortent pas. */
+    settings: { unit_system?: 'metric' | 'imperial' } & Record<string, unknown>;
     created_at: string;
     /** Foyer (couple): cercles partageant cet id; null = cercle isole. */
     household_id: string | null;

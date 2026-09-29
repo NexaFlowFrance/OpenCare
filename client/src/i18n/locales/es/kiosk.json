@@ -106,14 +106,14 @@
     "cancel": "Cancelar"
   },
   "leave": {
-    "title": "Salir de la pantalla del paciente",
+    "title": "Salir del modo Kiosco",
     "unpairHint": "Este dispositivo quedará desvinculado del círculo. Un cuidador podrá vincularlo de nuevo desde los ajustes.",
     "unpair": "Desvincular este dispositivo",
     "back": "Volver a la aplicación del cuidador"
   },
   "pair": {
     "title": "Vincular este dispositivo",
-    "subtitle": "Escribe el código que aparece en OpenCare (Ajustes, Pantalla del paciente).",
+    "subtitle": "Escribe el código que aparece en OpenCare (Ajustes, Modo Kiosco).",
     "codeLabel": "Código de vinculación",
     "submit": "Vincular",
     "error": "Código no válido o caducado. Pide un código nuevo a un cuidador.",
@@ -151,9 +151,9 @@
     "browserSpeechHint": "Sin un servidor Whisper, la voz de « Pregúntame » la reconoce el navegador (Google, Apple o Microsoft según el dispositivo) y por lo tanto sale de su servidor. Si se desactiva, solo se usa el dictado local."
   },
   "settings": {
-    "title": "Pantalla del paciente (tableta y teléfono)",
+    "title": "Modo Kiosco (tableta y teléfono)",
     "subtitle": "La pantalla de la tableta de pared y del teléfono de su familiar: lo que hay que tomar ahora, quién viene, las citas, el asistente y los botones « Todo va bien » / « Necesito ayuda ».",
-    "open": "Abrir la pantalla del paciente",
+    "open": "Abrir el modo Kiosco",
     "devices": "Dispositivos vinculados",
     "noDevices": "Ningún dispositivo vinculado. Vincule la tableta de pared o el teléfono de su familiar: no necesitarán ninguna cuenta.",
     "pairKiosk": "Vincular una tableta",
@@ -172,9 +172,9 @@
     "pairingHint": "En el dispositivo, abra {{url}} y escriba este código, o escanee el código QR. Válido 15 minutos, de un solo uso.",
     "pairingDone": "Cerrar",
     "pin": "Código de cuidador (PIN)",
-    "pinHint": "Protege los ajustes y la salida de la pantalla del paciente, sobre todo cuando las visitas tocan la tableta. De 4 a 8 cifras.",
+    "pinHint": "Protege los ajustes y la salida del modo Kiosco, sobre todo cuando las visitas tocan la tableta. De 4 a 8 cifras.",
     "pinSet": "Hay un código definido.",
-    "pinNotSet": "Sin código: los ajustes de la pantalla del paciente están al alcance de cualquiera.",
+    "pinNotSet": "Sin código: los ajustes del modo Kiosco están al alcance de cualquiera.",
     "pinPlaceholder": "Ej.: 2468",
     "setPin": "Definir el código",
     "changePin": "Cambiar el código",

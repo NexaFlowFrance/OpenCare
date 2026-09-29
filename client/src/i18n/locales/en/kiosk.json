@@ -106,14 +106,14 @@
     "cancel": "Cancel"
   },
   "leave": {
-    "title": "Leave the patient screen",
+    "title": "Leave Kiosk mode",
     "unpairHint": "This device will be detached from the circle. A caregiver can pair it again from the settings.",
     "unpair": "Detach this device",
     "back": "Back to the caregiver app"
   },
   "pair": {
     "title": "Pair this device",
-    "subtitle": "Enter the code shown in OpenCare (Settings, Patient screen).",
+    "subtitle": "Enter the code shown in OpenCare (Settings, Kiosk mode).",
     "codeLabel": "Pairing code",
     "submit": "Pair",
     "error": "Invalid or expired code. Ask a caregiver for a new one.",
@@ -151,9 +151,9 @@
     "browserSpeechHint": "Without a Whisper server, the voice of “Ask me” is recognised by the browser (Google, Apple or Microsoft depending on the device) and therefore leaves your server. Off, only local dictation is used."
   },
   "settings": {
-    "title": "Patient screen (tablet and phone)",
+    "title": "Kiosk mode (tablet and phone)",
     "subtitle": "The screen of the wall tablet and of your loved one's phone: what to take now, who is coming, appointments, the assistant, and the \"All is well\" / \"I need help\" buttons.",
-    "open": "Open the patient screen",
+    "open": "Open Kiosk mode",
     "devices": "Paired devices",
     "noDevices": "No paired device. Pair the wall tablet or your loved one's phone: they will not need an account.",
     "pairKiosk": "Pair a tablet",
@@ -172,9 +172,9 @@
     "pairingHint": "On the device, open {{url}} and enter this code, or scan the QR code. Valid for 15 minutes, single use.",
     "pairingDone": "Close",
     "pin": "Caregiver code (PIN)",
-    "pinHint": "Protects the settings and leaving the patient screen, especially when visitors touch the tablet. 4 to 8 digits.",
+    "pinHint": "Protects the settings and leaving Kiosk mode, especially when visitors touch the tablet. 4 to 8 digits.",
     "pinSet": "A code is set.",
-    "pinNotSet": "No code: the patient screen settings are open to anyone.",
+    "pinNotSet": "No code: the Kiosk mode settings are open to anyone.",
     "pinPlaceholder": "e.g. 2468",
     "setPin": "Set the code",
     "changePin": "Change the code",

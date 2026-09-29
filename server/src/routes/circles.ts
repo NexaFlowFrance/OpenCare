@@ -5,6 +5,7 @@ import { authMiddleware, AuthRequest } from '../middleware/auth';
 import { circleMiddleware, requireAdmin, CircleRequest } from '../middleware/circle';
 import { broadcastToCircle } from '../lib/broadcaster';
 import { langFromRequest, t } from '../lib/i18n';
+import { withPublicSettings, validateSettingsPatch, mergeCircleSettings } from '../lib/circleSettings';
 
 const router = Router();
 
@@ -41,7 +42,9 @@ router.get('/', async (req: AuthRequest, res: Response) => {
              ORDER BY c.created_at`,
             [req.userId]
         );
-        res.json({ success: true, data: result.rows });
+        // Les reglages passent par le filtre public : l'empreinte du code aidant
+        // du mode Kiosk n'a rien a faire dans une reponse d'API.
+        res.json({ success: true, data: result.rows.map(withPublicSettings) });
     } catch (error) {
         console.error('List circles error:', error);
         res.status(500).json({ success: false, error: 'Internal server error' });
@@ -157,7 +160,7 @@ router.get('/:circleId', circleMiddleware, async (req: CircleRequest, res: Respo
         res.json({
             success: true,
             data: {
-                circle: circleResult.rows[0],
+                circle: withPublicSettings(circleResult.rows[0]),
                 recipient: recipientResult.rows[0] ?? null,
                 members: membersResult.rows,
                 my_role: req.circleRole,
@@ -185,23 +188,41 @@ router.put('/:circleId', circleMiddleware, requireAdmin, async (req: CircleReque
             fields.push(`currency = $${idx++}`);
             values.push(currency.toUpperCase());
         }
-        if (settings && typeof settings === 'object') {
-            fields.push(`settings = $${idx++}`);
-            values.push(JSON.stringify(settings));
+        // Les reglages sont fusionnes, jamais remplaces : un client qui ignore
+        // l'existence du code aidant l'effacerait en enregistrant autre chose.
+        let settingsPatch: Record<string, unknown> | undefined;
+        if (settings !== undefined) {
+            const parsed = validateSettingsPatch(settings, langFromRequest(req));
+            if (parsed.error) return res.status(400).json({ success: false, error: parsed.error });
+            settingsPatch = parsed.patch;
         }
 
-        if (fields.length === 0) {
+        if (fields.length === 0 && !settingsPatch) {
             return res.status(400).json({ success: false, error: 'No changes provided' });
         }
 
-        values.push(req.circleId);
-        const result = await query(
-            `UPDATE care_circles SET ${fields.join(', ')} WHERE id = $${idx} RETURNING *`,
-            values
-        );
+        let row: Record<string, unknown> | undefined;
+        if (fields.length > 0) {
+            values.push(req.circleId);
+            const result = await query(
+                `UPDATE care_circles SET ${fields.join(', ')} WHERE id = $${idx} RETURNING *`,
+                values
+            );
+            row = result.rows[0];
+        }
+        if (settingsPatch && Object.keys(settingsPatch).length > 0) {
+            await mergeCircleSettings(req.circleId!, settingsPatch);
+        }
+        if (!row) {
+            const current = await query('SELECT * FROM care_circles WHERE id = $1', [req.circleId]);
+            row = current.rows[0];
+        } else if (settingsPatch) {
+            const current = await query('SELECT settings FROM care_circles WHERE id = $1', [req.circleId]);
+            row.settings = current.rows[0]?.settings;
+        }
 
         await broadcastToCircle(req.circleId!, { type: 'update', entity: 'circle', action: 'updated' });
-        res.json({ success: true, data: result.rows[0] });
+        res.json({ success: true, data: withPublicSettings(row as { settings?: unknown }) });
     } catch (error) {
         console.error('Update circle error:', error);
         res.status(500).json({ success: false, error: 'Internal server error' });

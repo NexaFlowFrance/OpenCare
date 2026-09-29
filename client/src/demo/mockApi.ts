@@ -10,7 +10,7 @@ import { detectIntent, answerIntent, hasDistressSignal, distressHint, type Compa
 
 const store: DemoStore = createSeed();
 
-// Ecran patient (demo) : appareils appaires et code aidant, en memoire.
+// Mode Kiosk (demo) : appareils appaires et code aidant, en memoire.
 const demoKiosk: { pinSet: boolean; pin: string; devices: Json[] } = {
     pinSet: false,
     pin: '',
@@ -917,7 +917,18 @@ async function route(method: string, path: string, q: Record<string, string>, bo
             if (seg.length === 3 && method === 'PUT') {
                 if (typeof body.name === 'string' && body.name.trim()) target.name = body.name.trim();
                 if (typeof body.currency === 'string' && body.currency.length === 3) target.currency = body.currency.toUpperCase();
-                if (body.settings && typeof body.settings === 'object') target.settings = body.settings;
+                // Comme le serveur : seules les cles publiques passent, et elles
+                // sont fusionnees, pas substituees.
+                if (body.settings && typeof body.settings === 'object') {
+                    const patch = body.settings as Record<string, unknown>;
+                    for (const key of Object.keys(patch)) {
+                        if (key !== 'unit_system') throw new Error('Unknown setting: ' + key);
+                    }
+                    if (patch.unit_system !== undefined) {
+                        if (patch.unit_system !== 'metric' && patch.unit_system !== 'imperial') throw new Error('unit_system must be metric or imperial');
+                        target.settings = { ...(target.settings as Json), unit_system: patch.unit_system };
+                    }
+                }
                 return ok(circleRow(target));
             }
             if (seg.length === 3 && method === 'DELETE') {
@@ -1759,7 +1770,7 @@ async function route(method: string, path: string, q: Record<string, string>, bo
         c.carePlan = { sections: next, updated_at: naiveNow(), updated_by_name: store.user.name };
         return ok({ sections: next, updated_at: c.carePlan.updated_at, updated_by_name: store.user.name });
     }
-    // Visiteurs : arrivee, note de passage, depart (ecran patient) et liste (aidants)
+    // Visiteurs : arrivee, note de passage, depart (mode Kiosk) et liste (aidants)
     if (path === '/api/kiosk/visits/check-in' && method === 'POST') {
         const visit: Json = {
             id: uid(), circle_id: c.id, visitor_type: body.visitor_type || 'other', visitor_name: String(body.visitor_name || '').trim() || 'Visiteur',

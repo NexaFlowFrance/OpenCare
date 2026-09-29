@@ -125,7 +125,7 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
             reconnectDelay.current = RECONNECT_DELAY_MS;
 
             // Authenticate with JWT (never the raw userId), or with the device
-            // token when this browser is a paired patient screen without account.
+            // token when this browser is a paired Kiosk device without account.
             if (user) {
                 ws.send(JSON.stringify({ type: 'auth', token: api.getToken() }));
             } else {
@@ -147,7 +147,7 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
         ws.onmessage = (event: MessageEvent) => {
             try {
                 const msg = JSON.parse(event.data as string) as WsUpdateMessage;
-                // Rappel de prise pousse a l'ecran patient (escalade) : pas d'entite, juste un signal.
+                // Rappel de prise pousse au mode Kiosk (escalade) : pas d'entite, juste un signal.
                 if ((msg as { type?: string }).type === 'reminder') {
                     notify('reminder');
                     return;

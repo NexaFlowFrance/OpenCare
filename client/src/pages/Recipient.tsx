@@ -280,7 +280,7 @@ const StoryCard: React.FC<{ circleId: string | null; canWriteContent: boolean }>
 };
 
 // ── Fiche urgence (QR frigo) ────────────────────────────────────────────────
-// L'encodage vit dans lib/emergencySheet : l'ecran patient fabrique le meme QR.
+// L'encodage vit dans lib/emergencySheet : le mode Kiosk fabrique le meme QR.
 
 const EmergencyCard: React.FC<{ circleId: string | null; canWriteContent: boolean; recipientName: string }> = ({
     circleId, canWriteContent, recipientName,

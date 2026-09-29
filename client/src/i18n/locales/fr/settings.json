@@ -82,5 +82,16 @@
     "avatarRemove": "Erreur lors de la suppression de la photo.",
     "export": "Erreur lors de l'export.",
     "import": "Erreur lors de l'import."
+  },
+  "units": {
+    "title": "Unités de mesure",
+    "subtitle": "Comment les constantes sont saisies et affichées pour ce cercle.",
+    "metric": "Métrique",
+    "imperial": "Impérial",
+    "weight": "Poids en",
+    "temperature": "Température en",
+    "glucose": "Glycémie en",
+    "hint": "Les mesures restent enregistrées en métrique : changer de système convertit tout l'historique à l'affichage, rien n'est perdu. La tension reste en mmHg dans les deux cas.",
+    "error": "Impossible d'enregistrer les unités."
   }
 }

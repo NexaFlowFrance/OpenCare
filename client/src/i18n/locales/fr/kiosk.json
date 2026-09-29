@@ -106,14 +106,14 @@
     "cancel": "Annuler"
   },
   "leave": {
-    "title": "Quitter l'écran patient",
+    "title": "Quitter le mode Kiosk",
     "unpairHint": "Cet appareil sera détaché du cercle. Un aidant pourra l'appairer à nouveau depuis les réglages.",
     "unpair": "Détacher cet appareil",
     "back": "Retour à l'application aidant"
   },
   "pair": {
     "title": "Appairer cet appareil",
-    "subtitle": "Saisis le code affiché dans OpenCare (Réglages, Écran patient).",
+    "subtitle": "Saisis le code affiché dans OpenCare (Réglages, Mode Kiosk).",
     "codeLabel": "Code d'appairage",
     "submit": "Appairer",
     "error": "Code invalide ou expiré. Demande un nouveau code à un aidant.",
@@ -151,9 +151,9 @@
     "browserSpeechHint": "Sans serveur Whisper, la voix de « Demandez-moi » est reconnue par le navigateur (Google, Apple ou Microsoft selon l'appareil) et sort donc de votre serveur. Désactivé, seule la dictée locale est utilisée."
   },
   "settings": {
-    "title": "Écran patient (tablette et téléphone)",
+    "title": "Mode Kiosk (tablette et téléphone)",
     "subtitle": "L'écran de la tablette murale et du téléphone de votre proche : ce qu'il y a à prendre maintenant, qui vient, les rendez-vous, l'assistant, et les boutons « Tout va bien » / « J'ai besoin d'aide ».",
-    "open": "Ouvrir l'écran patient",
+    "open": "Ouvrir le mode Kiosk",
     "devices": "Appareils appairés",
     "noDevices": "Aucun appareil appairé. Appairez la tablette murale ou le téléphone de votre proche : ils n'auront pas besoin de compte.",
     "pairKiosk": "Appairer une tablette",
@@ -172,9 +172,9 @@
     "pairingHint": "Sur l'appareil, ouvrez {{url}} et saisissez ce code, ou scannez le QR code. Valable 15 minutes, à usage unique.",
     "pairingDone": "Fermer",
     "pin": "Code aidant (PIN)",
-    "pinHint": "Protège les réglages et la sortie de l'écran patient, surtout quand des visiteurs touchent la tablette. De 4 à 8 chiffres.",
+    "pinHint": "Protège les réglages et la sortie du mode Kiosk, surtout quand des visiteurs touchent la tablette. De 4 à 8 chiffres.",
     "pinSet": "Un code est défini.",
-    "pinNotSet": "Aucun code : les réglages de l'écran patient sont accessibles à tous.",
+    "pinNotSet": "Aucun code : les réglages du mode Kiosk sont accessibles à tous.",
     "pinPlaceholder": "Ex. 2468",
     "setPin": "Définir le code",
     "changePin": "Changer le code",

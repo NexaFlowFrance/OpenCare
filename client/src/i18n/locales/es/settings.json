@@ -82,5 +82,16 @@
     "avatarRemove": "Error al eliminar la foto.",
     "export": "Error durante la exportación.",
     "import": "Error durante la importación."
+  },
+  "units": {
+    "title": "Unidades",
+    "subtitle": "Cómo se introducen y se muestran las constantes de este círculo.",
+    "metric": "Métrico",
+    "imperial": "Imperial",
+    "weight": "Peso en",
+    "temperature": "Temperatura en",
+    "glucose": "Glucemia en",
+    "hint": "Las mediciones se guardan siempre en métrico: cambiar de sistema convierte todo el historial en pantalla, no se pierde nada. La tensión se queda en mmHg en ambos casos.",
+    "error": "No se han podido guardar las unidades."
   }
 }

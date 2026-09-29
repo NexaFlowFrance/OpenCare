@@ -6,7 +6,7 @@ import { broadcastToCircle } from '../lib/broadcaster';
 import { VISIT_COLUMNS } from '../lib/visits';
 
 // Visites (cote aidant) : la liste de qui est passe voir le proche, declaree
-// depuis l'ecran patient. Les check-in eux-memes passent par /api/kiosk/visits.
+// depuis le mode Kiosk. Les check-in eux-memes passent par /api/kiosk/visits.
 // Mounted on /api/visits by app.ts.
 const router = Router();
 router.use(authMiddleware, circleMiddleware);

@@ -41,6 +41,7 @@
     "maxSystolicLabel": "Maximum systolique",
     "minDiastolicLabel": "Minimum diastolique",
     "maxDiastolicLabel": "Maximum diastolique",
+    "unitHint": "Bornes en {{unit}}.",
     "clearHint": "Videz les champs pour retirer la plage.",
     "outOfRange": "Hors plage",
     "outOfRangeLabel": "Mesure en dehors de la plage normale"

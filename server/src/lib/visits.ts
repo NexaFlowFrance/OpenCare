@@ -3,7 +3,7 @@ import { createNotification } from './notifications';
 import { broadcastToCircle } from './broadcaster';
 
 /**
- * Visites declarees sur l'ecran patient : arrivee, note de passage, depart.
+ * Visites declarees en mode Kiosk : arrivee, note de passage, depart.
  * Chaque arrivee ecrit une entree de journal de type "visit" au nom du
  * visiteur et previent les aidants (admin + famille), en leur langue.
  */

@@ -82,5 +82,16 @@
     "avatarRemove": "Error while removing the photo.",
     "export": "Error during export.",
     "import": "Error during import."
+  },
+  "units": {
+    "title": "Units",
+    "subtitle": "How vitals are entered and displayed for this circle.",
+    "metric": "Metric",
+    "imperial": "Imperial",
+    "weight": "Weight in",
+    "temperature": "Temperature in",
+    "glucose": "Blood sugar in",
+    "hint": "Measurements stay stored in metric: switching converts the whole history on screen, nothing is lost. Blood pressure stays in mmHg either way.",
+    "error": "Could not save the units."
   }
 }

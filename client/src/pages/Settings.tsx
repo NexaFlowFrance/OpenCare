@@ -28,6 +28,7 @@ import { useCircle } from '../contexts/CircleContext';
 import { useTheme } from '../contexts/ThemeContext';
 import KioskDevicesCard from '../components/app/KioskDevicesCard';
 import EscalationCard from '../components/app/EscalationCard';
+import UnitSystemCard from '../components/app/UnitSystemCard';
 import { refreshAiStatus } from '../lib/aiStatus';
 import { aiErrorKey } from '../components/app/MagicInput';
 
@@ -688,7 +689,7 @@ const Settings: React.FC = () => {
                 </CardContent>
             </Card>
 
-            {/* Ecran patient : tablette murale, telephone du proche, appairage, code aidant */}
+            {/* Mode Kiosk : tablette murale, telephone du proche, appairage, code aidant */}
             <KioskDevicesCard />
 
             {/* Push Notifications */}
@@ -760,6 +761,9 @@ const Settings: React.FC = () => {
 
             {/* AI assistant: per-circle settings, circle admins only */}
             {isAdmin && <AiAssistantCard />}
+
+            {/* Unites de mesure du cercle (admins) */}
+            {isAdmin && <UnitSystemCard />}
 
             {/* Alertes et escalade (admins) */}
             {isAdmin && <EscalationCard />}

@@ -5,7 +5,7 @@ import { api } from '../../lib/api';
 import { formatAmount } from '../../lib/medications';
 
 /**
- * Parcours visiteur de l'ecran patient : type, prenom, arrivee notee.
+ * Parcours visiteur du mode Kiosk : type, prenom, arrivee notee.
  * Un professionnel peut ensuite laisser une note de passage, confirmer les
  * medicaments dus maintenant, puis signaler son depart, sans jamais voir le
  * reste des donnees du cercle.

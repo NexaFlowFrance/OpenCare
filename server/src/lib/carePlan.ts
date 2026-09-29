@@ -30,7 +30,7 @@ export function sanitizeSections(input: unknown): CarePlanSections {
     return out;
 }
 
-/** Les sections non vides seulement (ecran patient, pack de relais). */
+/** Les sections non vides seulement (mode Kiosk, pack de relais). */
 export function filledSections(sections: CarePlanSections): CarePlanSections {
     const out: CarePlanSections = {};
     for (const key of CARE_PLAN_SECTION_KEYS) {

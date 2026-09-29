@@ -4,7 +4,7 @@
  * Detection d'intention par mots-cles (francais et anglais) et phrase de
  * reponse construite a partir de l'instantane du jour : medicaments a prendre
  * maintenant, visites, rendez-vous, date et heure, personnes a appeler,
- * canicule. Le francais tutoie, comme le reste de l'ecran patient.
+ * canicule. Le francais tutoie, comme le reste du mode Kiosk.
  *
  * Module sans dependance. Une copie identique sert la demo statique
  * (client/src/demo/companionAnswers.ts) : garder les deux fichiers alignes.

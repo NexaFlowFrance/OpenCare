@@ -27,7 +27,7 @@ import { broadcastToCircle } from '../lib/broadcaster';
 import { langFromRequest } from '../lib/i18n';
 import logger from '../lib/logger';
 
-// "Demandez-moi" : le compagnon de l'ecran patient. Les questions pratiques
+// "Demandez-moi" : le compagnon du mode Kiosk. Les questions pratiques
 // (medicaments a prendre, qui vient, rendez-vous, date, qui appeler) sont
 // repondues depuis les donnees du cercle, sans IA et sans invention ; la
 // conversation libre passe par l'IA du cercle quand elle est configuree, avec
@@ -183,7 +183,7 @@ router.post('/message', allowDeviceOr(...JOURNAL_WRITER_ROLES), async (req: Kios
             } catch (aiError) {
                 if (!(aiError instanceof AiError)) throw aiError;
                 // Provider injoignable: une phrase calme (200) plutot qu'une erreur
-                // brute, pour ne pas derouter la personne agee sur l'ecran patient.
+                // brute, pour ne pas derouter la personne agee en mode Kiosk.
                 logger.warn('companion.ai_failed', { circleId, code: aiError.code });
                 reply = intent ? answerIntent(intent, facts, language, now) : companionFallback(language);
                 source = intent ? 'facts' : 'fallback';

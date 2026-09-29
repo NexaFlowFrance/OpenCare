@@ -7,7 +7,7 @@ import { intlLocale } from '../../i18n/format';
 import { buildSheetUrl, MAX_QR_URL_LENGTH, type EmergencyPayload } from '../../lib/emergencySheet';
 
 /**
- * Fiche urgence sur l'ecran patient.
+ * Fiche urgence en mode Kiosk.
  *
  * Les secours arrivent chez le proche : ils lisent l'essentiel en grand tout de
  * suite (allergies, groupe sanguin, traitements, qui appeler) et scannent le QR

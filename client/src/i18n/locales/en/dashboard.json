@@ -84,5 +84,6 @@
     "medication_stock_other": "{{count}} medications running out",
     "stockLeft_one": "{{name}} ({{count}} left)",
     "stockLeft_other": "{{name}} ({{count}} left)"
-  }
+  },
+  "openKiosk": "Kiosk mode"
 }

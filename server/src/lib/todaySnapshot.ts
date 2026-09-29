@@ -4,7 +4,7 @@ import { VISIT_COLUMNS, VisitRow } from './visits';
 import { expandEventOccurrences, toLocalISO } from '../routes/events';
 
 /**
- * Instantane de la journee du proche : ce que l'ecran patient affiche
+ * Instantane de la journee du proche : ce que le mode Kiosk affiche
  * (GET /api/kiosk/today) et ce que le compagnon "Demandez-moi" utilise pour
  * repondre sans rien inventer. Une seule source pour les deux.
  */

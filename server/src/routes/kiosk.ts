@@ -18,12 +18,18 @@ import { assertSafeIntegrationUrl, UnsafeUrlError } from '../utils/urlGuard';
 
 // Kiosk routes: the wall tablet at the care recipient's home, and the same
 // screen on the recipient's phone. Two ways in:
-//  - an appaired patient device (X-Kiosk-Token): no caregiver session at all,
-//    only the patient screens are reachable;
+//  - a paired Kiosk device (X-Kiosk-Token): no caregiver session at all,
+//    only the Kiosk screens are reachable;
 //  - a circle member session (legacy, and for caregivers who open /kiosk).
 // Pairing, PIN and device management need a member session (admin or family).
 // Mounted on /api/kiosk by app.ts.
 const router = Router();
+
+// Le mode Kiosk montre des medicaments, des rendez-vous medicaux et la fiche
+// urgence : la matrice de docs/SPEC.md en exclut le role neighbor. Un appareil
+// appaire passe toujours, c'est l'ecran du proche lui-meme.
+const HEALTH_READER_ROLES = ['admin', 'family', 'professional', 'viewer'] as const;
+const HEALTH_WRITER_ROLES = ['admin', 'family', 'professional'] as const;
 
 type KioskStatusKind = 'ok' | 'help' | 'hydration';
 
@@ -136,8 +142,8 @@ router.post('/pair', async (req, res: Response) => {
     }
 });
 
-// GET /api/kiosk/today : everything the patient screen shows, in one call.
-router.get('/today', kioskOrMember(), async (req: KioskRequest, res: Response) => {
+// GET /api/kiosk/today : everything Kiosk mode shows, in one call.
+router.get('/today', kioskOrMember(), allowDeviceOr(...HEALTH_READER_ROLES), async (req: KioskRequest, res: Response) => {
     try {
         const circleId = req.circleId!;
         // The same snapshot feeds the "Ask me" companion (lib/todaySnapshot).
@@ -249,7 +255,7 @@ router.post('/status', kioskOrMember(), allowDeviceOr(...JOURNAL_WRITER_ROLES), 
 // the patient phone). Body { intake_ids: string[], source?: 'kiosk' | 'phone' }.
 // Every pending intake of the list is marked taken, attributed to the care
 // recipient by name, with the confirmation source kept for the audit trail.
-router.post('/intakes/confirm', kioskOrMember(), allowDeviceOr(...JOURNAL_WRITER_ROLES), async (req: KioskRequest, res: Response) => {
+router.post('/intakes/confirm', kioskOrMember(), allowDeviceOr(...HEALTH_WRITER_ROLES), async (req: KioskRequest, res: Response) => {
     const ids = Array.isArray(req.body?.intake_ids)
         ? (req.body.intake_ids as unknown[]).filter((id): id is string => typeof id === 'string').slice(0, 50)
         : [];
@@ -299,7 +305,7 @@ router.post('/intakes/confirm', kioskOrMember(), allowDeviceOr(...JOURNAL_WRITER
 });
 
 // ============================================================
-// Visiteurs : "quelqu'un est la" depuis l'ecran patient
+// Visiteurs : "quelqu'un est la" depuis le mode Kiosk
 // ============================================================
 
 // POST /api/kiosk/visits/check-in { visitor_type, visitor_name, member_id? }
@@ -560,7 +566,7 @@ router.delete('/pin', ...manage, async (req: CircleRequest, res: Response) => {
 
 // GET /api/kiosk/care-plan : the family's care instructions (non-empty
 // sections only), shown to a professional visitor during a visit.
-router.get('/care-plan', kioskOrMember(), async (req: KioskRequest, res: Response) => {
+router.get('/care-plan', kioskOrMember(), allowDeviceOr(...HEALTH_READER_ROLES), async (req: KioskRequest, res: Response) => {
     try {
         const plan = await loadCarePlan(req.circleId!);
         res.json({ success: true, data: { sections: filledSections(plan.sections), updated_at: plan.updated_at } });
@@ -574,7 +580,7 @@ router.get('/care-plan', kioskOrMember(), async (req: KioskRequest, res: Respons
 // screen. A responder arriving at the home reads it on the spot, or scans the
 // QR the screen shows to take it along. Same data as the fridge QR, and the
 // device sees nothing more than what that printed sheet already carries.
-router.get('/emergency', kioskOrMember(), async (req: KioskRequest, res: Response) => {
+router.get('/emergency', kioskOrMember(), allowDeviceOr(...HEALTH_READER_ROLES), async (req: KioskRequest, res: Response) => {
     try {
         res.json({ success: true, data: await loadEmergencySheet(req.circleId!) });
     } catch (error) {
