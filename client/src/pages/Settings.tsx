@@ -9,7 +9,6 @@ import {
     Loader2,
     Bell,
     BellOff,
-    Languages,
     Camera,
     Trash2,
     Sparkles,
@@ -21,14 +20,13 @@ import {
     AlertTriangle,
 } from 'lucide-react';
 import { Card, CardContent, Button, Input, Select } from '../components/ui';
-import { LanguageSwitcher } from '../components/ui/LanguageSwitcher';
 import { useNotifications } from '../hooks/useNotifications';
 import { useAuth } from '../contexts/AuthContext';
 import { useCircle } from '../contexts/CircleContext';
 import { useTheme } from '../contexts/ThemeContext';
 import KioskDevicesCard from '../components/app/KioskDevicesCard';
 import EscalationCard from '../components/app/EscalationCard';
-import UnitSystemCard from '../components/app/UnitSystemCard';
+import RegionSettingsCard from '../components/app/RegionSettingsCard';
 import { refreshAiStatus } from '../lib/aiStatus';
 import { aiErrorKey } from '../components/app/MagicInput';
 
@@ -640,21 +638,8 @@ const Settings: React.FC = () => {
                 </CardContent>
             </Card>
 
-            {/* Language */}
-            <Card>
-                <CardContent className="p-6">
-                    <div className="flex items-start gap-4">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-card bg-primary-soft text-primary">
-                            <Languages className="h-5 w-5" />
-                        </div>
-                        <div className="flex-1">
-                            <h3 className="text-caption font-semibold text-foreground">{t('settings:language.title')}</h3>
-                            <p className="mt-1 text-micro text-muted-foreground">{t('settings:language.subtitle')}</p>
-                            <LanguageSwitcher className="mt-4" />
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
+            {/* Langue et region : langue (chacun), unites et premier jour de la semaine (admins) */}
+            <RegionSettingsCard />
 
             {/* Theme */}
             <Card>
@@ -761,9 +746,6 @@ const Settings: React.FC = () => {
 
             {/* AI assistant: per-circle settings, circle admins only */}
             {isAdmin && <AiAssistantCard />}
-
-            {/* Unites de mesure du cercle (admins) */}
-            {isAdmin && <UnitSystemCard />}
 
             {/* Alertes et escalade (admins) */}
             {isAdmin && <EscalationCard />}

@@ -19,6 +19,7 @@ import { api } from '../lib/api';
 import { cn } from '../lib/utils';
 import { MEDICATION_FORMS, MEDICATION_UNITS, formatAmount, safeQuantity } from '../lib/medications';
 import { useCircle } from '../contexts/CircleContext';
+import { circleWeekStart, orderedIsoDays, sortIsoDays } from '../lib/weekStart';
 import { useWebSocketUpdates } from '../hooks/useWebSocketUpdates';
 import { dateLocale } from '../i18n/format';
 import {
@@ -291,6 +292,8 @@ const Medications: React.FC = () => {
     const dayLetters = t('medications:dayLetters', { returnObjects: true }) as unknown as string[];
     const dayNames = t('common:days', { returnObjects: true }) as unknown as string[];
     const daysShort = t('common:daysShort', { returnObjects: true }) as unknown as string[];
+    // Ordre d'affichage des jours (reglage du cercle) ; les jours restent stockes en ISO.
+    const weekStart = circleWeekStart(activeCircle);
 
     const formOptions = FORM_VALUES.map((value) => ({
         value,
@@ -830,7 +833,7 @@ const Medications: React.FC = () => {
         const days =
             schedule.days_of_week.length === 7
                 ? t('medications:treatments.everyDay')
-                : schedule.days_of_week.map((d) => daysShort[d - 1]).join(', ');
+                : sortIsoDays(schedule.days_of_week, weekStart).map((d) => daysShort[d - 1]).join(', ');
         return `${name} ${schedule.time_of_day}, ${days} : ${amountLabel(schedule.quantity, schedule.unit, form)}`;
     };
 
@@ -1499,7 +1502,7 @@ const Medications: React.FC = () => {
                                             </Button>
                                         </div>
                                         <div className="flex flex-wrap gap-1.5">
-                                            {ISO_DAYS.map((day) => {
+                                            {orderedIsoDays(weekStart).map((day) => {
                                                 const selected = row.days_of_week.includes(day);
                                                 return (
                                                     <button
