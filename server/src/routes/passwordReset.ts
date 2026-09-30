@@ -9,6 +9,7 @@ import { getAppUrl, isMailConfigured, sendMail } from '../lib/mailer';
 import { decryptCredentials, encryptCredentials } from '../utils/crypto';
 import logger from '../lib/logger';
 import { pickLang } from '../lib/i18n';
+import { relayAdminIds, type Membership } from '../lib/resetRelay';
 
 /**
  * Mot de passe oublie.
@@ -16,8 +17,14 @@ import { pickLang } from '../lib/i18n';
  * Deux modes de remise du lien, choisis par la configuration de l'instance
  * (jamais par l'existence du compte, pour ne pas permettre l'enumeration) :
  *  - SMTP configure : e-mail a l'adresse du compte.
- *  - Sans SMTP : les administrateurs des cercles de la personne sont prevenus et
- *    retrouvent le lien sur la page Cercle pour le lui transmettre de vive voix.
+ *  - Sans SMTP : les administrateurs de TOUS les cercles de la personne sont
+ *    prevenus et retrouvent le lien sur la page Cercle pour le lui transmettre de
+ *    vive voix (voir lib/resetRelay : le lien ouvre tout le compte, donc un admin
+ *    d'un seul cercle partage ne le recoit pas).
+ *
+ * Une fois le mot de passe change, la personne est prevenue (notification et
+ * push sur ses appareils), pour qu'une reinitialisation qu'elle n'a pas
+ * demandee ne passe pas inapercue.
  *
  * Le jeton n'est stocke qu'en hache (SHA-256) pour la verification. En mode
  * "admin" une copie chiffree (AES-256-GCM, meme cle que les integrations) est
@@ -84,6 +91,35 @@ function adminNotificationTexts(language: string, requesterName: string): { titl
     };
 }
 
+function ownerNotificationTexts(language: string, delivery: Delivery): { title: string; message: string } {
+    if (language === 'en') {
+        return {
+            title: 'Your password was changed',
+            message: delivery === 'admin'
+                ? 'Your OpenCare password was reset with a link passed on by a circle admin. If this was not you, tell your circle admins right away.'
+                : 'Your OpenCare password was reset from the link sent to your email. If this was not you, tell your circle admins right away.',
+        };
+    }
+    return {
+        title: 'Votre mot de passe a été changé',
+        message: delivery === 'admin'
+            ? "Votre mot de passe OpenCare a été réinitialisé avec un lien transmis par un administrateur du cercle. Si ce n'est pas vous, prévenez aussitôt les administrateurs du cercle."
+            : "Votre mot de passe OpenCare a été réinitialisé depuis le lien reçu par e-mail. Si ce n'est pas vous, prévenez aussitôt les administrateurs du cercle.",
+    };
+}
+
+/** Toutes les adhesions des cercles dont la personne est membre (pour lib/resetRelay). */
+async function membershipsAround(userId: string): Promise<Array<Membership & { language: string }>> {
+    const result = await query(
+        `SELECT cm.user_id, cm.circle_id, cm.role, COALESCE(u.language, 'fr') AS language
+         FROM circle_members cm
+         JOIN users u ON u.id = cm.user_id
+         WHERE cm.circle_id IN (SELECT circle_id FROM circle_members WHERE user_id = $1)`,
+        [userId]
+    );
+    return result.rows as Array<Membership & { language: string }>;
+}
+
 // Demande de reinitialisation. Repond toujours 200 avec le mode de remise de
 // l'instance, que le compte existe ou non.
 router.post('/forgot-password', async (req, res: Response) => {
@@ -123,16 +159,13 @@ router.post('/forgot-password', async (req, res: Response) => {
                 logger.error('password_reset.mail_failed', { error: err instanceof Error ? err.message : String(err) });
             }
         } else {
-            // Previent les administrateurs des cercles de la personne (sauf elle-meme).
-            const admins = await query(
-                `SELECT DISTINCT cm.user_id, COALESCE(u.language, 'fr') AS language
-                 FROM circle_members cm
-                 JOIN users u ON u.id = cm.user_id
-                 WHERE cm.role = 'admin' AND cm.user_id <> $1
-                   AND cm.circle_id IN (SELECT circle_id FROM circle_members WHERE user_id = $1)`,
-                [user.id]
-            );
-            for (const admin of admins.rows as { user_id: string; language: string }[]) {
+            // Previent les admins de TOUS les cercles de la personne (lib/resetRelay).
+            const memberships = await membershipsAround(user.id);
+            const relayIds = new Set(relayAdminIds(memberships, user.id));
+            const admins = { rows: [...new Map(memberships
+                .filter((row) => relayIds.has(row.user_id))
+                .map((row) => [row.user_id, { user_id: row.user_id, language: row.language }])).values()] };
+            for (const admin of admins.rows) {
                 const texts = adminNotificationTexts(admin.language, user.name);
                 await createNotification({
                     userId: admin.user_id,
@@ -188,14 +221,16 @@ router.post('/reset-password', async (req, res: Response) => {
         }
 
         const result = await query(
-            `SELECT id, user_id FROM password_resets
-             WHERE token_hash = $1 AND used_at IS NULL AND expires_at > NOW()`,
+            `SELECT pr.id, pr.user_id, pr.delivery, COALESCE(u.language, 'fr') AS language
+             FROM password_resets pr
+             JOIN users u ON u.id = pr.user_id
+             WHERE pr.token_hash = $1 AND pr.used_at IS NULL AND pr.expires_at > NOW()`,
             [hashToken(token)]
         );
         if (result.rows.length === 0) {
             return res.status(400).json({ success: false, error: 'Invalid or expired link' });
         }
-        const reset = result.rows[0] as { id: string; user_id: string };
+        const reset = result.rows[0] as { id: string; user_id: string; delivery: Delivery; language: string };
 
         const passwordHash = await bcrypt.hash(password, 12);
         await query(
@@ -206,7 +241,19 @@ router.post('/reset-password', async (req, res: Response) => {
         await query('UPDATE password_resets SET used_at = NOW(), token_encrypted = NULL WHERE id = $1', [reset.id]);
         await query('DELETE FROM password_resets WHERE user_id = $1 AND id <> $2', [reset.user_id, reset.id]);
 
-        logger.info('password_reset.completed', { userId: reset.user_id });
+        // La personne est prevenue sur ses appareils : une reinitialisation qu'elle
+        // n'a pas demandee (lien relaye par un admin) ne doit pas passer inapercue.
+        const texts = ownerNotificationTexts(reset.language, reset.delivery);
+        await createNotification({
+            userId: reset.user_id,
+            title: texts.title,
+            message: texts.message,
+            type: 'password_changed',
+            relatedId: reset.user_id,
+            url: '/settings',
+        });
+
+        logger.info('password_reset.completed', { userId: reset.user_id, delivery: reset.delivery });
         return res.json({ success: true, data: {} });
     } catch (error) {
         logger.error('password_reset.failed', { error: error instanceof Error ? error.message : String(error) });
@@ -232,10 +279,17 @@ router.get('/password-resets', authMiddleware, async (req: AuthRequest, res: Res
             [req.userId]
         );
 
-        const data = (result.rows as {
+        // Un lien n'est montre qu'a un admin de tous les cercles de la personne.
+        const rows = result.rows as {
             id: string; expires_at: string; created_at: string; token_encrypted: string;
             user_id: string; name: string; email: string; circle_id: string;
-        }[]).map((row) => {
+        }[];
+        const allowed = new Map<string, boolean>();
+        for (const targetId of new Set(rows.map((row) => row.user_id))) {
+            allowed.set(targetId, relayAdminIds(await membershipsAround(targetId), targetId).includes(req.userId!));
+        }
+
+        const data = rows.filter((row) => allowed.get(row.user_id)).map((row) => {
             let url: string | null = null;
             try {
                 url = resetPath(decryptCredentials(row.token_encrypted).token);

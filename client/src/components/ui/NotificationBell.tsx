@@ -17,6 +17,7 @@ function notificationRoute(n: AppNotification): string {
     if (t === 'prescription_renewal' || t === 'medication_stock') return '/medications';
     if (t === 'vital_out_of_range') return '/health';
     if (t === 'password_reset') return '/circle';
+    if (t === 'password_changed') return '/settings';
     if (t.startsWith('task')) return '/tasks';
     if (t.startsWith('appointment') || t.startsWith('reminder') || t.startsWith('calendar')) return '/calendar';
     if (t.startsWith('shopping')) return '/shopping';
