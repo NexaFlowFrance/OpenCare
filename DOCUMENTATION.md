@@ -299,6 +299,8 @@ Le réglage est stocké dans `care_circles.settings`, à côté de secrets qui n
 
 Dans la même carte **Langue et région**, les admins choisissent le premier jour de la semaine du cercle : **lundi** (par défaut) ou **dimanche**. Le calendrier commence sa grille ce jour-là, et les choix de jours (récurrence d'un événement, jours d'un traitement) suivent le même ordre. C'est un réglage d'affichage seulement : les jours restent enregistrés en ISO (lundi = 1) et les récurrences en `BYDAY=MO,...`, donc changer d'avis ne touche aucune donnée. La clé `week_start` fait partie des clés publiques de `care_circles.settings`, validée comme `unit_system`. L'ordre vit dans `client/src/lib/weekStart.ts`, couvert par des tests.
 
+Une exception assumée : la synthèse hebdomadaire couvre toujours lundi à dimanche, quel que soit le réglage. C'est une période de rapport, pas une grille de calendrier, et déplacer ses bornes couperait la semaine en deux au moment du changement. Un cercle réglé sur dimanche voit donc son calendrier commencer le dimanche, et reçoit toujours le récapitulatif de la semaine écoulée du lundi au dimanche.
+
 ### Divers
 
 - `GET / POST / PUT / DELETE /api/notes` : notes partagées du cercle.
