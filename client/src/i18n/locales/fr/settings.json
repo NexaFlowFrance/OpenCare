@@ -16,6 +16,12 @@
     "title": "Langue",
     "subtitle": "Choisissez la langue de l'interface de l'application."
   },
+  "region": {
+    "title": "Langue et région",
+    "subtitle": "Comment OpenCare parle, mesure et compte la semaine.",
+    "forYou": "Pour vous seulement",
+    "forCircle": "Pour tout le cercle"
+  },
   "theme": {
     "title": "Thème",
     "subtitle": "Clair, sombre, ou réglé automatiquement selon votre appareil.",
@@ -93,5 +99,12 @@
     "glucose": "Glycémie en",
     "hint": "Les mesures restent enregistrées en métrique : changer de système convertit tout l'historique à l'affichage, rien n'est perdu. La tension reste en mmHg dans les deux cas.",
     "error": "Impossible d'enregistrer les unités."
+  },
+  "weekStart": {
+    "title": "La semaine commence le",
+    "subtitle": "Première colonne du calendrier et premier jour des choix de jours.",
+    "monday": "Lundi",
+    "sunday": "Dimanche",
+    "error": "Impossible d'enregistrer le premier jour de la semaine."
   }
 }

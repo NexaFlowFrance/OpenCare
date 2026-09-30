@@ -289,11 +289,15 @@ La restauration demande une confirmation explicite, vérifie que le fichier ress
 
 ### Unités de mesure
 
-Un cercle choisit son système dans les Paramètres, section **Unités** (admins) : métrique ou impérial. Le poids passe des kilos aux livres, la température des degrés Celsius aux Fahrenheit, la glycémie des g/L aux mg/dL. La tension reste en mmHg dans les deux cas, la douleur et le moral sur dix.
+Un cercle choisit son système dans les Paramètres, carte **Langue et région**, section **Unités** (admins) : métrique ou impérial. Le poids passe des kilos aux livres, la température des degrés Celsius aux Fahrenheit, la glycémie des g/L aux mg/dL. La tension reste en mmHg dans les deux cas, la douleur et le moral sur dix.
 
 Les mesures sont **toujours enregistrées en métrique**, quel que soit le système choisi : le réglage ne change que la saisie et l'affichage. Changer d'avis convertit donc l'historique entier à l'écran, sans migration, sans arrondi cumulé et sans perte. Les seuils d'alerte suivent la même règle. La conversion vit dans `client/src/lib/units.ts` et est couverte par des tests d'aller-retour.
 
 Le réglage est stocké dans `care_circles.settings`, à côté de secrets qui ne doivent jamais sortir du serveur. `GET /api/circles` et `GET /api/circles/:id` ne renvoient donc que les **clés publiques** de ce JSONB, et `PUT /api/circles/:id` **fusionne** les réglages fournis après validation au lieu de remplacer l'objet : enregistrer une préférence n'efface plus le code aidant du mode Kiosk, et l'empreinte de ce code ne circule plus dans une réponse d'API.
+
+### Premier jour de la semaine
+
+Dans la même carte **Langue et région**, les admins choisissent le premier jour de la semaine du cercle : **lundi** (par défaut) ou **dimanche**. Le calendrier commence sa grille ce jour-là, et les choix de jours (récurrence d'un événement, jours d'un traitement) suivent le même ordre. C'est un réglage d'affichage seulement : les jours restent enregistrés en ISO (lundi = 1) et les récurrences en `BYDAY=MO,...`, donc changer d'avis ne touche aucune donnée. La clé `week_start` fait partie des clés publiques de `care_circles.settings`, validée comme `unit_system`. L'ordre vit dans `client/src/lib/weekStart.ts`, couvert par des tests.
 
 ### Divers
 

@@ -16,6 +16,12 @@
     "title": "Language",
     "subtitle": "Choose the language of the app interface."
   },
+  "region": {
+    "title": "Language & region",
+    "subtitle": "How OpenCare reads, measures and counts the week.",
+    "forYou": "Just for you",
+    "forCircle": "Everyone in this circle"
+  },
   "theme": {
     "title": "Theme",
     "subtitle": "Light, dark, or automatically matched to your device.",
@@ -93,5 +99,12 @@
     "glucose": "Blood sugar in",
     "hint": "Measurements stay stored in metric: switching converts the whole history on screen, nothing is lost. Blood pressure stays in mmHg either way.",
     "error": "Could not save the units."
+  },
+  "weekStart": {
+    "title": "Week starts on",
+    "subtitle": "First column of the calendar and first day in weekday pickers.",
+    "monday": "Monday",
+    "sunday": "Sunday",
+    "error": "Could not save the first day of the week."
   }
 }

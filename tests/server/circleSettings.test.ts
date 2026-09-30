@@ -16,15 +16,20 @@ describe('publicSettings', () => {
             kiosk_pin_hash: '$2b$10$uneEmpreinteQuiNeDoitPasSortir',
             secret_futur: 'jamais',
         });
-        expect(filtered).toEqual({ unit_system: 'imperial' });
+        expect(filtered).toEqual({ unit_system: 'imperial', week_start: 'monday' });
         expect(JSON.stringify(filtered)).not.toContain('2b$10');
     });
 
     it('donne une valeur par defaut utilisable', () => {
-        expect(publicSettings({})).toEqual({ unit_system: 'metric' });
-        expect(publicSettings(null)).toEqual({ unit_system: 'metric' });
-        expect(publicSettings('texte')).toEqual({ unit_system: 'metric' });
-        expect(publicSettings({ unit_system: 'lunaire' })).toEqual({ unit_system: 'metric' });
+        const defaults = { unit_system: 'metric', week_start: 'monday' };
+        expect(publicSettings({})).toEqual(defaults);
+        expect(publicSettings(null)).toEqual(defaults);
+        expect(publicSettings('texte')).toEqual(defaults);
+        expect(publicSettings({ unit_system: 'lunaire', week_start: 'mardi' })).toEqual(defaults);
+    });
+
+    it('garde le dimanche quand le cercle l a choisi', () => {
+        expect(publicSettings({ week_start: 'sunday' })).toEqual({ unit_system: 'metric', week_start: 'sunday' });
     });
 
     it('filtre aussi une ligne de cercle entiere, sans perdre le reste', () => {
@@ -32,7 +37,7 @@ describe('publicSettings', () => {
         const safe = withPublicSettings(row);
         expect(safe.id).toBe('c1');
         expect(safe.name).toBe('Jeanne');
-        expect(safe.settings).toEqual({ unit_system: 'imperial' });
+        expect(safe.settings).toEqual({ unit_system: 'imperial', week_start: 'monday' });
         expect(JSON.stringify(safe)).not.toContain('secret');
     });
 });
@@ -41,6 +46,18 @@ describe('validateSettingsPatch', () => {
     it('accepte les deux systemes d unites', () => {
         expect(validateSettingsPatch({ unit_system: 'imperial' }, 'fr').patch).toEqual({ unit_system: 'imperial' });
         expect(validateSettingsPatch({ unit_system: 'metric' }, 'fr').patch).toEqual({ unit_system: 'metric' });
+    });
+
+    it('accepte les deux premiers jours de semaine, seuls ou avec les unites', () => {
+        expect(validateSettingsPatch({ week_start: 'sunday' }, 'fr').patch).toEqual({ week_start: 'sunday' });
+        expect(validateSettingsPatch({ week_start: 'monday' }, 'en').patch).toEqual({ week_start: 'monday' });
+        expect(validateSettingsPatch({ unit_system: 'imperial', week_start: 'sunday' }, 'en').patch)
+            .toEqual({ unit_system: 'imperial', week_start: 'sunday' });
+    });
+
+    it('refuse un premier jour de semaine inconnu', () => {
+        expect(validateSettingsPatch({ week_start: 'saturday' }, 'fr').error).toBeTruthy();
+        expect(validateSettingsPatch({ week_start: 0 }, 'en').error).toMatch(/monday or sunday/);
     });
 
     it('refuse une valeur inconnue plutot que de l ignorer', () => {
@@ -64,6 +81,6 @@ describe('validateSettingsPatch', () => {
     });
 
     it('ne declare publique que ce qui a ete relu', () => {
-        expect([...PUBLIC_SETTING_KEYS]).toEqual(['unit_system']);
+        expect([...PUBLIC_SETTING_KEYS]).toEqual(['unit_system', 'week_start']);
     });
 });

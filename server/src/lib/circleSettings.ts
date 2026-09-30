@@ -4,7 +4,7 @@ import { query } from '../db';
  * Reglages d'un cercle (care_circles.settings).
  *
  * Ce JSONB melange deux choses : des preferences que tout le cercle peut lire
- * (le systeme d'unites) et des secrets qui ne doivent jamais sortir du serveur
+ * (le systeme d'unites, le premier jour de la semaine) et des secrets qui ne doivent jamais sortir du serveur
  * (l'empreinte du code aidant du mode Kiosk). Un code a quatre chiffres dont
  * l'empreinte circule se casse hors ligne en quelques secondes : la lecture
  * passe donc par un filtre, et l'ecriture fusionne au lieu de remplacer, pour
@@ -12,24 +12,38 @@ import { query } from '../db';
  */
 
 /** Ce qu'un membre du cercle peut lire. */
-export const PUBLIC_SETTING_KEYS = ['unit_system'] as const;
+export const PUBLIC_SETTING_KEYS = ['unit_system', 'week_start'] as const;
 
 /** Systeme d'unites de saisie et d'affichage des constantes. */
 export const UNIT_SYSTEMS = ['metric', 'imperial'] as const;
 export type UnitSystem = (typeof UNIT_SYSTEMS)[number];
 
+/**
+ * Premier jour de la semaine a l'ecran (calendrier, choix des jours). Lundi par
+ * defaut ; dimanche pour les familles qui comptent ainsi, aux Etats-Unis par
+ * exemple. Un reglage d'affichage seulement : les jours restent stockes en ISO
+ * (lundi = 1) et les RRULE en BYDAY=MO,...
+ */
+export const WEEK_STARTS = ['monday', 'sunday'] as const;
+export type WeekStart = (typeof WEEK_STARTS)[number];
+
 export interface PublicCircleSettings {
     unit_system: UnitSystem;
+    week_start: WeekStart;
 }
 
 const isUnitSystem = (value: unknown): value is UnitSystem =>
     typeof value === 'string' && (UNIT_SYSTEMS as readonly string[]).includes(value);
+
+const isWeekStart = (value: unknown): value is WeekStart =>
+    typeof value === 'string' && (WEEK_STARTS as readonly string[]).includes(value);
 
 /** La vue publique des reglages, valeurs par defaut comprises. Rien d'autre ne sort. */
 export function publicSettings(raw: unknown): PublicCircleSettings {
     const source = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
     return {
         unit_system: isUnitSystem(source.unit_system) ? source.unit_system : 'metric',
+        week_start: isWeekStart(source.week_start) ? source.week_start : 'monday',
     };
 }
 
@@ -57,6 +71,12 @@ export function validateSettingsPatch(input: unknown, lang: 'fr' | 'en'): { patc
                 return { error: lang === 'en' ? 'unit_system must be metric or imperial' : 'unit_system doit valoir metric ou imperial' };
             }
             patch.unit_system = value;
+        }
+        if (key === 'week_start') {
+            if (!isWeekStart(value)) {
+                return { error: lang === 'en' ? 'week_start must be monday or sunday' : 'week_start doit valoir monday ou sunday' };
+            }
+            patch.week_start = value;
         }
     }
     return { patch };

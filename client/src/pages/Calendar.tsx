@@ -14,6 +14,7 @@ import { Card, CardContent, Button, Dialog, Input, Textarea, Select, DatePicker 
 import { api } from '../lib/api';
 import { cn } from '../lib/utils';
 import { useCircle } from '../contexts/CircleContext';
+import { circleWeekStart, weekStartsOn, orderedIsoDays, inWeekOrder } from '../lib/weekStart';
 import { useAuth } from '../contexts/AuthContext';
 import { useWebSocketUpdates } from '../hooks/useWebSocketUpdates';
 import { dateLocale } from '../i18n/format';
@@ -243,8 +244,10 @@ const Calendar: React.FC = () => {
 
     // ── Data loading (refetched on month change, circle change, WS push) ──────
     const monthStart = startOfMonth(currentDate);
-    const gridStart = startOfWeek(monthStart, { weekStartsOn: 1 });
-    const gridEnd = endOfWeek(endOfMonth(currentDate), { weekStartsOn: 1 });
+    // Premier jour de la semaine : reglage du cercle (lundi par defaut).
+    const weekStart = circleWeekStart(activeCircle);
+    const gridStart = startOfWeek(monthStart, { weekStartsOn: weekStartsOn(weekStart) });
+    const gridEnd = endOfWeek(endOfMonth(currentDate), { weekStartsOn: weekStartsOn(weekStart) });
 
     const loadEvents = async () => {
         if (!activeCircle) return;
@@ -290,8 +293,9 @@ const Calendar: React.FC = () => {
     useEffect(() => {
         setLoading(true);
         void loadEvents();
+        // weekStart deplace les bords de la grille : le dimanche ajoute doit etre charge.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentDate, activeCircle?.id]);
+    }, [currentDate, activeCircle?.id, weekStart]);
 
     useEffect(() => {
         void loadMembers();
@@ -320,7 +324,8 @@ const Calendar: React.FC = () => {
     );
 
     const calendarDays = eachDayOfInterval({ start: gridStart, end: gridEnd });
-    const weekDays = t('common:daysShort', { returnObjects: true }) as string[];
+    // Les traductions restent rangees du lundi au dimanche ; seul l'affichage tourne.
+    const weekDays = inWeekOrder(t('common:daysShort', { returnObjects: true }) as string[], weekStart);
     const dayLetters = t('calendar:form.dayLetters', { returnObjects: true }) as string[];
 
     // ── Create / edit ─────────────────────────────────────────────────────────
@@ -1156,7 +1161,9 @@ const Calendar: React.FC = () => {
                             <div className="mt-3">
                                 <p className="mb-1.5 text-micro text-muted-foreground">{t('calendar:form.repeatDays')}</p>
                                 <div className="flex flex-wrap gap-1.5">
-                                    {RRULE_DAY_CODES.map((code, index) => {
+                                    {orderedIsoDays(weekStart).map((isoDay) => {
+                                        const index = isoDay - 1;
+                                        const code = RRULE_DAY_CODES[index];
                                         const active = formData.recurrence.byDays.includes(code);
                                         return (
                                             <button

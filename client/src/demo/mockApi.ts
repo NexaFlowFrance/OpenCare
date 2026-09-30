@@ -922,11 +922,15 @@ async function route(method: string, path: string, q: Record<string, string>, bo
                 if (body.settings && typeof body.settings === 'object') {
                     const patch = body.settings as Record<string, unknown>;
                     for (const key of Object.keys(patch)) {
-                        if (key !== 'unit_system') throw new Error('Unknown setting: ' + key);
+                        if (key !== 'unit_system' && key !== 'week_start') throw new Error('Unknown setting: ' + key);
                     }
                     if (patch.unit_system !== undefined) {
                         if (patch.unit_system !== 'metric' && patch.unit_system !== 'imperial') throw new Error('unit_system must be metric or imperial');
                         target.settings = { ...(target.settings as Json), unit_system: patch.unit_system };
+                    }
+                    if (patch.week_start !== undefined) {
+                        if (patch.week_start !== 'monday' && patch.week_start !== 'sunday') throw new Error('week_start must be monday or sunday');
+                        target.settings = { ...(target.settings as Json), week_start: patch.week_start };
                     }
                 }
                 return ok(circleRow(target));
