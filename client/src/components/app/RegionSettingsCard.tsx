@@ -7,11 +7,12 @@ import { LanguageSwitcher } from '../ui/LanguageSwitcher';
 import RegionSectionHeader from './RegionSectionHeader';
 import UnitSystemSection from './UnitSystemSection';
 import WeekStartSection from './WeekStartSection';
+import EmergencyNumbersSection from './EmergencyNumbersSection';
 
 /**
  * Langue et region : la langue (propre a chaque personne), puis, pour les
- * admins, les unites et le premier jour de la semaine (valables pour tout le
- * cercle). Les autres membres ne voient que la langue, comme avant.
+ * admins, les unites, le premier jour de la semaine et les numeros d'urgence
+ * (valables pour tout le cercle). Les autres membres ne voient que la langue, comme avant.
  */
 const RegionSettingsCard: React.FC = () => {
     const { t } = useTranslation('settings');
@@ -41,6 +42,7 @@ const RegionSettingsCard: React.FC = () => {
                     </section>
                     {isAdmin && <UnitSystemSection />}
                     {isAdmin && <WeekStartSection />}
+                    {isAdmin && <EmergencyNumbersSection />}
                 </div>
             </CardContent>
         </Card>

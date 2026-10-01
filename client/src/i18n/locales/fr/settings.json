@@ -106,5 +106,14 @@
     "monday": "Lundi",
     "sunday": "Dimanche",
     "error": "Impossible d'enregistrer le premier jour de la semaine."
+  },
+  "emergencyNumbers": {
+    "title": "Numéros d'urgence",
+    "subtitle": "Imprimés sur l'affiche de la fiche urgence. Indiquez les numéros du pays où vit votre proche.",
+    "placeholder": "ex. SAMU 15, Pompiers 18, 112",
+    "save": "Enregistrer",
+    "saving": "Enregistrement",
+    "saved": "Enregistré. Réimprimez l'affiche pour la mettre à jour.",
+    "error": "Impossible d'enregistrer les numéros d'urgence."
   }
 }

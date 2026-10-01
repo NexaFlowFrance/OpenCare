@@ -16,12 +16,12 @@ describe('publicSettings', () => {
             kiosk_pin_hash: '$2b$10$uneEmpreinteQuiNeDoitPasSortir',
             secret_futur: 'jamais',
         });
-        expect(filtered).toEqual({ unit_system: 'imperial', week_start: 'monday' });
+        expect(filtered).toEqual({ unit_system: 'imperial', week_start: 'monday', emergency_numbers: null });
         expect(JSON.stringify(filtered)).not.toContain('2b$10');
     });
 
     it('donne une valeur par defaut utilisable', () => {
-        const defaults = { unit_system: 'metric', week_start: 'monday' };
+        const defaults = { unit_system: 'metric', week_start: 'monday', emergency_numbers: null };
         expect(publicSettings({})).toEqual(defaults);
         expect(publicSettings(null)).toEqual(defaults);
         expect(publicSettings('texte')).toEqual(defaults);
@@ -29,7 +29,7 @@ describe('publicSettings', () => {
     });
 
     it('garde le dimanche quand le cercle l a choisi', () => {
-        expect(publicSettings({ week_start: 'sunday' })).toEqual({ unit_system: 'metric', week_start: 'sunday' });
+        expect(publicSettings({ week_start: 'sunday' })).toEqual({ unit_system: 'metric', week_start: 'sunday', emergency_numbers: null });
     });
 
     it('filtre aussi une ligne de cercle entiere, sans perdre le reste', () => {
@@ -37,7 +37,7 @@ describe('publicSettings', () => {
         const safe = withPublicSettings(row);
         expect(safe.id).toBe('c1');
         expect(safe.name).toBe('Jeanne');
-        expect(safe.settings).toEqual({ unit_system: 'imperial', week_start: 'monday' });
+        expect(safe.settings).toEqual({ unit_system: 'imperial', week_start: 'monday', emergency_numbers: null });
         expect(JSON.stringify(safe)).not.toContain('secret');
     });
 });
@@ -58,6 +58,26 @@ describe('validateSettingsPatch', () => {
     it('refuse un premier jour de semaine inconnu', () => {
         expect(validateSettingsPatch({ week_start: 'saturday' }, 'fr').error).toBeTruthy();
         expect(validateSettingsPatch({ week_start: 0 }, 'en').error).toMatch(/monday or sunday/);
+    });
+
+    it('accepte des numeros d urgence courts, nettoyes, et les efface avec null ou ""', () => {
+        expect(validateSettingsPatch({ emergency_numbers: '  911  ' }, 'en').patch).toEqual({ emergency_numbers: '911' });
+        expect(validateSettingsPatch({ emergency_numbers: 'SAMU 15, Pompiers 18, 112' }, 'fr').patch)
+            .toEqual({ emergency_numbers: 'SAMU 15, Pompiers 18, 112' });
+        expect(validateSettingsPatch({ emergency_numbers: null }, 'fr').patch).toEqual({ emergency_numbers: null });
+        expect(validateSettingsPatch({ emergency_numbers: '   ' }, 'fr').patch).toEqual({ emergency_numbers: null });
+    });
+
+    it('refuse des numeros d urgence trop longs, sur plusieurs lignes ou qui ne sont pas du texte', () => {
+        expect(validateSettingsPatch({ emergency_numbers: '9'.repeat(81) }, 'en').error).toMatch(/at most 80/);
+        expect(validateSettingsPatch({ emergency_numbers: '911\n112' }, 'fr').error).toBeTruthy();
+        expect(validateSettingsPatch({ emergency_numbers: 911 }, 'en').error).toBeTruthy();
+    });
+
+    it('relit les numeros d urgence enregistres, et ignore une valeur abimee', () => {
+        expect(publicSettings({ emergency_numbers: '911' }).emergency_numbers).toBe('911');
+        expect(publicSettings({ emergency_numbers: '9'.repeat(200) }).emergency_numbers).toBeNull();
+        expect(publicSettings({ emergency_numbers: 42 }).emergency_numbers).toBeNull();
     });
 
     it('refuse une valeur inconnue plutot que de l ignorer', () => {
@@ -81,6 +101,6 @@ describe('validateSettingsPatch', () => {
     });
 
     it('ne declare publique que ce qui a ete relu', () => {
-        expect([...PUBLIC_SETTING_KEYS]).toEqual(['unit_system', 'week_start']);
+        expect([...PUBLIC_SETTING_KEYS]).toEqual(['unit_system', 'week_start', 'emergency_numbers']);
     });
 });

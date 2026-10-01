@@ -97,6 +97,7 @@
     "preview": "Prévisualiser la fiche",
     "refresh": "Actualiser",
     "reprintNote": "Réimprimez l'affiche après toute modification (médicaments, contacts...) pour que le QR reste à jour.",
+    "numbersHint": "L'affiche indique SAMU 15, Pompiers 18 tant qu'un admin n'a pas saisi d'autres numéros dans Paramètres, Langue et région.",
     "qrAlt": "QR code de la fiche urgence de {{name}}",
     "notesLabel": "Notes complémentaires",
     "notesPlaceholder": "Code de la porte, animal, voisine qui a la clé...",
@@ -106,7 +107,6 @@
     "poster": {
       "scan": "En cas d'urgence, scannez",
       "name": "Fiche vitale de {{name}}",
-      "numbers": "SAMU 15, Pompiers 18",
       "print": "Imprimer",
       "close": "Fermer"
     },
