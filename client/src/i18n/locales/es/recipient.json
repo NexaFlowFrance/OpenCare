@@ -97,6 +97,7 @@
     "preview": "Previsualizar la ficha",
     "refresh": "Actualizar",
     "reprintNote": "Vuelva a imprimir el cartel después de cada cambio (medicamentos, contactos...) para que el QR siga al día.",
+    "numbersHint": "El cartel no muestra ningún número de emergencia hasta que un administrador añada los suyos en Ajustes, Idioma y región.",
     "qrAlt": "Código QR de la ficha de urgencia de {{name}}",
     "notesLabel": "Notas adicionales",
     "notesPlaceholder": "Código de la puerta, mascota, vecina que tiene la llave...",
@@ -106,7 +107,7 @@
     "poster": {
       "scan": "En caso de urgencia, escanee",
       "name": "Ficha vital de {{name}}",
-      "numbers": "SAMU 15, Bomberos 18",
+      "call": "Llame: {{numbers}}",
       "print": "Imprimir",
       "close": "Cerrar"
     },

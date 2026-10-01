@@ -106,5 +106,14 @@
     "monday": "Monday",
     "sunday": "Sunday",
     "error": "Could not save the first day of the week."
+  },
+  "emergencyNumbers": {
+    "title": "Emergency numbers",
+    "subtitle": "Printed on the emergency sheet poster. Enter the numbers used where your loved one lives.",
+    "placeholder": "e.g. 911",
+    "save": "Save",
+    "saving": "Saving",
+    "saved": "Saved. Print the poster again to update it.",
+    "error": "Could not save the emergency numbers."
   }
 }

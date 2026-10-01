@@ -106,5 +106,14 @@
     "monday": "Lunes",
     "sunday": "Domingo",
     "error": "No se ha podido guardar el primer día de la semana."
+  },
+  "emergencyNumbers": {
+    "title": "Números de emergencia",
+    "subtitle": "Se imprimen en el cartel de la ficha de emergencia. Indique los números del país donde vive su ser querido.",
+    "placeholder": "p. ej. 112",
+    "save": "Guardar",
+    "saving": "Guardando",
+    "saved": "Guardado. Vuelva a imprimir el cartel para actualizarlo.",
+    "error": "No se han podido guardar los números de emergencia."
   }
 }

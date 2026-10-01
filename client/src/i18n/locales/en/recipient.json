@@ -97,6 +97,7 @@
     "preview": "Preview the sheet",
     "refresh": "Refresh",
     "reprintNote": "Reprint the poster after any change (medications, contacts...) so the QR stays up to date.",
+    "numbersHint": "No emergency number is printed on the poster until an admin adds yours in Settings, Language & region.",
     "qrAlt": "QR code of {{name}}'s emergency sheet",
     "notesLabel": "Additional notes",
     "notesPlaceholder": "Door code, pet, neighbour who has the key...",
@@ -106,7 +107,7 @@
     "poster": {
       "scan": "In an emergency, scan",
       "name": "{{name}}'s vital sheet",
-      "numbers": "SAMU 15, Fire brigade 18",
+      "call": "Call: {{numbers}}",
       "print": "Print",
       "close": "Close"
     },

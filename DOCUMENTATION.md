@@ -301,6 +301,10 @@ Dans la même carte **Langue et région**, les admins choisissent le premier jou
 
 Une exception assumée : la synthèse hebdomadaire couvre toujours lundi à dimanche, quel que soit le réglage. C'est une période de rapport, pas une grille de calendrier, et déplacer ses bornes couperait la semaine en deux au moment du changement. Un cercle réglé sur dimanche voit donc son calendrier commencer le dimanche, et reçoit toujours le récapitulatif de la semaine écoulée du lundi au dimanche.
 
+### Numéros d'urgence de l'affiche
+
+L'affiche imprimable de la fiche urgence porte une ligne de numéros d'urgence, précédée de « Appelez : » dans la langue de l'interface. Les admins la saisissent dans la carte **Langue et région**, section **Numéros d'urgence** : texte libre sur une ligne, 80 caractères au plus (« 911 », « SAMU 15, Pompiers 18, 112 »). Sans saisie, un cercle francophone garde l'affiche d'origine (SAMU 15, Pompiers 18) ; dans une autre langue, l'affiche n'imprime aucun numéro plutôt qu'un numéro d'un autre pays, et la fiche le rappelle à côté du bouton d'impression. La clé `emergency_numbers` fait partie des clés publiques de `care_circles.settings` (`null` efface le réglage). Le repli vit dans `client/src/lib/emergencyNumbers.ts`, couvert par des tests.
+
 ### Divers
 
 - `GET / POST / PUT / DELETE /api/notes` : notes partagées du cercle.
