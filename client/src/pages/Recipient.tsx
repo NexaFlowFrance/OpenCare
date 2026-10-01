@@ -5,6 +5,7 @@ import { Camera, Copy, Eye, EyeOff, Loader2, Pencil, Plus, Printer, RefreshCw, T
 import QRCode from 'qrcode';
 import { api } from '../lib/api';
 import { EMERGENCY_VIEWER_URL, MAX_QR_URL_LENGTH, encodeSheet, type EmergencyPayload } from '../lib/emergencySheet';
+import { circleEmergencyNumbers, posterEmergencyNumbers } from '../lib/emergencyNumbers';
 import { useCircle } from '../contexts/CircleContext';
 import { useWebSocketUpdates } from '../hooks/useWebSocketUpdates';
 import {
@@ -285,8 +286,12 @@ const StoryCard: React.FC<{ circleId: string | null; canWriteContent: boolean }>
 const EmergencyCard: React.FC<{ circleId: string | null; canWriteContent: boolean; recipientName: string }> = ({
     circleId, canWriteContent, recipientName,
 }) => {
-    const { t } = useTranslation(['recipient', 'common']);
+    const { t, i18n } = useTranslation(['recipient', 'common']);
     const { showToast } = useToast();
+    // Numeros imprimes sur l'affiche : reglage du cercle (Langue et region), sinon repli.
+    const { activeCircle } = useCircle();
+    const hasCircleNumbers = circleEmergencyNumbers(activeCircle) !== null;
+    const posterNumbers = posterEmergencyNumbers(activeCircle, i18n.language || 'en');
     const [payload, setPayload] = useState<EmergencyPayload | null>(null);
     const [sheetUrl, setSheetUrl] = useState<string | null>(null);
     const [qr, setQr] = useState<string | null>(null);
@@ -424,6 +429,9 @@ const EmergencyCard: React.FC<{ circleId: string | null; canWriteContent: boolea
                                 </Button>
                             </div>
                             <p className="text-micro text-muted-foreground">{t('recipient:emergency.reprintNote')}</p>
+                            {!hasCircleNumbers && (
+                                <p className="text-micro text-muted-foreground">{t('recipient:emergency.numbersHint')}</p>
+                            )}
                         </div>
                     </div>
                 )}
@@ -443,7 +451,11 @@ const EmergencyCard: React.FC<{ circleId: string | null; canWriteContent: boolea
                         <p className="text-2xl text-neutral-900">
                             {t('recipient:emergency.poster.name', { name: recipientName })}
                         </p>
-                        <p className="text-2xl font-semibold text-neutral-900">{t('recipient:emergency.poster.numbers')}</p>
+                        {posterNumbers && (
+                            <p className="text-2xl font-semibold text-neutral-900">
+                                {t('recipient:emergency.poster.call', { numbers: posterNumbers })}
+                            </p>
+                        )}
                         <div className="flex gap-3 print:hidden">
                             <Button onClick={() => window.print()}>
                                 <Printer className="mr-2 h-4 w-4" />

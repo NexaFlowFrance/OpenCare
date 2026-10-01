@@ -923,11 +923,18 @@ async function route(method: string, path: string, q: Record<string, string>, bo
                 if (body.settings && typeof body.settings === 'object') {
                     const patch = body.settings as Record<string, unknown>;
                     for (const key of Object.keys(patch)) {
-                        if (key !== 'unit_system' && key !== 'week_start') throw new Error('Unknown setting: ' + key);
+                        if (key !== 'unit_system' && key !== 'week_start' && key !== 'emergency_numbers') throw new Error('Unknown setting: ' + key);
                     }
                     if (patch.unit_system !== undefined) {
                         if (patch.unit_system !== 'metric' && patch.unit_system !== 'imperial') throw new Error('unit_system must be metric or imperial');
                         target.settings = { ...(target.settings as Json), unit_system: patch.unit_system };
+                    }
+                    if (patch.emergency_numbers !== undefined) {
+                        const raw = patch.emergency_numbers;
+                        if (raw !== null && (typeof raw !== 'string' || raw.trim().length > 80 || /[\u0000-\u001f\u007f]/.test(raw))) {
+                            throw new Error('emergency_numbers must be one line of at most 80 characters');
+                        }
+                        target.settings = { ...(target.settings as Json), emergency_numbers: typeof raw === 'string' && raw.trim() ? raw.trim() : null };
                     }
                     if (patch.week_start !== undefined) {
                         if (patch.week_start !== 'monday' && patch.week_start !== 'sunday') throw new Error('week_start must be monday or sunday');

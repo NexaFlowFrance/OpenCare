@@ -207,6 +207,14 @@ week=$(request PUT "/api/circles/$CIRCLE_ID" '{"settings":{"week_start":"sunday"
 echo "$week" | jq -e '.data.settings.week_start == "sunday" and .data.settings.unit_system == "imperial" and (.data.settings | has("kiosk_pin_hash") | not)' >/dev/null
 bad_week=$(curl -sS -o /dev/null -w "%{http_code}" -X PUT "$API_BASE/api/circles/$CIRCLE_ID" -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -H "X-Circle-Id: $CIRCLE_ID" -d '{"settings":{"week_start":"mardi"}}')
 [[ "$bad_week" == "400" ]]
+# Numeros d'urgence de l'affiche : texte libre nettoye, efface par null.
+echo "$circle_list" | jq -e '.data[0].settings.emergency_numbers == null' >/dev/null
+numbers=$(request PUT "/api/circles/$CIRCLE_ID" '{"settings":{"emergency_numbers":"  911  "}}')
+echo "$numbers" | jq -e '.data.settings.emergency_numbers == "911" and .data.settings.week_start == "sunday"' >/dev/null
+bad_numbers=$(curl -sS -o /dev/null -w "%{http_code}" -X PUT "$API_BASE/api/circles/$CIRCLE_ID" -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -H "X-Circle-Id: $CIRCLE_ID" -d '{"settings":{"emergency_numbers":"911\n112"}}')
+[[ "$bad_numbers" == "400" ]]
+cleared=$(request PUT "/api/circles/$CIRCLE_ID" '{"settings":{"emergency_numbers":null}}')
+echo "$cleared" | jq -e '.data.settings.emergency_numbers == null' >/dev/null
 bad_setting=$(curl -sS -o /dev/null -w "%{http_code}" -X PUT "$API_BASE/api/circles/$CIRCLE_ID" -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -H "X-Circle-Id: $CIRCLE_ID" -d '{"settings":{"kiosk_pin_hash":"a-moi"}}')
 [[ "$bad_setting" == "400" ]]
 pin_kept=$(curl -sS -X POST "$API_BASE/api/kiosk/pin/verify" -H "Content-Type: application/json" -H "X-Kiosk-Token: $kiosk_token" -d '{"pin":"2468"}')
