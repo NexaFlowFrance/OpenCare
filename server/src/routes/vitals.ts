@@ -5,6 +5,8 @@ import { circleMiddleware, requireRole, CircleRequest } from '../middleware/circ
 import { broadcastToCircle } from '../lib/broadcaster';
 import { createNotification } from '../lib/notifications';
 import { langFromRequest, t } from '../lib/i18n';
+import { getPublicSettings } from '../lib/circleSettings';
+import { formatVital, isVitalType, numberLocale } from '../lib/units';
 
 const router = Router();
 
@@ -145,7 +147,7 @@ async function notifyOutOfRange(
     direction: 'low' | 'high',
     vitalId: string
 ): Promise<void> {
-    const [{ rows: members }, { rows: recipientRows }] = await Promise.all([
+    const [{ rows: members }, { rows: recipientRows }, settings] = await Promise.all([
         query(
             `SELECT cm.user_id, COALESCE(u.language, 'fr') AS language
              FROM circle_members cm JOIN users u ON u.id = cm.user_id
@@ -153,12 +155,18 @@ async function notifyOutOfRange(
             [circleId]
         ),
         query('SELECT first_name FROM care_recipients WHERE circle_id = $1', [circleId]),
+        getPublicSettings(circleId),
     ]);
     const who = (recipientRows[0]?.first_name as string | undefined)?.trim() ?? '';
-    const reading = value2 !== null ? `${value}/${value2}` : String(value);
+    // La mesure est stockee en metrique : on la lit dans le systeme du cercle, avec
+    // son unite ("150 lb", pas "68.04"), et les nombres dans la langue de chacun.
+    const readingFor = (language: string): string => (isVitalType(type)
+        ? formatVital(type, value, value2, settings.unit_system, numberLocale(language))
+        : (value2 !== null ? `${value}/${value2}` : String(value)));
 
     await Promise.all((members as Array<{ user_id: string; language: string }>).map((member) => {
         const lang = String(member.language).toLowerCase().startsWith('en') ? 'en' : 'fr';
+        const reading = readingFor(lang);
         const label = VITAL_LABELS[type]?.[lang] ?? type;
         const title = lang === 'en'
             ? `${label} out of range${who ? ` for ${who}` : ''}`
