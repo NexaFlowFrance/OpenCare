@@ -96,6 +96,8 @@ interface KioskToday {
     companion_enabled: boolean;
     pin_required?: boolean;
     device?: { id: string; name: string; kind: 'kiosk' | 'phone'; settings?: Partial<KioskSettings> } | null;
+    /** Systeme d'unites du cercle : la meteo suit le meme reglage que les constantes. */
+    unit_system?: 'metric' | 'imperial';
     members?: KioskMember[];
     visits_today?: KioskVisit[];
     active_visit?: KioskVisit | null;
@@ -132,7 +134,7 @@ const loadLocalSettings = (): KioskSettings => {
 
 // ── Meteo (Open-Meteo, sans cle). Simplifiee : temperature + une phrase ──
 
-interface WeatherState { temp: number; code: number; isDay: boolean }
+interface WeatherState { temp: number; unit: '°C' | '°F'; code: number; isDay: boolean }
 
 const weatherIcon = (code: number, isDay: boolean, className: string): React.ReactElement => {
     if (code === 0) return isDay ? <Sun className={className} /> : <Moon className={className} />;
@@ -156,13 +158,15 @@ const weatherPhraseKey = (code: number): string => {
     return 'cloudy';
 };
 
-const fetchWeather = async (loc: KioskLocation): Promise<WeatherState> => {
+const fetchWeather = async (loc: KioskLocation, fahrenheit: boolean): Promise<WeatherState> => {
+    // Open-Meteo repond en Celsius par defaut ; un cercle imperial la demande en Fahrenheit.
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}`
-        + '&current=temperature_2m,weather_code,is_day&forecast_days=1&timezone=auto';
+        + '&current=temperature_2m,weather_code,is_day&forecast_days=1&timezone=auto'
+        + (fahrenheit ? '&temperature_unit=fahrenheit' : '');
     const resp = await fetch(url);
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const d = await resp.json() as { current: { temperature_2m: number; weather_code: number; is_day: number } };
-    return { temp: d.current.temperature_2m, code: d.current.weather_code, isDay: d.current.is_day === 1 };
+    return { temp: d.current.temperature_2m, unit: fahrenheit ? '°F' : '°C', code: d.current.weather_code, isDay: d.current.is_day === 1 };
 };
 
 interface GeoResult { id: number; name: string; latitude: number; longitude: number; admin1?: string; country?: string }
@@ -300,14 +304,15 @@ const Kiosk: React.FC<KioskProps> = ({ device }) => {
     }, [device, settings.language, i18n]);
 
     // Meteo : toutes les 30 min ; en cas d'echec la carte disparait, on reessaie au cycle suivant
+    const weatherFahrenheit = today?.unit_system === 'imperial';
     useEffect(() => {
         const loc = settings.location;
         if (!loc) { setWeather(null); return; }
-        const load = () => { fetchWeather(loc).then(setWeather).catch(() => setWeather(null)); };
+        const load = () => { fetchWeather(loc, weatherFahrenheit).then(setWeather).catch(() => setWeather(null)); };
         load();
         const id = setInterval(load, 30 * 60_000);
         return () => clearInterval(id);
-    }, [settings.location]);
+    }, [settings.location, weatherFahrenheit]);
 
     // Photos de famille (Immich) dans le bandeau : nouvelle photo toutes les 2 min.
     // Toute erreur (pas d'integration, demo, serveur absent) garde l'image par defaut.
@@ -584,7 +589,7 @@ const Kiosk: React.FC<KioskProps> = ({ device }) => {
                             {weather && settings.location ? (
                                 <div className="flex items-center gap-3 rounded-2xl px-4 py-2" style={{ backgroundColor: 'rgba(255,255,255,0.9)', color: C.text }}>
                                     {weatherIcon(weather.code, weather.isDay, 'h-9 w-9 shrink-0')}
-                                    <span className="font-bold tabular-nums" style={fs(26)}>{Math.round(weather.temp)}°</span>
+                                    <span className="font-bold tabular-nums" style={fs(26)}>{Math.round(weather.temp)}{weather.unit}</span>
                                     <span style={{ ...fs(18), color: C.muted }}>{t(`kiosk:weather.${weatherPhraseKey(weather.code)}`)}</span>
                                 </div>
                             ) : <span />}

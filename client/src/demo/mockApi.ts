@@ -735,6 +735,7 @@ function kioskToday(c: CircleData): Json {
             .map((k) => ({ id: k.id, name: k.name, category: k.category, phone: k.phone ?? null, organization: k.organization ?? null })),
         pin_required: demoKiosk.pinSet,
         device: null,
+        unit_system: (c.settings as { unit_system?: string } | undefined)?.unit_system === 'imperial' ? 'imperial' : 'metric',
         members: c.members.map((m) => ({ id: m.id, name: m.name, avatar_url: m.avatar_url ?? null, role: m.role })),
         visits_today: c.visits.filter((v) => String(v.checked_in_at).slice(0, 10) === isoDate(now)),
         active_visit: c.visits.find((v) => !v.checked_out_at) ?? null,

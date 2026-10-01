@@ -28,6 +28,9 @@ export interface AttentionDetail {
     /** Horodatage local (ISO sans fuseau) ou date 'YYYY-MM-DD' selon le type. */
     when: string | null;
     extra?: string | null;
+    /** Mesures hors plage : valeurs stockees (metrique), que le client affiche dans le systeme du cercle. */
+    value?: number;
+    value2?: number | null;
 }
 
 export interface AttentionItem {
@@ -198,6 +201,8 @@ export async function loadAttention(circleId: string, includeHealth: boolean, no
         when: stamp(r.measured_at),
                 // pg rend les NUMERIC en chaine ("176.00") : on repasse par Number pour un affichage lisible.
         extra: r.value2 !== null && r.value2 !== undefined ? `${Number(r.value)}/${Number(r.value2)}` : String(Number(r.value)),
+        value: Number(r.value),
+        value2: r.value2 !== null && r.value2 !== undefined ? Number(r.value2) : null,
     })));
 
     push('medication_stock', lowStock.rows.length, '/medications', (lowStock.rows as any[]).map((r) => ({

@@ -82,6 +82,12 @@ export function validateSettingsPatch(input: unknown, lang: 'fr' | 'en'): { patc
     return { patch };
 }
 
+/** Les reglages publics d'un cercle, lus en base (valeurs par defaut si absent). */
+export async function getPublicSettings(circleId: string): Promise<PublicCircleSettings> {
+    const result = await query('SELECT settings FROM care_circles WHERE id = $1', [circleId]);
+    return publicSettings(result.rows[0]?.settings);
+}
+
 /** Fusionne les preferences dans le JSONB sans toucher aux cles privees. */
 export async function mergeCircleSettings(circleId: string, patch: Record<string, unknown>): Promise<PublicCircleSettings> {
     const result = await query(

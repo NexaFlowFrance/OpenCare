@@ -1,5 +1,7 @@
 import cron from 'node-cron';
 import { query } from '../db';
+import { publicSettings } from './circleSettings';
+import { displayUnit, isVitalType, roundedDisplayValue } from './units';
 import { createNotification } from './notifications';
 import logger from './logger';
 import { aiComplete, getAiSettings, AiError } from '../services/ai';
@@ -169,7 +171,18 @@ async function collectFacts(circleId: string, weekStart: string, info: CircleInf
         language: circleLanguage(info.settings),
         journalEntries,
         journalEntriesCount: counts.total,
-        vitalsByWeek: vitalsResult.rows as WeeklyDigestVitalWeek[],
+        // Moyennes stockees en metrique : l'IA les recoit dans le systeme du cercle,
+        // pour que la synthese parle en livres a une famille qui pese en livres.
+        vitalsByWeek: (vitalsResult.rows as WeeklyDigestVitalWeek[]).map((v) => {
+            if (!isVitalType(v.type)) return v;
+            const system = publicSettings(info.settings).unit_system;
+            return {
+                ...v,
+                avg: roundedDisplayValue(v.type, v.avg, system),
+                avg2: v.avg2 === null ? null : roundedDisplayValue(v.type, v.avg2, system),
+                unit: displayUnit(v.type, system),
+            };
+        }),
         intakes: {
             scheduled: intakes.scheduled,
             taken: intakes.taken,

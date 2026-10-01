@@ -6,6 +6,8 @@ import { formatDistanceToNow } from 'date-fns';
 import { api } from '../../lib/api';
 import { cn } from '../../lib/utils';
 import { dateLocale, intlLocale } from '../../i18n/format';
+import { useCircle } from '../../contexts/CircleContext';
+import { formatVital, type UnitSystem, type VitalType } from '../../lib/units';
 
 /**
  * "A traiter" : le haut du tableau de bord. Le serveur envoie des elements
@@ -21,6 +23,8 @@ export interface AttentionDetail {
     label: string;
     when: string | null;
     extra?: string | null;
+    value?: number;
+    value2?: number | null;
 }
 
 export interface AttentionItem {
@@ -82,6 +86,12 @@ interface Props {
 
 const AttentionCard: React.FC<Props> = ({ items, className, onChanged }) => {
     const { t } = useTranslation(['dashboard', 'visitors']);
+    const { activeCircle } = useCircle();
+    const unitSystem: UnitSystem = activeCircle?.settings?.unit_system === 'imperial' ? 'imperial' : 'metric';
+    // Une mesure hors plage, dans le systeme du cercle ("150 lb") ; texte brut du serveur sinon.
+    const vitalReading = (d: AttentionDetail): string => (typeof d.value === 'number'
+        ? formatVital(d.label as VitalType, d.value, d.value2, unitSystem, intlLocale())
+        : d.extra ?? '');
     const navigate = useNavigate();
     const [acking, setAcking] = React.useState(false);
 
@@ -112,7 +122,7 @@ const AttentionCard: React.FC<Props> = ({ items, className, onChanged }) => {
                 return {
                     title: t('dashboard:attention.vitals_out_of_range', { count: item.count }),
                     // Le libelle envoye par le serveur est le type de constante, traduit ici.
-                    detail: item.details.map((d) => `${t(`dashboard:vitals.types.${d.label}`, { defaultValue: d.label })} ${d.extra ?? ''} (${relativeTime(d.when)})`.trim()).join(', '),
+                    detail: item.details.map((d) => `${t(`dashboard:vitals.types.${d.label}`, { defaultValue: d.label })} ${vitalReading(d)} (${relativeTime(d.when)})`.trim()).join(', '),
                 };
             case 'medication_stock':
                 return {

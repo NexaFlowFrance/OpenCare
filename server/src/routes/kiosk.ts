@@ -9,6 +9,7 @@ import { broadcastToCircle } from '../lib/broadcaster';
 import { createNotification } from '../lib/notifications';
 import { applyIntakeStatus, fetchIntakeForUpdate, IntakeSource } from '../lib/intakes';
 import { loadTodaySnapshot } from '../lib/todaySnapshot';
+import { getPublicSettings } from '../lib/circleSettings';
 import { loadCarePlan, filledSections } from '../lib/carePlan';
 import { loadEmergencySheet } from '../lib/emergencySheet';
 import { loadRules, createHelpRequest, resolveTargets } from '../lib/escalation';
@@ -147,7 +148,9 @@ router.get('/today', kioskOrMember(), allowDeviceOr(...HEALTH_READER_ROLES), asy
     try {
         const circleId = req.circleId!;
         // The same snapshot feeds the "Ask me" companion (lib/todaySnapshot).
-        const [snapshot, pinHash] = await Promise.all([loadTodaySnapshot(circleId), getPinHash(circleId)]);
+        const [snapshot, pinHash, settings] = await Promise.all([
+            loadTodaySnapshot(circleId), getPinHash(circleId), getPublicSettings(circleId),
+        ]);
         res.json({
             success: true,
             data: {
@@ -155,6 +158,8 @@ router.get('/today', kioskOrMember(), allowDeviceOr(...HEALTH_READER_ROLES), asy
                 // Caregiver settings and leaving the screen are protected by a PIN when one is set.
                 pin_required: Boolean(pinHash),
                 device: req.kioskDevice ? publicDevice(req.kioskDevice) : null,
+                // Systeme d'unites du cercle : la meteo de l'ecran s'affiche en °F ou en °C.
+                unit_system: settings.unit_system,
             },
         });
     } catch (error) {
