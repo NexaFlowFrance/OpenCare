@@ -107,6 +107,7 @@
     "poster": {
       "scan": "En cas d'urgence, scannez",
       "name": "Fiche vitale de {{name}}",
+      "call": "Appelez : {{numbers}}",
       "print": "Imprimer",
       "close": "Fermer"
     },

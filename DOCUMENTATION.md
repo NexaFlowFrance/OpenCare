@@ -303,7 +303,7 @@ Une exception assumée : la synthèse hebdomadaire couvre toujours lundi à dima
 
 ### Numéros d'urgence de l'affiche
 
-L'affiche imprimable de la fiche urgence porte une ligne de numéros d'urgence. Les admins la saisissent dans la carte **Langue et région**, section **Numéros d'urgence** : texte libre sur une ligne, 80 caractères au plus (« 911 », « SAMU 15, Pompiers 18, 112 »). Sans saisie, un cercle francophone garde l'affiche d'origine (SAMU 15, Pompiers 18) ; dans une autre langue, l'affiche n'imprime aucun numéro plutôt qu'un numéro d'un autre pays, et la fiche le rappelle à côté du bouton d'impression. La clé `emergency_numbers` fait partie des clés publiques de `care_circles.settings` (`null` efface le réglage). Le repli vit dans `client/src/lib/emergencyNumbers.ts`, couvert par des tests.
+L'affiche imprimable de la fiche urgence porte une ligne de numéros d'urgence, précédée de « Appelez : » dans la langue de l'interface. Les admins la saisissent dans la carte **Langue et région**, section **Numéros d'urgence** : texte libre sur une ligne, 80 caractères au plus (« 911 », « SAMU 15, Pompiers 18, 112 »). Sans saisie, un cercle francophone garde l'affiche d'origine (SAMU 15, Pompiers 18) ; dans une autre langue, l'affiche n'imprime aucun numéro plutôt qu'un numéro d'un autre pays, et la fiche le rappelle à côté du bouton d'impression. La clé `emergency_numbers` fait partie des clés publiques de `care_circles.settings` (`null` efface le réglage). Le repli vit dans `client/src/lib/emergencyNumbers.ts`, couvert par des tests.
 
 ### Divers
 

@@ -107,6 +107,7 @@
     "poster": {
       "scan": "In an emergency, scan",
       "name": "{{name}}'s vital sheet",
+      "call": "Call: {{numbers}}",
       "print": "Print",
       "close": "Close"
     },

@@ -452,7 +452,9 @@ const EmergencyCard: React.FC<{ circleId: string | null; canWriteContent: boolea
                             {t('recipient:emergency.poster.name', { name: recipientName })}
                         </p>
                         {posterNumbers && (
-                            <p className="text-2xl font-semibold text-neutral-900">{posterNumbers}</p>
+                            <p className="text-2xl font-semibold text-neutral-900">
+                                {t('recipient:emergency.poster.call', { numbers: posterNumbers })}
+                            </p>
                         )}
                         <div className="flex gap-3 print:hidden">
                             <Button onClick={() => window.print()}>
