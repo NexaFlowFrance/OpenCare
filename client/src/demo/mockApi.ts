@@ -627,7 +627,7 @@ function attention(c: CircleData): Json[] {
     if (c.role !== 'neighbor') {
         const weekAgo = new Date(now.getTime() - 7 * 86400000).getTime();
         const outOfRange = c.vitals.filter((v) => new Date(String(v.measured_at)).getTime() >= weekAgo && vitalOutOfRange(c, v));
-        if (outOfRange.length) items.push({ kind: 'vitals_out_of_range', severity: 'warn', count: outOfRange.length, href: '/health', details: outOfRange.slice(0, 5).map((v) => ({ id: v.id, label: v.type, when: v.measured_at, extra: v.value2 !== null && v.value2 !== undefined ? `${v.value}/${v.value2}` : String(v.value) })) });
+        if (outOfRange.length) items.push({ kind: 'vitals_out_of_range', severity: 'warn', count: outOfRange.length, href: '/health', details: outOfRange.slice(0, 5).map((v) => ({ id: v.id, label: v.type, when: v.measured_at, extra: v.value2 !== null && v.value2 !== undefined ? `${v.value}/${v.value2}` : String(v.value), value: Number(v.value), value2: v.value2 !== null && v.value2 !== undefined ? Number(v.value2) : null })) });
         const low = c.medications.filter((m) => m.active !== false && m.stock_quantity !== null && m.stock_quantity !== undefined && m.stock_alert_threshold !== null && m.stock_alert_threshold !== undefined && Number(m.stock_quantity) <= Number(m.stock_alert_threshold));
         if (low.length) items.push({ kind: 'medication_stock', severity: 'warn', count: low.length, href: '/medications', details: low.slice(0, 5).map((m) => ({ id: m.id, label: m.name, when: null, extra: String(m.stock_quantity) })) });
         const missed = intakesForRange(c, today, today).filter((i) => i.status === 'missed');

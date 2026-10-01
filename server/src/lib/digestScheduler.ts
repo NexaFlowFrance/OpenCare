@@ -85,6 +85,7 @@ const circleLanguage = (settings: Record<string, unknown> | null): string => {
 };
 
 async function collectFacts(circleId: string, weekStart: string, info: CircleInfoRow): Promise<WeeklyDigestFacts> {
+    const system = publicSettings(info.settings).unit_system;
     const weekEndExclusive = addDays(weekStart, 7);
     const vitalsStart = addDays(weekStart, -49); // 8 weeks window including the summarized week
 
@@ -175,7 +176,6 @@ async function collectFacts(circleId: string, weekStart: string, info: CircleInf
         // pour que la synthese parle en livres a une famille qui pese en livres.
         vitalsByWeek: (vitalsResult.rows as WeeklyDigestVitalWeek[]).map((v) => {
             if (!isVitalType(v.type)) return v;
-            const system = publicSettings(info.settings).unit_system;
             return {
                 ...v,
                 avg: roundedDisplayValue(v.type, v.avg, system),

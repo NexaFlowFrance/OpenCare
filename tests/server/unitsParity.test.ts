@@ -59,5 +59,8 @@ describe('affichage cote serveur', () => {
     it('reconnait les types de constantes', () => {
         expect(server.isVitalType('weight')).toBe(true);
         expect(server.isVitalType('height')).toBe(false);
+        for (const value of ['weight', 'bp', 'glucose', 'height', '', null, 42]) {
+            expect(client.isVitalType(value), String(value)).toBe(server.isVitalType(value));
+        }
     });
 });

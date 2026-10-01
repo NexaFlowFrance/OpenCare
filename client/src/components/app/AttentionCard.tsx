@@ -7,7 +7,7 @@ import { api } from '../../lib/api';
 import { cn } from '../../lib/utils';
 import { dateLocale, intlLocale } from '../../i18n/format';
 import { useCircle } from '../../contexts/CircleContext';
-import { formatVital, type UnitSystem, type VitalType } from '../../lib/units';
+import { formatVital, isVitalType, type UnitSystem } from '../../lib/units';
 
 /**
  * "A traiter" : le haut du tableau de bord. Le serveur envoie des elements
@@ -89,8 +89,8 @@ const AttentionCard: React.FC<Props> = ({ items, className, onChanged }) => {
     const { activeCircle } = useCircle();
     const unitSystem: UnitSystem = activeCircle?.settings?.unit_system === 'imperial' ? 'imperial' : 'metric';
     // Une mesure hors plage, dans le systeme du cercle ("150 lb") ; texte brut du serveur sinon.
-    const vitalReading = (d: AttentionDetail): string => (typeof d.value === 'number'
-        ? formatVital(d.label as VitalType, d.value, d.value2, unitSystem, intlLocale())
+    const vitalReading = (d: AttentionDetail): string => (typeof d.value === 'number' && isVitalType(d.label)
+        ? formatVital(d.label, d.value, d.value2, unitSystem, intlLocale())
         : d.extra ?? '');
     const navigate = useNavigate();
     const [acking, setAcking] = React.useState(false);

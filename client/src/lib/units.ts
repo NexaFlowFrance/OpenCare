@@ -11,6 +11,11 @@
 export type UnitSystem = 'metric' | 'imperial';
 export type VitalType = 'weight' | 'bp' | 'pain' | 'mood' | 'temperature' | 'glucose';
 
+const VITAL_TYPES: readonly string[] = ['weight', 'bp', 'pain', 'mood', 'temperature', 'glucose'];
+/** Un libelle venu du serveur est-il bien un type de constante ? */
+export const isVitalType = (value: unknown): value is VitalType =>
+    typeof value === 'string' && VITAL_TYPES.includes(value);
+
 const LB_PER_KG = 2.2046226218;
 /** g/L vers mg/dL : 1 g/L = 100 mg/dL. */
 const MGDL_PER_GL = 100;
