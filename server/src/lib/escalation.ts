@@ -3,6 +3,7 @@ import { query } from '../db';
 import { createNotification } from './notifications';
 import { broadcastToCircle } from './broadcaster';
 import logger from './logger';
+import { pick, pickLang, type Lang } from './i18n';
 
 /**
  * Escalade configurable des alertes (regles par cercle, table escalation_rules) :
@@ -48,8 +49,8 @@ const idList = (value: unknown): string[] =>
     Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string' && UUID_RE.test(v)).slice(0, 50) : [];
 
 /** Validation stricte d'une mise a jour partielle. */
-export function validateRules(input: unknown, lang: 'fr' | 'en'): { patch?: Partial<EscalationRules>; error?: string } {
-    if (!input || typeof input !== 'object') return { error: lang === 'en' ? 'rules must be an object' : 'Les règles doivent être un objet' };
+export function validateRules(input: unknown, lang: Lang): { patch?: Partial<EscalationRules>; error?: string } {
+    if (!input || typeof input !== 'object') return { error: pick(lang, { fr: 'Les règles doivent être un objet', en: 'rules must be an object', es: 'Las reglas deben ser un objeto' }) };
     const body = input as Record<string, unknown>;
     const patch: Partial<EscalationRules> = {};
     if (body.enabled !== undefined) patch.enabled = body.enabled === true;
@@ -61,7 +62,11 @@ export function validateRules(input: unknown, lang: 'fr' | 'en'): { patch?: Part
         const raw = body[key];
         const n = typeof raw === 'number' || (typeof raw === 'string' && raw.trim() !== '') ? Number(raw) : NaN;
         if (!Number.isInteger(n) || n < 0 || n > MAX_MINUTES) {
-            return { error: lang === 'en' ? `${key} must be a whole number of minutes between 0 and ${MAX_MINUTES}` : `${key} doit être un nombre entier de minutes entre 0 et ${MAX_MINUTES}` };
+            return { error: pick(lang, {
+                fr: `${key} doit être un nombre entier de minutes entre 0 et ${MAX_MINUTES}`,
+                en: `${key} must be a whole number of minutes between 0 and ${MAX_MINUTES}`,
+                es: `${key} debe ser un número entero de minutos entre 0 y ${MAX_MINUTES}`,
+            }) };
         }
         patch[key] = n;
     }
@@ -181,17 +186,26 @@ export async function listOpenHelp(circleId: string): Promise<Array<HelpRequestR
 interface RuleRow extends EscalationRules { circle_id: string; first_name: string | null }
 interface LateIntake { id: string; due_at: string; name: string }
 
-const fmtTime = (iso: string, lang: string): string => {
+const fmtTime = (iso: string, lang: Lang): string => {
     const d = new Date(iso);
     if (Number.isNaN(d.getTime())) return '';
     const h = d.getHours();
     const m = String(d.getMinutes()).padStart(2, '0');
-    return lang === 'en' ? `${h}:${m}` : d.getMinutes() === 0 ? `${h} h` : `${h} h ${m}`;
+    // "17 h 30" en francais, "17:30" en anglais et en espagnol.
+    if (lang !== 'fr') return `${h}:${m}`;
+    return d.getMinutes() === 0 ? `${h} h` : `${h} h ${m}`;
 };
 
-function lateTexts(rule: RuleRow, intakes: LateIntake[], level: 'primary' | 'secondary', lang: string): { title: string; message: string } {
+function lateTexts(rule: RuleRow, intakes: LateIntake[], level: 'primary' | 'secondary', language: string): { title: string; message: string } {
+    const lang = pickLang(language);
     const name = (rule.first_name ?? '').trim();
     const list = intakes.map((i) => `${i.name} (${fmtTime(i.due_at, lang)})`).join(', ');
+    if (lang === 'es') {
+        return {
+            title: level === 'primary' ? `⏰ Toma con retraso${name ? ` en casa de ${name}` : ''}` : `⏰ Sigue sin confirmar${name ? ` en casa de ${name}` : ''}`,
+            message: `${list}: aún sin confirmar. ${level === 'primary' ? 'Compruébelo, por favor.' : 'Los cuidadores principales tampoco la han confirmado, compruébelo, por favor.'}`,
+        };
+    }
     if (lang === 'en') {
         return {
             title: level === 'primary' ? `⏰ Late medication${name ? ` at ${name}'s` : ''}` : `⏰ Still not confirmed${name ? ` at ${name}'s` : ''}`,
@@ -204,8 +218,15 @@ function lateTexts(rule: RuleRow, intakes: LateIntake[], level: 'primary' | 'sec
     };
 }
 
-function helpTexts(rule: RuleRow, minutes: number, lang: string): { title: string; message: string } {
+function helpTexts(rule: RuleRow, minutes: number, language: string): { title: string; message: string } {
+    const lang = pickLang(language);
     const name = (rule.first_name ?? '').trim();
+    if (lang === 'es') {
+        return {
+            title: `🆘 Sigue sin respuesta${name ? `: ${name} ha pedido ayuda` : ': petición de ayuda'}`,
+            message: `Nadie se ha hecho cargo de la petición de ayuda desde hace ${minutes} min. Compruebe que todo va bien.`,
+        };
+    }
     if (lang === 'en') {
         return {
             title: `🆘 Still no answer${name ? `: ${name} asked for help` : ' to a help request'}`,

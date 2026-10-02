@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { intlLocale } from '../../i18n/format';
 import { Mic, Square, X, Volume2, Send, Loader2, Pill, Users, CalendarClock, CalendarDays, Phone } from 'lucide-react';
 import { api } from '../../lib/api';
 import { cn } from '../../lib/utils';
@@ -78,8 +79,9 @@ interface KioskCompanionProps {
 }
 
 const KioskCompanion: React.FC<KioskCompanionProps> = ({ recipientName, aiEnabled, browserSpeech, fontScale, onClose }) => {
-    const { t, i18n } = useTranslation(['companion']);
-    const speechLang = (i18n.language || 'fr').toLowerCase().startsWith('fr') ? 'fr-FR' : 'en-US';
+    const { t } = useTranslation(['companion']);
+    // Dictee et voix dans la langue de l'ecran (fr-FR, en-US, es-ES...).
+    const speechLang = intlLocale();
     const fs = (px: number): React.CSSProperties => ({ fontSize: `calc(${px}px * ${fontScale})` });
 
     const [messages, setMessages] = useState<Msg[]>([]);

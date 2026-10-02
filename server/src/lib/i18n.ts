@@ -6,11 +6,36 @@ import type { Request } from 'express';
  * messages tels quels dans ses toasts : ils doivent donc suivre la langue de
  * l'utilisateur, et non rester en francais.
  */
-export type Lang = 'fr' | 'en';
+export type Lang = 'fr' | 'en' | 'es';
 
-/** 'en' pour toute valeur commencant par "en" (en, en-US, EN...), 'fr' sinon. */
+/** Les langues de l'interface, dans l'ordre ou le client les propose. */
+export const LANGS: readonly Lang[] = ['fr', 'en', 'es'];
+
+/**
+ * 'en' ou 'es' pour toute valeur qui commence ainsi (en-US, ES, es-419...),
+ * 'fr' sinon : le francais reste la langue par defaut du projet.
+ */
 export function pickLang(value: unknown): Lang {
-    return typeof value === 'string' && /^en/i.test(value.trim()) ? 'en' : 'fr';
+    if (typeof value !== 'string') return 'fr';
+    const tag = value.trim().toLowerCase();
+    if (tag.startsWith('en')) return 'en';
+    if (tag.startsWith('es')) return 'es';
+    return 'fr';
+}
+
+/**
+ * Le texte d'une langue, pour les phrases construites dans le code (notifications,
+ * reponses du compagnon...) plutot que dans MESSAGES. Le type impose les trois
+ * variantes : une langue ajoutee plus tard fera echouer la compilation a chaque
+ * phrase oubliee, au lieu de tomber en silence sur le francais.
+ */
+export function pick<T>(lang: Lang, variants: Record<Lang, T>): T {
+    return variants[lang];
+}
+
+/** Locale Intl d'une langue, pour les nombres et les dates produits par le serveur. */
+export function intlLocale(lang: Lang): string {
+    return pick(lang, { fr: 'fr-FR', en: 'en-US', es: 'es-ES' });
 }
 
 /**
@@ -31,7 +56,9 @@ export function langFromRequest(req: Request & { language?: string }): Lang {
 
 // Les textes francais reprennent mot pour mot les anciens litteraux des routes
 // (aucun changement pour les utilisateurs francophones).
-const MESSAGES: Record<Lang, Record<string, string>> = {
+// Exporte pour le test de parite (tests/server/i18n.test.ts) : une cle absente
+// d'une langue retomberait en silence sur le francais.
+export const MESSAGES: Record<Lang, Record<string, string>> = {
     fr: {
         'events.not_recurring': "Cet événement ne se répète pas : modifiez-le directement.",
         'medications.stockInvalid': 'Quantité de stock invalide.',
@@ -281,6 +308,132 @@ const MESSAGES: Record<Lang, Record<string, string>> = {
         'integrations.immich.connected': 'Connected to Immich {{version}}',
 
         'voice.whisperTimeout': 'The Whisper service did not answer within {{seconds}}s',
+    },
+    // Espagnol : vouvoiement cote aidants, comme l'interface (client/src/i18n/locales/es).
+    es: {
+        'events.not_recurring': 'Este evento no se repite: modifíquelo directamente.',
+        'medications.stockInvalid': 'Cantidad de stock no válida.',
+        'medications.stockRequired': 'Indique un stock o un umbral.',
+        'vitals.thresholdInvalid': 'Umbral no válido: el mínimo debe ser inferior al máximo.',
+        'vitals.thresholdType': 'Tipo de constante desconocido.',
+        'events.no_occurrence': 'No hay ninguna repetición en esa fecha.',
+        'events.move_too_far': 'Una repetición solo puede moverse {{days}} días como máximo.',
+        'url.invalid': 'URL no válida',
+        'url.protocol': 'Solo se permiten los protocolos http y https',
+        'url.ws_invalid': 'URL de WebSocket no válida',
+        'url.ws_protocol': 'Solo se permiten los protocolos ws y wss',
+        'url.cloud_metadata': 'Esta dirección está bloqueada (servicio de metadatos en la nube)',
+        'url.blocked': 'Esta dirección está bloqueada ({{reason}})',
+        'url.private': 'Esta dirección está bloqueada (dirección privada)',
+        'url.dns': 'No se pudo resolver el DNS de este host',
+        'url.no_ip': 'No se encontró ninguna dirección IP para este host',
+        'url.redirect': 'SSRF_REDIRECT_BLOCKED: redirección a otro host rechazada',
+        'url.redirect_invalid': 'SSRF_REDIRECT_BLOCKED: Location de redirección no válida',
+        'url.too_many_redirects': 'SSRF_REDIRECT_BLOCKED: demasiadas redirecciones',
+
+        'ai.AI_UNREACHABLE': 'No se puede contactar con el proveedor de IA',
+        'ai.AI_UNAUTHORIZED': 'El proveedor de IA ha rechazado la clave API',
+        'ai.AI_MODEL_NOT_FOUND': 'Modelo no encontrado en el proveedor de IA',
+        'ai.AI_INVALID_RESPONSE': 'El modelo ha devuelto una respuesta no válida',
+        'ai.AI_PROVIDER_ERROR': 'El proveedor de IA ha devuelto un error',
+        'ai.AI_NOT_CONFIGURED': 'El asistente de IA no está configurado',
+        'ai.testNotJson': 'El modelo ha respondido, pero no con el JSON esperado',
+        'ai.modelRequired': 'model es obligatorio',
+
+        'medications.schedulesArray': 'schedules debe ser una lista',
+        'medications.scheduleInvalid': 'Horario de toma no válido',
+        'medications.timeInvalid': 'Hora de toma no válida (formato HH:MM esperado)',
+        'medications.daysInvalid': 'Días de toma no válidos (enteros del 1 al 7 esperados)',
+        'medications.photoDataUrl': 'photo_url debe ser una data URL de imagen',
+        'medications.photoTooLarge': 'Foto demasiado grande (1,5 MB como máximo)',
+        'medications.dateFormat': '{{field}} debe ser una fecha con formato AAAA-MM-DD',
+        'medications.statusInvalid': 'Estado no válido',
+        'medications.intakeNotFound': 'Toma no encontrada',
+        'medications.activeParam': 'Parámetro active no válido (true, false o all)',
+        'medications.nameRequired': 'El nombre del medicamento es obligatorio',
+        'medications.activeBoolean': 'active debe ser un booleano',
+        'medications.notFound': 'Medicamento no encontrado',
+        'medications.datesInvalid': 'Fechas no válidas (formato AAAA-MM-DD esperado)',
+        'medications.endBeforeStart': 'La fecha de fin debe ser posterior a la de inicio',
+        'medications.prescriptionTitleRequired': 'El título de la receta es obligatorio',
+        'medications.reminderDays': 'reminder_days debe ser un entero positivo',
+        'medications.prescriptionNotFound': 'Receta no encontrada',
+        'medications.quantityInvalid': 'Cantidad por toma no válida (entre 0,25 y 99)',
+        'medications.unitInvalid': 'Unidad de toma no válida',
+        'medications.prnBoolean': 'prn debe ser un booleano',
+        'medications.withFoodInvalid': 'with_food no válido (with, without o any)',
+
+        'expenses.splitsRequired': 'splits es obligatorio para un reparto personalizado',
+        'expenses.splitsInvalidMember': 'splits contiene un miembro no válido',
+        'expenses.splitsDuplicateMember': 'splits contiene un miembro duplicado',
+        'expenses.sharePositive': 'Cada parte debe ser un importe positivo',
+        'expenses.sharesSum': 'La suma de las partes debe ser igual al importe',
+        'expenses.amountPositive': 'El importe debe ser mayor que cero',
+        'expenses.categoryInvalid': 'Categoría no válida',
+        'expenses.dateInvalid': 'Fecha no válida (formato AAAA-MM-DD)',
+        'expenses.fieldDateInvalid': '{{field}} no válido (formato AAAA-MM-DD)',
+        'expenses.splitModeInvalid': 'split_mode no válido',
+        'expenses.payerInvalid': 'Pagador no válido',
+        'expenses.receiptInvalid': 'Justificante no válido',
+        'expenses.notFound': 'Gasto no encontrado',
+        'expenses.onlyAuthorEdit': 'Solo el autor del gasto o un administrador puede modificarlo',
+        'expenses.onlyAuthorDelete': 'Solo el autor del gasto o un administrador puede eliminarlo',
+        'expenses.membersInvalid': 'Miembros no válidos',
+        'expenses.settlementNotFound': 'Pago no encontrado',
+        'expenses.onlySettlementAuthorDelete': 'Solo el autor del pago o un administrador puede eliminarlo',
+        'expenses.aidTypeInvalid': 'Tipo de ayuda no válido',
+        'expenses.aidNotFound': 'Ayuda no encontrada',
+
+        'circles.recipientFirstNameRequired': 'El nombre de su familiar es obligatorio',
+        'circles.mustAdminLinked': 'Debe ser administrador del círculo que quiere vincular',
+        'circles.targetInvalid': 'Círculo de destino no válido',
+        'circles.mustAdminBoth': 'Debe ser administrador de los dos círculos',
+        'circles.alreadyInHousehold': 'Uno de los círculos ya pertenece a otro hogar',
+        'circles.notInHousehold': 'Este círculo no forma parte de un hogar',
+        'circles.keepOneAdmin': 'El círculo debe conservar al menos un administrador',
+        'circles.firstNameRequired': 'El nombre es obligatorio',
+
+        'invites.invalidOrExpired': 'Invitación no válida o caducada',
+        'invites.reservedForOtherEmail': 'Esta invitación está reservada a otra dirección de correo',
+        'invites.alreadyMember': 'Ya es miembro de este círculo',
+
+        'auth.imageTooLarge': 'Imagen demasiado grande',
+        'handover.notFound': 'Paquete de relevo no encontrado',
+        'handover.expired': 'Este paquete de relevo ha caducado',
+        'emergency.notFound': 'Ficha no encontrada',
+
+        'integrations.typeAndUrlRequired': 'type y base_url son obligatorios',
+        'integrations.unknownType': 'Tipo de integración desconocido',
+        'integrations.unknownError': 'Error desconocido',
+        'integrations.notFound': 'Integración no encontrada',
+        'integrations.unreachable': 'No se puede contactar con el servidor',
+        'integrations.httpError': 'Error HTTP {{status}}',
+        'integrations.immichNotConfigured': 'No hay ninguna integración de Immich configurada',
+        'integrations.immichUnavailable': 'Immich no disponible',
+        'integrations.whisperKeyInvalid': 'Clave API de Whisper no válida',
+        'integrations.whisperStatus': 'El servicio Whisper ha respondido {{status}}',
+        'integrations.whisperOk': 'Conexión con el servicio Whisper correcta',
+        'integrations.whisperTimeout': 'El servicio Whisper no responde (10 s)',
+        'integrations.whisperUnreachable': 'Servicio Whisper inaccesible',
+        'integrations.ha.tokenInvalid': 'Token no válido o caducado',
+        'integrations.ha.shoppingList': 'Conectado a Home Assistant (integración shopping_list detectada)',
+        'integrations.ha.todo': 'Conectado a Home Assistant (entidad todo detectada, {{count}} elemento{{s}})',
+        'integrations.ha.none': 'Conectado a Home Assistant. No se ha detectado ni "shopping_list" ni "todo.shopping_list". Compruebe que una de estas integraciones está activada o indique el identificador de su entidad todo.',
+        'integrations.ha.wsTimeout': 'Tiempo de espera agotado en la conexión WebSocket de Home Assistant',
+        'integrations.ha.wsTokenInvalid': 'Token de Home Assistant no válido',
+        'integrations.ha.entityNotFound': 'Entidad "{{entityId}}" no encontrada en Home Assistant',
+        'integrations.ha.wsError': 'No se puede conectar al WebSocket de Home Assistant: {{detail}}',
+        'integrations.ha.tokenMissing': 'Falta el token',
+        'integrations.nextcloud.serverUnreachable': 'Servidor inaccesible (HTTP {{status}})',
+        'integrations.nextcloud.badCredentials': 'Credenciales incorrectas. Si la verificación en dos pasos está activada, use una contraseña de aplicación.',
+        'integrations.nextcloud.userNotFound': 'Usuario "{{username}}" no encontrado en este servidor.',
+        'integrations.nextcloud.davError': 'Error DAV {{status}}',
+        'integrations.nextcloud.connected': 'Conectado a Nextcloud {{version}}: {{count}} calendario{{s}} encontrado{{s}}',
+        'integrations.grocy.connected': 'Conectado a Grocy {{version}}',
+        'integrations.immich.keyInvalid': 'Clave API incorrecta',
+        'integrations.immich.connected': 'Conectado a Immich {{version}}',
+
+        'voice.whisperTimeout': 'El servicio Whisper no ha respondido en {{seconds}} s',
     },
 };
 

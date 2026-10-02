@@ -1,4 +1,5 @@
 import { query } from '../db';
+import { pick, type Lang } from './i18n';
 
 /**
  * Reglages d'un cercle (care_circles.settings).
@@ -78,24 +79,24 @@ export function withPublicSettings<T extends { settings?: unknown }>(row: T): T 
  * refusee plutot qu'ignoree : mieux vaut le dire que laisser croire que le
  * reglage a ete pris en compte.
  */
-export function validateSettingsPatch(input: unknown, lang: 'fr' | 'en'): { patch?: Record<string, unknown>; error?: string } {
+export function validateSettingsPatch(input: unknown, lang: Lang): { patch?: Record<string, unknown>; error?: string } {
     if (!input || typeof input !== 'object' || Array.isArray(input)) {
-        return { error: lang === 'en' ? 'settings must be an object' : 'Les réglages doivent être un objet' };
+        return { error: pick(lang, { fr: 'Les réglages doivent être un objet', en: 'settings must be an object', es: 'Los ajustes deben ser un objeto' }) };
     }
     const patch: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(input as Record<string, unknown>)) {
         if (!(PUBLIC_SETTING_KEYS as readonly string[]).includes(key)) {
-            return { error: lang === 'en' ? `Unknown setting: ${key}` : `Réglage inconnu : ${key}` };
+            return { error: pick(lang, { fr: `Réglage inconnu : ${key}`, en: `Unknown setting: ${key}`, es: `Ajuste desconocido: ${key}` }) };
         }
         if (key === 'unit_system') {
             if (!isUnitSystem(value)) {
-                return { error: lang === 'en' ? 'unit_system must be metric or imperial' : 'unit_system doit valoir metric ou imperial' };
+                return { error: pick(lang, { fr: 'unit_system doit valoir metric ou imperial', en: 'unit_system must be metric or imperial', es: 'unit_system debe ser metric o imperial' }) };
             }
             patch.unit_system = value;
         }
         if (key === 'week_start') {
             if (!isWeekStart(value)) {
-                return { error: lang === 'en' ? 'week_start must be monday or sunday' : 'week_start doit valoir monday ou sunday' };
+                return { error: pick(lang, { fr: 'week_start doit valoir monday ou sunday', en: 'week_start must be monday or sunday', es: 'week_start debe ser monday o sunday' }) };
             }
             patch.week_start = value;
         }
@@ -108,9 +109,11 @@ export function validateSettingsPatch(input: unknown, lang: 'fr' | 'en'): { patc
             const cleaned = cleanEmergencyNumbers(value);
             if (!cleaned) {
                 return {
-                    error: lang === 'en'
-                        ? `emergency_numbers must be one line of at most ${MAX_EMERGENCY_NUMBERS_LENGTH} characters`
-                        : `emergency_numbers doit tenir sur une ligne de ${MAX_EMERGENCY_NUMBERS_LENGTH} caractères au plus`,
+                    error: pick(lang, {
+                        fr: `emergency_numbers doit tenir sur une ligne de ${MAX_EMERGENCY_NUMBERS_LENGTH} caractères au plus`,
+                        en: `emergency_numbers must be one line of at most ${MAX_EMERGENCY_NUMBERS_LENGTH} characters`,
+                        es: `emergency_numbers debe caber en una línea de ${MAX_EMERGENCY_NUMBERS_LENGTH} caracteres como máximo`,
+                    }),
                 };
             }
             patch.emergency_numbers = cleaned;

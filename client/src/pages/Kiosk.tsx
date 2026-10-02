@@ -11,6 +11,7 @@ import { formatAmount } from '../lib/medications';
 import { clearPairedDevice, type PairedDevice } from '../lib/kioskDevice';
 import { useWebSocketUpdates } from '../hooks/useWebSocketUpdates';
 import { intlLocale } from '../i18n/format';
+import { SUPPORTED_LANGUAGES } from '../i18n';
 import { cn } from '../lib/utils';
 import KioskCompanion from '../components/app/KioskCompanion';
 import KioskEmergency from '../components/app/KioskEmergency';
@@ -106,7 +107,7 @@ interface KioskToday {
 // ── Reglages d'affichage (cote serveur pour un appareil appaire, sinon localStorage) ──
 
 interface KioskLocation { name: string; lat: number; lon: number }
-interface KioskSettings { location: KioskLocation | null; photoBackground: boolean; fontScale: number; language: 'fr' | 'en' | null; browserSpeech: boolean }
+interface KioskSettings { location: KioskLocation | null; photoBackground: boolean; fontScale: number; language: string | null; browserSpeech: boolean }
 
 const SETTINGS_KEY = 'opencare.kioskSettings';
 const FONT_SCALES = [1, 1.15, 1.3];
@@ -120,7 +121,8 @@ const normalizeSettings = (raw: Partial<KioskSettings> | null | undefined): Kios
         // Dictee de "Demandez-moi" par le navigateur (sort la voix du serveur) : choix explicite d'un aidant.
         browserSpeech: Boolean(raw?.browserSpeech),
         fontScale: Number.isFinite(scale) && scale >= 0.9 && scale <= 1.5 ? scale : 1,
-        language: raw?.language === 'en' ? 'en' : raw?.language === 'fr' ? 'fr' : null,
+        // Toute langue livree avec l'application (dossiers de i18n/locales), pas seulement fr et en.
+        language: typeof raw?.language === 'string' && SUPPORTED_LANGUAGES.includes(raw.language) ? raw.language : null,
     };
 };
 
@@ -277,7 +279,8 @@ const Kiosk: React.FC<KioskProps> = ({ device }) => {
             if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
             window.speechSynthesis.cancel();
             const utter = new SpeechSynthesisUtterance(`${t('kiosk:reminder.title')} ${t('kiosk:reminder.spoken')}`);
-            utter.lang = i18n.language.toLowerCase().startsWith('en') ? 'en-US' : 'fr-FR';
+            // Voix de la langue de l'ecran : une phrase espagnole lue par une voix francaise est incomprehensible.
+            utter.lang = intlLocale();
             utter.rate = 0.95;
             window.speechSynthesis.speak(utter);
         } catch { /* pas de synthese vocale : le rappel reste a l ecran */ }
@@ -1063,8 +1066,8 @@ const Kiosk: React.FC<KioskProps> = ({ device }) => {
                         {device && (
                             <div className="mt-6 space-y-2">
                                 <p className="font-bold" style={fs(20)}>{t('kiosk:displaySettings.language')}</p>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {(['fr', 'en'] as const).map((lng) => (
+                                <div className="grid grid-cols-3 gap-2">
+                                    {SUPPORTED_LANGUAGES.map((lng) => (
                                         <button
                                             key={lng}
                                             type="button"

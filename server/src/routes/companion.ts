@@ -24,7 +24,7 @@ import {
 } from '../lib/companionAnswers';
 import { createNotification } from '../lib/notifications';
 import { broadcastToCircle } from '../lib/broadcaster';
-import { langFromRequest } from '../lib/i18n';
+import { langFromRequest, pick, pickLang, type Lang } from '../lib/i18n';
 import logger from '../lib/logger';
 
 // "Demandez-moi" : le compagnon du mode Kiosk. Les questions pratiques
@@ -43,8 +43,14 @@ type ReplySource = 'facts' | 'ai' | 'fallback';
 // Notification d'escalade VOLONTAIREMENT generique: le detail (flag_reason)
 // vient du modele et pourrait etre manipule par la conversation, on ne le pousse
 // donc pas tel quel aux familles; il reste consultable dans l'entree de journal.
-function buildAlertTexts(name: string, language: string): { title: string; message: string } {
-    const who = name || (language === 'en' ? 'Your loved one' : 'Votre proche');
+function buildAlertTexts(name: string, language: Lang): { title: string; message: string } {
+    const who = name || pick(language, { fr: 'Votre proche', en: 'Your loved one', es: 'Su familiar' });
+    if (language === 'es') {
+        return {
+            title: `💬 ${who} puede necesitar atención`,
+            message: 'Ha surgido una señal durante una conversación en el modo Kiosco. Pregunte cómo se encuentra.',
+        };
+    }
     if (language === 'en') {
         return {
             title: `💬 ${who} may need attention`,
@@ -57,7 +63,7 @@ function buildAlertTexts(name: string, language: string): { title: string; messa
     };
 }
 
-async function escalate(circleId: string, recipientFirstName: string, flagReason: string): Promise<void> {
+async function escalate(circleId: string, recipientFirstName: string, flagReason: string, language: Lang): Promise<void> {
     const { rows: memberRows } = await query(
         `SELECT cm.user_id, COALESCE(u.language, 'fr') AS language
          FROM circle_members cm
@@ -75,9 +81,18 @@ async function escalate(circleId: string, recipientFirstName: string, flagReason
             // Auteur = "Compagnon": l'entree est generee par le compagnon, pas
             // ecrite par le proche; ne pas signer de son prenom (provenance honnete).
             'Compagnon',
+            // Langue de l'ecran, comme les entrees de visite (lib/visits).
             flagReason
-                ? `Signal pendant une conversation : ${flagReason}`
-                : 'Signal pendant une conversation sur le kiosk',
+                ? pick(language, {
+                    fr: `Signal pendant une conversation : ${flagReason}`,
+                    en: `Signal during a conversation: ${flagReason}`,
+                    es: `Señal durante una conversación: ${flagReason}`,
+                })
+                : pick(language, {
+                    fr: 'Signal pendant une conversation sur le kiosk',
+                    en: 'Signal during a conversation on the kiosk',
+                    es: 'Señal durante una conversación en el modo Kiosco',
+                }),
             JSON.stringify({ source: 'companion', flag_reason: flagReason }),
         ]
     );
@@ -85,8 +100,7 @@ async function escalate(circleId: string, recipientFirstName: string, flagReason
 
     await Promise.all(
         (memberRows as Array<{ user_id: string; language: string | null }>).map((member) => {
-            const memberLang = String(member.language || '').toLowerCase().startsWith('en') ? 'en' : 'fr';
-            const { title, message } = buildAlertTexts(recipientFirstName, memberLang);
+            const { title, message } = buildAlertTexts(recipientFirstName, pickLang(member.language));
             return createNotification({
                 userId: member.user_id,
                 circleId,
@@ -150,7 +164,7 @@ router.post('/message', allowDeviceOr(...JOURNAL_WRITER_ROLES), async (req: Kios
             source = 'facts';
             if (intent === 'help') {
                 flagged = true;
-                flagReason = language === 'en' ? 'asked for help' : "demande d'aide";
+                flagReason = pick(language, { fr: "demande d'aide", en: 'asked for help', es: 'ha pedido ayuda' });
             } else if (distress) {
                 reply += distressHint(language);
             }
@@ -195,7 +209,7 @@ router.post('/message', allowDeviceOr(...JOURNAL_WRITER_ROLES), async (req: Kios
         }
 
         // Escalade en cas de detresse: notification au cercle + trace au journal.
-        if (flagged) await escalate(circleId, recipientFirstName, flagReason);
+        if (flagged) await escalate(circleId, recipientFirstName, flagReason, language);
 
         res.json({ success: true, data: { reply, flagged, source, intent } });
     } catch (error) {

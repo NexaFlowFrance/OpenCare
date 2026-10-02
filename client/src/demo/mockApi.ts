@@ -877,7 +877,7 @@ async function route(method: string, path: string, q: Record<string, string>, bo
     if (seg[1] === 'auth' && seg[2] === 'reset-password' && seg[3]) return ok({ valid: true, name: store.user.name });
     if (path === '/api/auth/password-resets') return ok([]);
     if (path === '/api/auth/language') {
-        if (body.language !== 'fr' && body.language !== 'en') throw new Error('Invalid language'); // 400 du serveur
+        if (body.language !== 'fr' && body.language !== 'en' && body.language !== 'es') throw new Error('Invalid language'); // 400 du serveur
         store.user.language = body.language;
         return ok({ user: store.user });
     }
@@ -1913,7 +1913,7 @@ async function route(method: string, path: string, q: Record<string, string>, bo
         await new Promise((resolve) => setTimeout(resolve, 400));
         const msgs = Array.isArray(body.messages) ? (body.messages as Array<{ role: string; content: string }>) : [];
         const last = msgs.length > 0 ? String(msgs[msgs.length - 1]?.content || '') : '';
-        const lang: CompanionLang = store.user.language === 'en' ? 'en' : 'fr';
+        const lang: CompanionLang = store.user.language === 'en' ? 'en' : store.user.language === 'es' ? 'es' : 'fr';
         const today = kioskToday(c);
         const facts: CompanionFactsInput = {
             recipientFirstName: c.recipient?.first_name ?? '',

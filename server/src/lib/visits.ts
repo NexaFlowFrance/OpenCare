@@ -1,6 +1,7 @@
 import { query } from '../db';
 import { createNotification } from './notifications';
 import { broadcastToCircle } from './broadcaster';
+import { pick, pickLang, type Lang } from './i18n';
 
 /**
  * Visites declarees en mode Kiosk : arrivee, note de passage, depart.
@@ -14,18 +15,20 @@ export type VisitorType = typeof VISITOR_TYPES[number];
 /** Les professionnels peuvent laisser une note et confirmer les medicaments. */
 export const PROFESSIONAL_VISITOR_TYPES: VisitorType[] = ['caregiver', 'nurse', 'doctor'];
 
-const TYPE_LABELS: Record<'fr' | 'en', Record<VisitorType, string>> = {
+const TYPE_LABELS: Record<Lang, Record<VisitorType, string>> = {
     fr: { family: 'famille', friend: 'ami ou voisin', caregiver: 'aide à domicile', nurse: 'infirmier(ère)', doctor: 'médecin', other: 'visiteur' },
     en: { family: 'family', friend: 'friend or neighbor', caregiver: 'home aide', nurse: 'nurse', doctor: 'doctor', other: 'visitor' },
+    es: { family: 'familia', friend: 'amigo o vecino', caregiver: 'auxiliar a domicilio', nurse: 'enfermero/a', doctor: 'médico', other: 'visitante' },
 };
 
-const pickLang = (language: unknown): 'fr' | 'en' =>
-    String(language || '').toLowerCase().startsWith('en') ? 'en' : 'fr';
+const fmtTime = (d: Date, lang: Lang): string => pick(lang, {
+    fr: `${d.getHours()} h${d.getMinutes() > 0 ? ` ${String(d.getMinutes()).padStart(2, '0')}` : ''}`,
+    en: d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+    es: `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`,
+});
 
-const fmtTime = (d: Date, lang: 'fr' | 'en'): string =>
-    lang === 'fr'
-        ? `${d.getHours()} h${d.getMinutes() > 0 ? ` ${String(d.getMinutes()).padStart(2, '0')}` : ''}`
-        : d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+/** "a las 10:30", ou "a la 1:30" : l'article espagnol suit l'heure. */
+const esAt = (d: Date): string => `a ${d.getHours() === 1 ? 'la' : 'las'} ${fmtTime(d, 'es')}`;
 
 export const VISIT_COLUMNS = `id, circle_id, visitor_type, visitor_name, member_id, device_id,
     checked_in_at, checked_out_at, note, journal_entry_id, created_at`;
@@ -43,9 +46,13 @@ export interface VisitRow {
     journal_entry_id: string | null;
 }
 
-export function journalContent(visit: { visitor_name: string; visitor_type: VisitorType; checked_in_at: Date; checked_out_at?: Date | null }, lang: 'fr' | 'en', recipientName: string): string {
+export function journalContent(visit: { visitor_name: string; visitor_type: VisitorType; checked_in_at: Date; checked_out_at?: Date | null }, lang: Lang, recipientName: string): string {
     const type = TYPE_LABELS[lang][visit.visitor_type];
     const arrived = fmtTime(visit.checked_in_at, lang);
+    if (lang === 'es') {
+        const base = `${visit.visitor_name} (${type}) llegó ${esAt(visit.checked_in_at)}${recipientName ? ` a casa de ${recipientName}` : ''}`;
+        return visit.checked_out_at ? `${base}, se fue ${esAt(visit.checked_out_at)}` : base;
+    }
     if (lang === 'en') {
         const base = `${visit.visitor_name} (${type}) checked in at ${arrived}${recipientName ? ` to see ${recipientName}` : ''}`;
         return visit.checked_out_at ? `${base}, left at ${fmtTime(visit.checked_out_at, lang)}` : base;
@@ -61,7 +68,7 @@ export async function checkIn(input: {
     visitorName: string;
     memberId: string | null;
     deviceId: string | null;
-    lang: 'fr' | 'en';
+    lang: Lang;
 }): Promise<VisitRow> {
     const recipient = await query('SELECT first_name FROM care_recipients WHERE circle_id = $1', [input.circleId]);
     const recipientName: string = recipient.rows[0]?.first_name?.trim() || '';
@@ -101,12 +108,16 @@ export async function checkIn(input: {
         return createNotification({
             userId: member.user_id,
             circleId: input.circleId,
-            title: lang === 'en'
-                ? `${input.visitorName} checked in`
-                : `${input.visitorName} est arrivé(e)`,
-            message: lang === 'en'
-                ? `${input.visitorName} (${type}) checked in at ${fmtTime(now, 'en')}${recipientName ? ` to see ${recipientName}` : ''}.`
-                : `${input.visitorName} (${type}) est arrivé(e) à ${fmtTime(now, 'fr')}${recipientName ? ` chez ${recipientName}` : ''}.`,
+            title: pick(lang, {
+                fr: `${input.visitorName} est arrivé(e)`,
+                en: `${input.visitorName} checked in`,
+                es: `${input.visitorName} ha llegado`,
+            }),
+            message: pick(lang, {
+                fr: `${input.visitorName} (${type}) est arrivé(e) à ${fmtTime(now, 'fr')}${recipientName ? ` chez ${recipientName}` : ''}.`,
+                en: `${input.visitorName} (${type}) checked in at ${fmtTime(now, 'en')}${recipientName ? ` to see ${recipientName}` : ''}.`,
+                es: `${input.visitorName} (${type}) ha llegado ${esAt(now)}${recipientName ? ` a casa de ${recipientName}` : ''}.`,
+            }),
             type: 'visitor_checkin',
             relatedId: row.id,
             url: '/visitors',
@@ -120,7 +131,7 @@ export async function checkIn(input: {
 }
 
 /** Depart : horodate la sortie et complete l'entree de journal. */
-export async function checkOut(circleId: string, visitId: string, lang: 'fr' | 'en'): Promise<VisitRow | null> {
+export async function checkOut(circleId: string, visitId: string, lang: Lang): Promise<VisitRow | null> {
     const result = await query(
         `UPDATE visits SET checked_out_at = NOW()
          WHERE id = $1 AND circle_id = $2 AND checked_out_at IS NULL

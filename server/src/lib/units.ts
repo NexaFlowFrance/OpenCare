@@ -10,6 +10,7 @@
  */
 
 import type { UnitSystem } from './circleSettings';
+import { intlLocale, pickLang } from './i18n';
 
 export type VitalType = 'weight' | 'bp' | 'pain' | 'mood' | 'temperature' | 'glucose';
 
@@ -76,6 +77,5 @@ export const formatVital = (
 export const roundedDisplayValue = (type: VitalType, metric: number, system: UnitSystem): number =>
     Number(toDisplayValue(type, metric, system).toFixed(decimalsFor(type, system)));
 
-/** Locale d'affichage des nombres pour une langue de compte ('fr' -> 68,2 ; 'en' -> 68.2). */
-export const numberLocale = (language: string | null | undefined): string =>
-    String(language || '').toLowerCase().startsWith('en') ? 'en-US' : 'fr-FR';
+/** Locale d'affichage des nombres pour une langue de compte ('fr' -> 68,2 ; 'en' -> 68.2 ; 'es' -> 68,2). */
+export const numberLocale = (language: string | null | undefined): string => intlLocale(pickLang(language));

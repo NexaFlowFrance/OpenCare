@@ -16,6 +16,7 @@ import { loadRules, createHelpRequest, resolveTargets } from '../lib/escalation'
 import { fetchImmichRandomPhoto } from '../services/integrations/immich';
 import { checkIn, checkOut, addVisitNote, VISITOR_TYPES, VisitorType } from '../lib/visits';
 import { assertSafeIntegrationUrl, UnsafeUrlError } from '../utils/urlGuard';
+import { pickLang, type Lang } from '../lib/i18n';
 
 // Kiosk routes: the wall tablet at the care recipient's home, and the same
 // screen on the recipient's phone. Two ways in:
@@ -37,7 +38,15 @@ type KioskStatusKind = 'ok' | 'help' | 'hydration';
 // Server-side strings: the kiosk writes journal entries and notifications on
 // behalf of the care recipient, so the wording is resolved here (per user or
 // device language, FR default like the rest of the app).
-const STRINGS = {
+interface KioskStrings {
+    okContent: string;
+    helpContent: string;
+    hydrationContent: string;
+    helpTitle: (name: string) => string;
+    helpMessage: (name: string) => string;
+}
+
+const STRINGS: Record<Lang, KioskStrings> = {
     fr: {
         okContent: 'Tout va bien (signal envoyé depuis le kiosk)',
         helpContent: "J'ai besoin d'aide (signal envoyé depuis le kiosk)",
@@ -52,10 +61,14 @@ const STRINGS = {
         helpTitle: (name: string) => `${name} is asking for help`,
         helpMessage: (name: string) => `${name} pressed the help button on the kiosk. Please check in right away.`,
     },
-} as const;
-
-const pickLang = (language: unknown): keyof typeof STRINGS =>
-    String(language || '').toLowerCase().startsWith('en') ? 'en' : 'fr';
+    es: {
+        okContent: 'Todo va bien (señal enviada desde el modo Kiosco)',
+        helpContent: 'Necesito ayuda (señal enviada desde el modo Kiosco)',
+        hydrationContent: 'Ha bebido agua (registrado desde el modo Kiosco)',
+        helpTitle: (name: string) => `${name} pide ayuda`,
+        helpMessage: (name: string) => `${name} ha pulsado el botón de ayuda del modo Kiosco. Pregunte enseguida cómo se encuentra.`,
+    },
+};
 
 // Journal entry type written for each kiosk button.
 const KIND_TO_TYPE: Record<KioskStatusKind, string> = { ok: 'mood', help: 'incident', hydration: 'note' };
@@ -70,7 +83,7 @@ const newPairingCode = (): string =>
     Array.from(crypto.randomBytes(6), (b) => PAIRING_ALPHABET[b % PAIRING_ALPHABET.length]).join('');
 
 /** Langue de la personne devant l'ecran : reglage de l'appareil, sinon compte de l'aidant. */
-async function screenLanguage(req: KioskRequest): Promise<keyof typeof STRINGS> {
+async function screenLanguage(req: KioskRequest): Promise<Lang> {
     if (req.kioskDevice) return pickLang(req.kioskDevice.settings?.language);
     const result = await query('SELECT language FROM users WHERE id = $1', [req.userId]);
     return pickLang(result.rows[0]?.language);
@@ -431,7 +444,8 @@ router.put('/device/settings', kioskOrMember(), requireDevice, async (req: Kiosk
                 : null;
         }
         if ('photoBackground' in body) patch.photoBackground = body.photoBackground === true;
-        if ('language' in body) patch.language = body.language === 'en' ? 'en' : 'fr';
+        // Une tablette reglee en espagnol restait en francais : toute langue de l'interface est gardee.
+        if ('language' in body) patch.language = pickLang(body.language);
         if ('fontScale' in body) {
             const scale = Number(body.fontScale);
             patch.fontScale = Number.isFinite(scale) ? Math.min(1.5, Math.max(0.9, scale)) : 1;

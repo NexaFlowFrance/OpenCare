@@ -1,23 +1,24 @@
 import { Router } from 'express';
 import { query } from '../db';
 import { authMiddleware, AuthRequest } from '../middleware/auth';
+import { LANGS } from '../lib/i18n';
 
 const router = Router();
 
-const SUPPORTED_LANGUAGES = ['fr', 'en'] as const;
+const SUPPORTED_LANGUAGES: readonly string[] = LANGS;
 
 // Per-account settings only: anything circle-wide lives in care_circles.settings
 // and is managed through the circles routes.
 
 // Update the authenticated user's preferred language (used for the UI and for
 // server-generated notifications such as reminders).
-// PUT /api/auth/language. Body: { "language": "fr" | "en" }
+// PUT /api/auth/language. Body: { "language": "fr" | "en" | "es" }
 router.put('/language', authMiddleware, async (req: AuthRequest, res) => {
     try {
         const { language } = req.body as { language?: unknown };
 
-        if (typeof language !== 'string' || !SUPPORTED_LANGUAGES.includes(language as typeof SUPPORTED_LANGUAGES[number])) {
-            return res.status(400).json({ success: false, error: 'Invalid language. Supported values: fr, en' });
+        if (typeof language !== 'string' || !SUPPORTED_LANGUAGES.includes(language)) {
+            return res.status(400).json({ success: false, error: `Invalid language. Supported values: ${LANGS.join(', ')}` });
         }
 
         const result = await query(

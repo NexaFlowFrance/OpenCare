@@ -7,6 +7,8 @@
 //  - every property is required; "not applicable" is conveyed with '' / [] / 0 so
 //    the same schema behaves identically on Ollama, OpenAI-compatible and Anthropic.
 
+import { pick, pickLang } from '../../lib/i18n';
+
 export const TASK_PRIORITIES = ['Haute', 'Moyenne', 'Basse'] as const;
 export const TASK_FREQUENCIES = ['Une fois', 'Quotidien', 'Hebdomadaire', 'Mensuel', 'Annuel'] as const;
 export const SHOPPING_CATEGORIES = ['Alimentation', 'Hygiene', 'Menage', 'Sante', 'Autre'] as const;
@@ -251,7 +253,7 @@ export interface WeeklyDigestFacts {
     weekStart: string;
     /** Sunday of the summarized week, YYYY-MM-DD. */
     weekEnd: string;
-    /** Target language of the digest texts ('fr' default, 'en' supported). */
+    /** Target language of the digest texts ('fr' default, 'en' and 'es' supported). */
     language: string;
     journalEntries: WeeklyDigestJournalLine[];
     journalEntriesCount: number;
@@ -282,7 +284,7 @@ const digestVitalLine = (v: WeeklyDigestVitalWeek): string => {
  * circle's language (French by default).
  */
 export function buildWeeklyDigestPrompt(facts: WeeklyDigestFacts): { system: string; user: string } {
-    const languageLabel = facts.language === 'en' ? 'anglais' : 'français';
+    const languageLabel = pick(pickLang(facts.language), { fr: 'français', en: 'anglais', es: 'espagnol' });
 
     const system = [
         `Tu rédiges la synthèse hebdomadaire d'un cercle d'aidants familiaux autour de ${facts.recipientFirstName || 'une personne âgée'}. Les lecteurs sont la famille: ton chaleureux, factuel, rassurant quand c'est justifié, jamais alarmiste.`,

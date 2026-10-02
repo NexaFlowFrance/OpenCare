@@ -8,6 +8,7 @@ import { createNotification } from '../lib/notifications';
 import { getAppUrl, isMailConfigured, sendMail } from '../lib/mailer';
 import { decryptCredentials, encryptCredentials } from '../utils/crypto';
 import logger from '../lib/logger';
+import { pickLang } from '../lib/i18n';
 
 /**
  * Mot de passe oublie.
@@ -37,7 +38,15 @@ const currentDelivery = (): Delivery => (isMailConfigured() ? 'email' : 'admin')
 
 function buildEmail(language: string, name: string, url: string): { subject: string; text: string; html: string } {
     const minutes = TOKEN_TTL_MINUTES;
-    if (language === 'en') {
+    const lang = pickLang(language);
+    if (lang === 'es') {
+        return {
+            subject: 'OpenCare: restablecer su contraseña',
+            text: `Hola, ${name}:\n\nSe ha solicitado restablecer la contraseña de su cuenta de OpenCare. Abra este enlace para elegir una nueva contraseña (válido durante ${minutes} minutos):\n\n${url}\n\nSi no ha sido usted, ignore este mensaje: su contraseña no cambia.`,
+            html: `<p>Hola, ${escapeHtml(name)}:</p><p>Se ha solicitado restablecer la contraseña de su cuenta de OpenCare. Abra este enlace para elegir una nueva contraseña (válido durante ${minutes} minutos):</p><p><a href="${url}">${url}</a></p><p>Si no ha sido usted, ignore este mensaje: su contraseña no cambia.</p>`,
+        };
+    }
+    if (lang === 'en') {
         return {
             subject: 'OpenCare: reset your password',
             text: `Hello ${name},\n\nSomeone asked to reset the password of your OpenCare account. Open this link to choose a new password (valid for ${minutes} minutes):\n\n${url}\n\nIf you did not ask for this, ignore this message: your password stays unchanged.`,
@@ -56,7 +65,14 @@ function escapeHtml(value: string): string {
 }
 
 function adminNotificationTexts(language: string, requesterName: string): { title: string; message: string } {
-    if (language === 'en') {
+    const lang = pickLang(language);
+    if (lang === 'es') {
+        return {
+            title: 'Solicitud de restablecimiento de contraseña',
+            message: `${requesterName} ha olvidado su contraseña. Abra la página Círculo para enviarle un enlace de restablecimiento.`,
+        };
+    }
+    if (lang === 'en') {
         return {
             title: 'Password reset requested',
             message: `${requesterName} forgot their password. Open the Circle page to hand them a reset link.`,

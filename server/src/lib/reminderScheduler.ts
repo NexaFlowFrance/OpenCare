@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { query } from '../db';
 import { createNotification } from './notifications';
 import logger from './logger';
+import { pickLang } from './i18n';
 
 // Rappels planifiés du cercle de soin:
 //  - rappels d'événements (events.reminder_30min / reminder_1hour), notifiés
@@ -22,7 +23,7 @@ interface EventRow {
 
 interface MemberRow {
     user_id: string;
-    /** Recipient's preferred language ('fr' | 'en'), defaults to 'fr' */
+    /** Recipient's preferred language ('fr' | 'en' | 'es'), defaults to 'fr' */
     language: string;
 }
 
@@ -40,8 +41,15 @@ function buildEventTexts(event: EventRow, kind: '30min' | '1hour', language: str
     // start_time is 'YYYY-MM-DDTHH:mm:ss': extract HH:mm directly, no Date round-trip.
     const timeStr = event.start_time.slice(11, 16);
     const suffix = `${timeStr}${event.location ? ` · ${event.location}` : ''}`;
+    const lang = pickLang(language);
 
-    if (language === 'en') {
+    if (lang === 'es') {
+        return {
+            title: `⏰ Recordatorio: ${event.title}`,
+            body: `${kind === '30min' ? 'Dentro de 30 minutos' : 'Dentro de 1 hora'} · ${suffix}`,
+        };
+    }
+    if (lang === 'en') {
         return {
             title: `⏰ Reminder: ${event.title}`,
             body: `${kind === '30min' ? 'In 30 minutes' : 'In 1 hour'} · ${suffix}`,
@@ -160,7 +168,14 @@ interface PrescriptionRow {
 
 function buildPrescriptionTexts(prescription: PrescriptionRow, language: string): ReminderTexts {
     const [y, m, d] = prescription.renewal_date.split('-');
-    if (language === 'en') {
+    const lang = pickLang(language);
+    if (lang === 'es') {
+        return {
+            title: '💊 Renovación de receta',
+            body: `«${prescription.title}» debe renovarse antes del ${d}/${m}/${y}`,
+        };
+    }
+    if (lang === 'en') {
         return {
             title: '💊 Prescription renewal',
             body: `"${prescription.title}" must be renewed by ${prescription.renewal_date}`,
@@ -232,7 +247,16 @@ async function checkPrescriptionRenewals(): Promise<void> {
 }
 
 function buildHydrationTexts(firstName: string, language: string): ReminderTexts {
-    if (language === 'en') {
+    const lang = pickLang(language);
+    if (lang === 'es') {
+        return {
+            title: '🌡️ Calor: hora de hidratarse',
+            body: firstName
+                ? `Hace mucho calor hoy. Ofrezca un vaso de agua a ${firstName} y mantenga la casa fresca.`
+                : 'Hace mucho calor hoy. Ofrezca un vaso de agua y mantenga la casa fresca.',
+        };
+    }
+    if (lang === 'en') {
         return {
             title: '🌡️ Heat: time to hydrate',
             body: firstName

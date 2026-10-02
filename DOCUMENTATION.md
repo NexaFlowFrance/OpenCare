@@ -235,6 +235,10 @@ Le compteur de messages non lus est réel : `GET /api/messages/unread` renvoie l
 
 L'interface existe en **français, anglais et espagnol**. Les langues sont découvertes depuis les dossiers de `client/src/i18n/locales/` : déposer un dossier `<code>/` suffit pour qu'une langue apparaisse dans le sélecteur, et une traduction partielle retombe sur l'anglais clé par clé. L'attribut `lang` du document suit la langue choisie, pour que les lecteurs d'écran prononcent correctement.
 
+Le serveur parle les mêmes trois langues pour tout ce qu'il écrit lui-même : messages d'erreur, notifications et push (rappels, mesure hors plage, visites, escalade, absence de signe de vie), e-mail de mot de passe oublié, réponses du compagnon « Demandez-moi » et synthèse hebdomadaire. Chaque membre reçoit ses notifications dans la langue de son compte, que le client enregistre par `PUT /api/auth/language` (`fr`, `en` ou `es`). Le mode Kiosk suit la langue réglée sur la tablette, y compris pour la voix de synthèse et la dictée. La synthèse hebdomadaire, écrite une fois pour tout le cercle, prend la langue la plus fréquente chez les administrateurs et la famille, celle du créateur du cercle en cas d'égalité.
+
+Côté serveur, les messages vivent dans `server/src/lib/i18n.ts`, dont un test vérifie que les trois langues ont les mêmes clés et les mêmes variables. Les phrases construites dans le code passent par `pick(lang, { fr, en, es })`, dont le type impose les trois variantes : ajouter une langue fera échouer la compilation à chaque phrase oubliée, au lieu de retomber en silence sur le français.
+
 Côté accessibilité : un lien d'évitement mène directement au contenu dès la première tabulation, les deux barres de navigation sont nommées et la page courante porte `aria-current`, le contenu principal est un repère `main` focalisable, les boutons de langue annoncent le nom de la langue et non son code, et les boîtes de dialogue se ferment à l'échappement en rendant le focus. Les états importants ne passent jamais par la seule couleur : une mesure hors plage, un stock bas ou un message non lu portent aussi un texte lisible par un lecteur d'écran.
 
 ### Fuseau horaire

@@ -9,6 +9,8 @@
 //  - flagged=true si la personne exprime douleur, detresse, urgence, idees
 //    noires ou un probleme medical -> le serveur escalade vers le cercle.
 
+import { pick, pickLang } from '../../lib/i18n';
+
 export const COMPANION_SCHEMA: Record<string, unknown> = {
     type: 'object',
     additionalProperties: false,
@@ -34,7 +36,7 @@ export interface CompanionFacts {
     recipientFirstName: string;
     /** Sections de la page "Qui je suis" (titre + contenu). */
     story: CompanionStorySection[];
-    /** Langue de reponse ('fr' par defaut, 'en' supporte). */
+    /** Langue de reponse : 'fr' par defaut, 'en' et 'es' supportes. */
     language: string;
     /** Faits du jour (medicaments dus, visites, rendez-vous...) deja mis en forme, voir lib/companionAnswers. */
     today?: string;
@@ -64,7 +66,7 @@ function buildStoryBlock(story: CompanionStorySection[]): string {
  */
 export function buildCompanionPrompt(facts: CompanionFacts): string {
     const name = facts.recipientFirstName.trim() || 'la personne';
-    const languageLabel = facts.language === 'en' ? 'anglais' : 'français';
+    const languageLabel = pick(pickLang(facts.language), { fr: 'français', en: 'anglais', es: 'espagnol' });
 
     return [
         `Tu es un compagnon de conversation bienveillant pour ${name}, une personne âgée qui vit chez elle. Tu réponds à ses questions pratiques sur sa journée et tu lui tiens compagnie par de petites conversations: souvenirs, vie quotidienne, ce qui lui fait plaisir.`,
@@ -99,17 +101,20 @@ const MAX_MSG_CHARS = 1000;
 
 /** Transcript compact passe en "user" a aiComplete (les providers ne prennent qu'un seul message user). */
 export function buildCompanionUser(messages: CompanionMessage[], language: string): string {
-    const youLabel = language === 'en' ? 'You' : 'Toi';
-    const personLabel = language === 'en' ? 'Person' : 'Personne';
+    const lang = pickLang(language);
+    const youLabel = pick(lang, { fr: 'Toi', en: 'You', es: 'Tú' });
+    const personLabel = pick(lang, { fr: 'Personne', en: 'Person', es: 'Persona' });
     const recent = messages.slice(-MAX_TURNS);
 
     const transcript = recent
         .map((m) => `[${m.role === 'assistant' ? youLabel : personLabel}] ${m.content.trim().slice(0, MAX_MSG_CHARS)}`)
         .join('\n');
 
-    const instruction = language === 'en'
-        ? 'Reply to the last message from the person.'
-        : 'Réponds au dernier message de la personne.';
+    const instruction = pick(lang, {
+        fr: 'Réponds au dernier message de la personne.',
+        en: 'Reply to the last message from the person.',
+        es: 'Responde al último mensaje de la persona.',
+    });
 
     return `${transcript}\n\n${instruction}`;
 }
@@ -122,9 +127,11 @@ export interface CompanionReply {
 
 /** Phrase de repli si le modele ne renvoie pas de texte exploitable. */
 export function companionFallback(language: string): string {
-    return language === 'en'
-        ? "I did not quite catch that. Could you say it again?"
-        : "Je n'ai pas bien compris. Peux-tu répéter ?";
+    return pick(pickLang(language), {
+        fr: "Je n'ai pas bien compris. Peux-tu répéter ?",
+        en: 'I did not quite catch that. Could you say it again?',
+        es: 'No te he entendido bien. ¿Puedes repetirlo?',
+    });
 }
 
 /** Validation structurelle: ne fait jamais confiance au modele. */

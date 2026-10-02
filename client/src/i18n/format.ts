@@ -6,7 +6,7 @@ import i18n from './index';
 // only needs an extra entry here (falls back to English otherwise).
 const DATE_LOCALES: Record<string, Locale> = { en: enUS, fr, es, de, it, pt, nl };
 // BCP-47 tags for Intl.* : falls back to the bare language code.
-const INTL_TAGS: Record<string, string> = { en: 'en-US', fr: 'fr-FR' };
+const INTL_TAGS: Record<string, string> = { en: 'en-US', fr: 'fr-FR', es: 'es-ES' };
 
 const lang = () => (i18n.language || 'en').split('-')[0];
 

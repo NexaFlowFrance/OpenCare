@@ -3,6 +3,7 @@ import { query } from '../db';
 import { publicSettings } from './circleSettings';
 import { displayUnit, isVitalType, roundedDisplayValue } from './units';
 import { createNotification } from './notifications';
+import { pickLang, type Lang } from './i18n';
 import logger from './logger';
 import { aiComplete, getAiSettings, AiError } from '../services/ai';
 import {
@@ -60,6 +61,8 @@ interface CircleInfoRow {
     name: string;
     settings: Record<string, unknown> | null;
     first_name: string | null;
+    /** Langue la plus parlee chez les admins et la famille (voir generateDigestForCircle). */
+    members_language: string | null;
 }
 
 interface JournalRow {
@@ -78,10 +81,15 @@ export interface WeeklyDigestRow {
     created_at: string;
 }
 
-/** The digest texts are written in the circle's language; 'fr' by default. */
-const circleLanguage = (settings: Record<string, unknown> | null): string => {
-    const lang = settings && typeof settings.language === 'string' ? settings.language : '';
-    return lang.toLowerCase().startsWith('en') ? 'en' : 'fr';
+/**
+ * Langue de la synthese : une cle settings.language si une installation l'a
+ * posee, sinon la langue de ceux qui la lisent. Rien n'ecrit cette cle dans
+ * l'application, et s'y fier seule rendait la synthese toujours en francais,
+ * y compris pour un cercle entierement anglophone.
+ */
+const circleLanguage = (info: CircleInfoRow): Lang => {
+    const explicit = info.settings && typeof info.settings.language === 'string' ? info.settings.language : '';
+    return pickLang(explicit || info.members_language);
 };
 
 async function collectFacts(circleId: string, weekStart: string, info: CircleInfoRow): Promise<WeeklyDigestFacts> {
@@ -169,7 +177,7 @@ async function collectFacts(circleId: string, weekStart: string, info: CircleInf
         recipientFirstName: info.first_name || info.name,
         weekStart,
         weekEnd: addDays(weekStart, 6),
-        language: circleLanguage(info.settings),
+        language: circleLanguage(info),
         journalEntries,
         journalEntriesCount: counts.total,
         // Moyennes stockees en metrique : l'IA les recoit dans le systeme du cercle,
@@ -202,7 +210,11 @@ interface DigestNotifTexts {
 }
 
 function buildDigestTexts(firstName: string, summary: string, language: string): DigestNotifTexts {
-    if (language === 'en') {
+    const lang = pickLang(language);
+    if (lang === 'es') {
+        return { title: `Resumen de la semana de ${firstName}`, message: summary };
+    }
+    if (lang === 'en') {
         return { title: `Weekly summary for ${firstName}`, message: summary };
     }
     return { title: `Synthèse de la semaine de ${firstName}`, message: summary };
@@ -262,7 +274,15 @@ export async function generateDigestForCircle(circleId: string, weekStart: strin
     if (!settings) return null;
 
     const infoResult = await query(
-        `SELECT c.name, c.settings, r.first_name
+        // Langue des lecteurs : la plus frequente chez les admins et la famille,
+        // celle du createur du cercle en cas d'egalite.
+        `SELECT c.name, c.settings, r.first_name,
+                (SELECT COALESCE(u.language, 'fr')
+                 FROM circle_members cm JOIN users u ON u.id = cm.user_id
+                 WHERE cm.circle_id = c.id AND cm.role IN ('admin', 'family')
+                 GROUP BY COALESCE(u.language, 'fr')
+                 ORDER BY COUNT(*) DESC, BOOL_OR(u.id = c.created_by) DESC
+                 LIMIT 1) AS members_language
          FROM care_circles c
          LEFT JOIN care_recipients r ON r.circle_id = c.id
          WHERE c.id = $1`,

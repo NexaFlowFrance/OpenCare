@@ -2,6 +2,7 @@ import cron from 'node-cron';
 import { query } from '../db';
 import { createNotification } from './notifications';
 import logger from './logger';
+import { pickLang } from './i18n';
 
 // Veille passive: toutes les 10 minutes, pour chaque règle presence_rules
 // activée dont l'heure limite (no_activity_before) est dépassée, si AUCUN
@@ -22,7 +23,7 @@ interface PresenceRuleRow {
 
 interface MemberRow {
     user_id: string;
-    /** Recipient's preferred language ('fr' | 'en'), defaults to 'fr' */
+    /** Recipient's preferred language ('fr' | 'en' | 'es'), defaults to 'fr' */
     language: string;
 }
 
@@ -33,7 +34,14 @@ interface AlertTexts {
 
 function buildAlertTexts(rule: PresenceRuleRow, language: string): AlertTexts {
     const name = (rule.first_name ?? '').trim();
-    if (language === 'en') {
+    const lang = pickLang(language);
+    if (lang === 'es') {
+        return {
+            title: name ? `Ninguna señal de vida en casa de ${name} esta mañana` : 'Ninguna señal de vida esta mañana',
+            body: `No se ha recibido ninguna señal de actividad hoy antes de las ${rule.no_activity_before}. Llame o pase a comprobar que todo va bien.`,
+        };
+    }
+    if (lang === 'en') {
         return {
             title: name ? `No sign of life at ${name}'s this morning` : 'No sign of life this morning',
             body: `No activity signal was received today before ${rule.no_activity_before}. Consider calling or stopping by to check that everything is fine.`,

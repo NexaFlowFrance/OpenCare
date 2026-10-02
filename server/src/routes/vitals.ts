@@ -4,7 +4,7 @@ import { authMiddleware } from '../middleware/auth';
 import { circleMiddleware, requireRole, CircleRequest } from '../middleware/circle';
 import { broadcastToCircle } from '../lib/broadcaster';
 import { createNotification } from '../lib/notifications';
-import { langFromRequest, t } from '../lib/i18n';
+import { langFromRequest, t, pick, pickLang, type Lang } from '../lib/i18n';
 import { getPublicSettings } from '../lib/circleSettings';
 import { formatVital, isVitalType, numberLocale } from '../lib/units';
 
@@ -108,13 +108,13 @@ interface ThresholdRow {
 }
 
 /** Libelles serveur des constantes, pour le texte des notifications. */
-const VITAL_LABELS: Record<string, { fr: string; en: string }> = {
-    weight: { fr: 'Poids', en: 'Weight' },
-    bp: { fr: 'Tension', en: 'Blood pressure' },
-    pain: { fr: 'Douleur', en: 'Pain' },
-    mood: { fr: 'Moral', en: 'Mood' },
-    temperature: { fr: 'Température', en: 'Temperature' },
-    glucose: { fr: 'Glycémie', en: 'Blood sugar' },
+const VITAL_LABELS: Record<string, Record<Lang, string>> = {
+    weight: { fr: 'Poids', en: 'Weight', es: 'Peso' },
+    bp: { fr: 'Tension', en: 'Blood pressure', es: 'Tensión' },
+    pain: { fr: 'Douleur', en: 'Pain', es: 'Dolor' },
+    mood: { fr: 'Moral', en: 'Mood', es: 'Ánimo' },
+    temperature: { fr: 'Température', en: 'Temperature', es: 'Temperatura' },
+    glucose: { fr: 'Glycémie', en: 'Blood sugar', es: 'Glucemia' },
 };
 
 const num = (raw: unknown): number | null => {
@@ -165,15 +165,20 @@ async function notifyOutOfRange(
         : (value2 !== null ? `${value}/${value2}` : String(value)));
 
     await Promise.all((members as Array<{ user_id: string; language: string }>).map((member) => {
-        const lang = String(member.language).toLowerCase().startsWith('en') ? 'en' : 'fr';
+        const lang = pickLang(member.language);
         const reading = readingFor(lang);
         const label = VITAL_LABELS[type]?.[lang] ?? type;
-        const title = lang === 'en'
-            ? `${label} out of range${who ? ` for ${who}` : ''}`
-            : `${label} hors de la plage${who ? ` pour ${who}` : ''}`;
-        const message = lang === 'en'
-            ? `Last measurement: ${reading}, ${direction === 'high' ? 'above' : 'below'} the range set for this circle.`
-            : `Dernière mesure : ${reading}, ${direction === 'high' ? 'au-dessus' : 'en dessous'} de la plage définie pour ce cercle.`;
+        const high = direction === 'high';
+        const title = pick(lang, {
+            fr: `${label} hors de la plage${who ? ` pour ${who}` : ''}`,
+            en: `${label} out of range${who ? ` for ${who}` : ''}`,
+            es: `${label} fuera de rango${who ? ` para ${who}` : ''}`,
+        });
+        const message = pick(lang, {
+            fr: `Dernière mesure : ${reading}, ${high ? 'au-dessus' : 'en dessous'} de la plage définie pour ce cercle.`,
+            en: `Last measurement: ${reading}, ${high ? 'above' : 'below'} the range set for this circle.`,
+            es: `Última medición: ${reading}, ${high ? 'por encima' : 'por debajo'} del rango definido para este círculo.`,
+        });
         return createNotification({
             userId: member.user_id,
             circleId,

@@ -63,6 +63,13 @@ if [[ "$TOKEN" == "null" || -z "$TOKEN" ]]; then
   echo "[FAIL] Missing auth token"
   exit 1
 fi
+# Langue du compte : l'espagnol etait refuse en 400, si bien qu'un membre
+# hispanophone recevait tout en francais. Une langue non livree reste refusee.
+lang_es=$(request PUT "/api/auth/language" '{"language":"es"}')
+echo "$lang_es" | jq -e '.data.user.language == "es"' >/dev/null
+bad_lang=$(curl -sS -o /dev/null -w "%{http_code}" -X PUT "$API_BASE/api/auth/language" -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '{"language":"de"}')
+[[ "$bad_lang" == "400" ]]
+request PUT "/api/auth/language" '{"language":"fr"}' >/dev/null
 
 echo "[3/14] Care circle"
 circle=$(request POST "/api/circles" '{"recipient_first_name":"Jeanne","recipient_last_name":"Martin"}')
