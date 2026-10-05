@@ -11,7 +11,8 @@ import {
     addDays, subDays, addMinutes, differenceInMinutes,
 } from 'date-fns';
 import { Card, CardContent, Button, Dialog, Input, Textarea, Select, DatePicker } from '../components/ui';
-import { api } from '../lib/api';
+import { api, API_BASE_URL } from '../lib/api';
+import { serverUrl } from '../lib/serverUrl';
 import { cn } from '../lib/utils';
 import { useCircle } from '../contexts/CircleContext';
 import { circleWeekStart, weekStartsOn, orderedIsoDays, inWeekOrder } from '../lib/weekStart';
@@ -518,7 +519,8 @@ const Calendar: React.FC = () => {
     };
 
     // ── iCal feed ─────────────────────────────────────────────────────────────
-    const feedUrl = feedToken ? `${window.location.origin}/api/calendar/feed/${feedToken}.ics` : '';
+    // Le flux est servi par l'API, qui peut avoir son propre domaine (voir lib/serverUrl).
+    const feedUrl = feedToken ? serverUrl(API_BASE_URL, window.location.origin, `/api/calendar/feed/${feedToken}.ics`) : '';
     const feedWebcalUrl = feedUrl.replace(/^https?:\/\//, 'webcal://');
 
     const generateFeedToken = async () => {
