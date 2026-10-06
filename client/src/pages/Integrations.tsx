@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api, API_BASE_URL } from '../lib/api';
+import { serverUrl } from '../lib/serverUrl';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
@@ -162,7 +163,7 @@ const PresenceSection: React.FC = () => {
     }, [activeCircle?.id, isAdmin]);
 
     const fullWebhookUrl = status?.webhook_url
-        ? `${API_BASE_URL || window.location.origin}${status.webhook_url}`
+        ? serverUrl(API_BASE_URL, window.location.origin, status.webhook_url)
         : null;
 
     const handleGenerateToken = async () => {

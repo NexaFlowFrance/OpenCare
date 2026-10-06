@@ -135,7 +135,7 @@ Toutes les routes (sauf mention contraire) exigent un JWT (`Authorization: Beare
 ### Calendrier (`/api/events`, `/api/calendar`)
 
 - `GET /api/events`, `GET /api/events/upcoming`, `POST / PUT / DELETE` : visites, rendez-vous médicaux, passages infirmière, récurrences (RRULE simple), rappels, participants.
-- `GET / POST /api/calendar/token` puis `GET /api/calendar/feed/:token.ics` (public) : export iCal (.ics / webcal).
+- `GET / POST /api/calendar/token` puis `GET /api/calendar/feed/:token.ics` (public) : export iCal (.ics / webcal). Le lien affiché dans l'agenda vise l'adresse de l'API (`VITE_API_URL`), et celle de la page seulement quand l'API est à la même origine : sur une installation à deux domaines, l'adresse de la page renverrait l'app en HTML et l'agenda resterait vide.
 
 ### Tâches et courses (`/api/tasks`, `/api/shopping`)
 
