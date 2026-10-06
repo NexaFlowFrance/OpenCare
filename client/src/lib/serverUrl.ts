@@ -8,6 +8,17 @@
  * inconnue par la page de l'app, et un lien construit sur l'adresse de la page
  * renvoie du HTML au lieu du calendrier, sans erreur visible. L'adresse de la
  * page ne sert donc que de repli, quand l'API est a la meme origine.
+ *
+ * Une adresse d'API relative ("/backend") est resolue sur l'adresse de la page :
+ * Google Agenda ou Home Assistant ne savent rien faire d'un lien relatif.
  */
-export const serverUrl = (apiBase: string, pageOrigin: string, path: string): string =>
-    `${(apiBase || pageOrigin).replace(/\/+$/, '')}${path}`;
+export const serverUrl = (apiBase: string, pageOrigin: string, path: string): string => {
+    let base: string;
+    try {
+        base = new URL(apiBase || '/', `${pageOrigin.replace(/\/+$/, '')}/`).href;
+    } catch {
+        // Adresse illisible : on garde la concatenation simple plutot que de lever.
+        base = apiBase || pageOrigin;
+    }
+    return `${base.replace(/\/+$/, '')}${path}`;
+};
