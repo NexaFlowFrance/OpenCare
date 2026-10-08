@@ -283,6 +283,37 @@ as_neighbor "/api/dashboard" | jq -e '(.data.last_journal_entries | all(.[]; .ty
 as_neighbor "/api/emergency/sheet" | jq -e '.success == true and (.data | has("public_token") | not) and (.data | has("url") | not)' >/dev/null
 request GET "/api/emergency/sheet" | jq -e '.data.public_token | length == 64' >/dev/null
 
+# Mot de passe oublie sans SMTP : le lien ouvre tout le compte, donc seul un admin
+# de TOUS les cercles de la personne le recoit ou peut annuler la demande. Le
+# voisin ouvre son propre cercle : l'admin du cercle partage ne voit plus rien.
+NEMAIL="neighbor-${RUN_ID}@example.com"
+neighbor_circle() {
+  curl -sS -X POST "$API_BASE/api/circles" -H "Content-Type: application/json" -H "Authorization: Bearer $NTOKEN" -d '{"recipient_first_name":"Paul"}' | jq -r '.data.circle.id'
+}
+drop_neighbor_circle() {
+  curl -sS -X DELETE "$API_BASE/api/circles/$1" -H "Authorization: Bearer $NTOKEN" -H "X-Circle-Id: $1" | jq -e '.success == true' >/dev/null
+}
+NCIRCLE_ID=$(neighbor_circle)
+[[ -n "$NCIRCLE_ID" && "$NCIRCLE_ID" != "null" ]] || { echo "[FAIL] neighbor circle"; exit 1; }
+curl -sS -X POST "$API_BASE/api/auth/forgot-password" -H "Content-Type: application/json" -d "{\"email\":\"$NEMAIL\"}" | jq -e '.data.delivery == "admin"' >/dev/null
+request GET "/api/auth/password-resets" | jq -e --arg e "$NEMAIL" 'all(.data[]; .email != $e)' >/dev/null
+# Sans son autre cercle, le voisin n'a plus que celui de l'admin : le lien revient.
+drop_neighbor_circle "$NCIRCLE_ID"
+resets=$(request GET "/api/auth/password-resets")
+reset_id=$(echo "$resets" | jq -r --arg e "$NEMAIL" '[.data[] | select(.email == $e)][0].id')
+reset_url=$(echo "$resets" | jq -r --arg e "$NEMAIL" '[.data[] | select(.email == $e)][0].url')
+[[ "$reset_id" != "null" && "$reset_url" == /reset-password\?token=* ]] || { echo "[FAIL] reset link not relayed to the admin of every circle"; exit 1; }
+# Un nouveau cercle a lui : l'admin ne peut plus annuler sa demande.
+NCIRCLE_ID=$(neighbor_circle)
+cancel=$(curl -sS -o /dev/null -w "%{http_code}" -X DELETE "$API_BASE/api/auth/password-resets/$reset_id" -H "Authorization: Bearer $TOKEN")
+[[ "$cancel" == "404" ]] || { echo "[FAIL] admin of one shared circle cancelled a reset (got $cancel)"; exit 1; }
+drop_neighbor_circle "$NCIRCLE_ID"
+# Reinitialisation par le lien relaye : le titulaire en est prevenu.
+reset_token="${reset_url#*token=}"
+curl -sS -X POST "$API_BASE/api/auth/reset-password" -H "Content-Type: application/json" -d "{\"token\":\"$reset_token\",\"password\":\"Smoke-Nouveau-456!\"}" | jq -e '.success == true' >/dev/null
+NTOKEN=$(curl -sS -X POST "$API_BASE/api/auth/login" -H "Content-Type: application/json" -d "{\"email\":\"$NEMAIL\",\"password\":\"Smoke-Nouveau-456!\"}" | jq -r '.data.token')
+curl -sS "$API_BASE/api/notifications" -H "Authorization: Bearer $NTOKEN" | jq -e 'any(.data[]; .type == "password_changed")' >/dev/null
+
 echo "[14/14] Cleanup"
 request DELETE "/api/circles/$CIRCLE_ID" >/dev/null
 request DELETE "/api/circles/$CIRCLE2_ID" >/dev/null

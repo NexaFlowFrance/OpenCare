@@ -92,7 +92,16 @@ function adminNotificationTexts(language: string, requesterName: string): { titl
 }
 
 function ownerNotificationTexts(language: string, delivery: Delivery): { title: string; message: string } {
-    if (language === 'en') {
+    const lang = pickLang(language);
+    if (lang === 'es') {
+        return {
+            title: 'Su contraseña ha cambiado',
+            message: delivery === 'admin'
+                ? 'Su contraseña de OpenCare se ha restablecido con un enlace transmitido por un administrador del círculo. Si no ha sido usted, avise enseguida a los administradores del círculo.'
+                : 'Su contraseña de OpenCare se ha restablecido desde el enlace recibido por correo. Si no ha sido usted, avise enseguida a los administradores del círculo.',
+        };
+    }
+    if (lang === 'en') {
         return {
             title: 'Your password was changed',
             message: delivery === 'admin'
@@ -315,18 +324,21 @@ router.get('/password-resets', authMiddleware, async (req: AuthRequest, res: Res
     }
 });
 
-// Annulation d'une demande par un administrateur d'un cercle commun.
+// Annulation d'une demande : meme regle que la liste (lib/resetRelay), seul un
+// admin de tous les cercles de la personne peut l'annuler. L'admin d'un seul
+// cercle partage ne voit pas la demande, il ne doit pas pouvoir l'effacer non plus.
 router.delete('/password-resets/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
     try {
-        const result = await query(
-            `DELETE FROM password_resets pr
-             USING circle_members cm, circle_members me
-             WHERE pr.id = $1 AND pr.used_at IS NULL
-               AND cm.user_id = pr.user_id
-               AND me.circle_id = cm.circle_id AND me.user_id = $2 AND me.role = 'admin'
-             RETURNING pr.id`,
-            [req.params.id, req.userId]
+        const pending = await query(
+            'SELECT user_id FROM password_resets WHERE id = $1 AND used_at IS NULL',
+            [req.params.id]
         );
+        const targetId = pending.rows[0]?.user_id as string | undefined;
+        const allowed = targetId !== undefined
+            && relayAdminIds(await membershipsAround(targetId), targetId).includes(req.userId!);
+        const result = allowed
+            ? await query('DELETE FROM password_resets WHERE id = $1 AND used_at IS NULL RETURNING id', [req.params.id])
+            : { rows: [] };
         if (result.rows.length === 0) {
             return res.status(404).json({ success: false, error: 'Not found' });
         }
