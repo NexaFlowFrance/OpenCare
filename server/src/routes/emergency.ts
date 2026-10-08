@@ -2,7 +2,7 @@ import { Router, Response } from 'express';
 import crypto from 'crypto';
 import { query } from '../db';
 import { authMiddleware } from '../middleware/auth';
-import { circleMiddleware, requireContentWriter, CircleRequest } from '../middleware/circle';
+import { circleMiddleware, requireContentWriter, CONTENT_WRITER_ROLES, CircleRequest } from '../middleware/circle';
 import { langFromRequest, t } from '../lib/i18n';
 import { buildEmergencyData } from '../lib/emergencySheet';
 
@@ -88,6 +88,13 @@ router.get('/sheet', async (req: CircleRequest, res: Response) => {
         }
 
         const sheet = result.rows[0];
+        // The token opens the live sheet (allergies, history, medications) from
+        // anywhere, and keeps working after a member leaves the circle. Only the
+        // roles that can switch live mode on (PUT /sheet) receive it.
+        if (!req.circleRole || !CONTENT_WRITER_ROLES.includes(req.circleRole)) {
+            const { public_token: _token, ...rest } = sheet;
+            return res.json({ success: true, data: rest });
+        }
         res.json({ success: true, data: { ...sheet, url: `/urgence/${sheet.public_token}` } });
     } catch (error) {
         console.error('Get emergency sheet error:', error);

@@ -66,6 +66,13 @@ export const JOURNAL_WRITER_ROLES: CircleRole[] = ['admin', 'family', 'professio
 /** Roles allowed to manage circle content (calendar, tasks, documents...). */
 export const CONTENT_WRITER_ROLES: CircleRole[] = ['admin', 'family'];
 
+/**
+ * Journal entry types a neighbor never reads: they carry health data (readings,
+ * doses taken, and incidents, whose text can describe a pain or a fall).
+ * Applied wherever journal entries are listed, not only on /api/journal.
+ */
+export const NEIGHBOR_HIDDEN_JOURNAL_TYPES = ['vital', 'medication', 'incident'];
+
 /** Convenience guards matching the permission matrix in docs/SPEC.md. */
 export const requireAdmin = requireRole('admin');
 export const requireContentWriter = requireRole(...CONTENT_WRITER_ROLES);

@@ -184,9 +184,11 @@ export async function loadAttention(circleId: string, includeHealth: boolean, no
         if (count > 0) items.push({ kind, severity: SEVERITY[kind], count, href, details: details.slice(0, 5), ...extra });
     };
 
-    push('help', incidents.rows.length, '/journal', (incidents.rows as any[]).map((r) => ({
+    // A neighbor still sees that help was asked (they may hold the keys), but not
+    // the text: a companion incident can describe a pain or a fall.
+    push('help', incidents.rows.length, '/journal', includeHealth ? (incidents.rows as any[]).map((r) => ({
         id: r.id, label: String(r.content || '').slice(0, SNIPPET), when: stamp(r.occurred_at), extra: r.author_name ?? null,
-    })), { open_help: (openHelp.rows as any[]).map((r) => ({ id: r.id, created_at: stamp(r.created_at) ?? '' })) });
+    })) : [], { open_help: (openHelp.rows as any[]).map((r) => ({ id: r.id, created_at: stamp(r.created_at) ?? '' })) });
 
     const before = (presence.rows[0] as { before: string } | undefined)?.before;
     push('presence', before ? 1 : 0, '/', [], { time: before ?? null });

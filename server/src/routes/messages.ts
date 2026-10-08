@@ -3,17 +3,14 @@ import { query } from '../db';
 import { authMiddleware } from '../middleware/auth';
 import { circleMiddleware, requireJournalWriter, CircleRequest } from '../middleware/circle';
 import { broadcast, broadcastToCircle, WsAction, WsUpdatePayload } from '../lib/broadcaster';
+import { FILE_DATA_URL_REGEX as ATTACHMENT_DATA_URL_REGEX, MAX_MESSAGE_ATTACHMENTS as MAX_ATTACHMENTS } from '../lib/dataUrls';
 
 const router = Router();
 
 router.use(authMiddleware, circleMiddleware);
 
 const MAX_CONTENT_LENGTH = 5000;
-const MAX_ATTACHMENTS = 2;
 const MAX_ATTACHMENT_BYTES = Math.floor(1.5 * 1024 * 1024);
-// Strict allowlist: raster images or PDF only. SVG is excluded on purpose (stored
-// XSS via embedded scripts when a data URL is rendered inline).
-const ATTACHMENT_DATA_URL_REGEX = /^data:(image\/(?:png|jpe?g|webp|gif)|application\/pdf);base64,([A-Za-z0-9+/]+={0,2})$/i;
 
 /** Approximate decoded size of a base64 payload without allocating a buffer */
 const base64ByteSize = (base64: string): number => {

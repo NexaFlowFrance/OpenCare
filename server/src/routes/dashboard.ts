@@ -1,7 +1,7 @@
 import { Router, Response } from 'express';
 import { query } from '../db';
 import { authMiddleware } from '../middleware/auth';
-import { circleMiddleware, CircleRequest } from '../middleware/circle';
+import { circleMiddleware, CircleRequest, NEIGHBOR_HIDDEN_JOURNAL_TYPES } from '../middleware/circle';
 import { toLocalISO } from './events';
 import { ensureTodayIntakes } from '../lib/intakes';
 import { loadAttention } from '../lib/attention';
@@ -116,13 +116,16 @@ router.get('/', async (req: CircleRequest, res: Response) => {
                    AND start_time::date <= CURRENT_DATE`,
                 [circleId]
             ),
+            // Same scope as /api/journal: a neighbor gets the last 7 days, without
+            // health entries (readings, doses, incidents).
             query(
                 `SELECT id, author_name, type, content, occurred_at, created_at
                  FROM journal_entries
                  WHERE circle_id = $1
+                   AND ($2::boolean OR (type <> ALL($3::text[]) AND occurred_at >= CURRENT_TIMESTAMP - INTERVAL '7 days'))
                  ORDER BY occurred_at DESC
                  LIMIT 5`,
-                [circleId]
+                [circleId, includeHealth, NEIGHBOR_HIDDEN_JOURNAL_TYPES]
             ),
             query(
                 'SELECT COUNT(*)::int AS count FROM tasks WHERE circle_id = $1 AND is_completed = false',

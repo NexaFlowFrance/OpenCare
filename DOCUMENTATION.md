@@ -335,6 +335,8 @@ Chaque requête vérifie le rôle du membre dans le cercle visé. La matrice de 
 
 Les liens magiques ont une portée volontairement étroite : écrire au journal, lire le jour même, confirmer une prise de médicament, consulter la page « Qui je suis ».
 
+Le « partiel » du voisin a deux bornes, appliquées partout où le journal est lu (`/api/journal`, le tableau de bord) : les 7 derniers jours, et jamais les entrées de santé, c'est-à-dire les mesures (`vital`), les prises (`medication`) et les incidents (`incident`), dont le texte peut décrire une douleur ou une chute. Un voisin ne lit pas non plus la synthèse hebdomadaire, écrite à partir de ces données. Il voit qu'une demande d'aide est en cours dans « À traiter », sans le détail.
+
 ---
 
 ## Pages publiques (sans compte)
@@ -431,11 +433,13 @@ OpenCare manipule des **données de santé** : la prudence prime à chaque couch
 | **Mots de passe** | bcrypt, coût 12 |
 | **Isolation par cercle** | Chaque requête vérifie l'appartenance au cercle et le rôle du membre ; les liens magiques ont une portée réduite et révocable |
 | **Appareils patient** | La tablette et le téléphone du proche ont un token d'appareil (appairage par code à usage unique) qui n'atteint que les écrans patient, révocable à tout moment ; un code aidant protège les réglages et la sortie de l'écran |
-| **En-têtes HTTP** | helmet, avec une CSP dédiée quand le serveur sert aussi le client (`SERVE_CLIENT_DIR`) |
+| **En-têtes HTTP** | helmet, avec une CSP dédiée quand le serveur sert aussi le client (`SERVE_CLIENT_DIR`) ; le nginx de l'image Docker du client envoie la même politique (`client/nginx.conf`), seul `connect-src` y est élargi parce que l'adresse de l'API (`VITE_API_URL`) n'y est pas connue |
 | **Anti brute-force** | Rate limiting sur `/api/auth/login`, `/api/auth/register` et `/api/auth/forgot-password` (fenêtre et plafond configurables) |
 | **Mot de passe oublié** | Jeton aléatoire de 256 bits, stocké haché (SHA-256), valable une heure, à usage unique ; réponse identique que le compte existe ou non ; sans SMTP, remise du lien par un administrateur du cercle ; toutes les sessions ouvertes sont fermées après le changement |
 | **CORS** | Origines strictes configurables (`CORS_ORIGINS`) |
 | **Secrets** | Clés IA et identifiants d'intégrations chiffrés au repos (AES-256-GCM), jamais renvoyés au navigateur |
+| **Fichiers et import** | Documents, photos et pièces jointes sont des data URL en base, limitées aux images matricielles et au PDF (pas de SVG). L'import (`/api/data/import`) applique exactement les mêmes règles (`server/src/lib/dataUrls.ts`) et n'attribue un contenu qu'à un membre du cercle importé |
+| **Fiche urgence en direct** | Désactivée par défaut ; son jeton n'est remis qu'aux admins et à la famille, les rôles qui peuvent l'activer |
 | **SSRF** | Validation des URL d'intégrations (schéma, métadonnées cloud, IP privées optionnellement bloquées) |
 | **Journaux** | Logs structurés, stack traces masquées en production |
 

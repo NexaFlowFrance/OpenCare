@@ -3,6 +3,7 @@ import { getClient, query } from '../db';
 import { authMiddleware } from '../middleware/auth';
 import { circleMiddleware, requireAdmin, CircleRequest } from '../middleware/circle';
 import { broadcastToCircle } from '../lib/broadcaster';
+import { FILE_DATA_URL_REGEX, IMAGE_DATA_URL_REGEX, cleanImportedAttachments } from '../lib/dataUrls';
 
 /**
  * Per-circle export/import (admin only).
@@ -13,13 +14,16 @@ import { broadcastToCircle } from '../lib/broadcaster';
  * Import: rows are inserted into the CURRENT circle with brand new ids; an
  * old id -> new id mapping is kept for internal references (medication_id in
  * schedules/intakes, journal_entry_id, document_id, schedule_id, entry_id).
- * References to accounts (users) are kept only when the account exists on this
- * server, otherwise nulled. References to circle members (expenses, task
+ * References to accounts (users) are kept only when the account is a member of
+ * the circle being imported into, otherwise nulled: an import must not show
+ * content as written by someone outside that circle. References to circle members (expenses, task
  * assignments...) are kept only when the member id exists in the current
  * circle, otherwise the row is skipped or the reference dropped.
  *
- * Note: this is a JSON export. Files on disk (journal photos, documents) are
- * not bundled; their file_path values are preserved as-is.
+ * Files (documents, journal photos, message attachments) live in the database
+ * as data URLs and travel inside the JSON. On import they pass the same checks
+ * as an upload (lib/dataUrls): anything else, such as a javascript: link, is
+ * dropped.
  */
 
 const EXPORT_VERSION = 'opencare-1';
@@ -185,15 +189,19 @@ router.post('/import', async (req: CircleRequest, res: Response) => {
     const medicationMap = new Map<string, string>();
     const scheduleMap = new Map<string, string>();
 
-    // Account references survive only if the user exists on this server
-    const userExistsCache = new Map<string, boolean>();
+    // Account references survive only if the account belongs to THIS circle:
+    // existing somewhere on the server is not enough to sign its messages.
+    const memberCache = new Map<string, boolean>();
     const userOrNull = async (value: unknown): Promise<string | null> => {
         if (typeof value !== 'string' || !UUID_RE.test(value)) return null;
-        if (!userExistsCache.has(value)) {
-            const result = await client.query('SELECT 1 FROM users WHERE id = $1', [value]);
-            userExistsCache.set(value, result.rows.length > 0);
+        if (!memberCache.has(value)) {
+            const result = await client.query(
+                'SELECT 1 FROM circle_members WHERE circle_id = $1 AND user_id = $2',
+                [circleId, value]
+            );
+            memberCache.set(value, result.rows.length > 0);
         }
-        return userExistsCache.get(value) ? value : null;
+        return memberCache.get(value) ? value : null;
     };
 
     const mapOrNull = (map: Map<string, string>, value: unknown): string | null =>
@@ -255,7 +263,7 @@ router.post('/import', async (req: CircleRequest, res: Response) => {
 
         // 3. documents (before journal/prescriptions/expenses which reference them)
         for (const row of asArray(data.documents)) {
-            if (typeof row?.title !== 'string' || !row.title.trim() || typeof row?.file_path !== 'string' || !row.file_path) {
+            if (typeof row?.title !== 'string' || !row.title.trim() || typeof row?.file_path !== 'string' || !FILE_DATA_URL_REGEX.test(row.file_path)) {
                 bump(skipped, 'documents');
                 continue;
             }
@@ -291,7 +299,7 @@ router.post('/import', async (req: CircleRequest, res: Response) => {
         // 5. journal_photos (entry_id remapped; the photo files themselves are not in the JSON)
         for (const row of asArray(data.journal_photos)) {
             const entryId = mapOrNull(journalMap, row?.entry_id);
-            if (!entryId || typeof row?.file_path !== 'string' || !row.file_path) {
+            if (!entryId || typeof row?.file_path !== 'string' || !IMAGE_DATA_URL_REGEX.test(row.file_path)) {
                 bump(skipped, 'journal_photos');
                 continue;
             }
@@ -475,18 +483,21 @@ router.post('/import', async (req: CircleRequest, res: Response) => {
             bump(imported, 'circle_notes');
         }
 
-        // 15. messages (author account must exist: author_user_id is NOT NULL)
+        // 15. messages (author must be a member: author_user_id is NOT NULL; a
+        //     direct message also needs its recipient in the circle)
         for (const row of asArray(data.messages)) {
             const authorId = await userOrNull(row?.author_user_id);
-            if (!authorId || typeof row?.content !== 'string' || !row.content) {
+            const channel = oneOf(row?.channel, MESSAGE_CHANNELS, 'circle');
+            const recipientId = await userOrNull(row?.recipient_user_id);
+            if (!authorId || typeof row?.content !== 'string' || !row.content || (channel === 'dm' && !recipientId)) {
                 bump(skipped, 'messages');
                 continue;
             }
             await insert('messages',
                 ['circle_id', 'channel', 'author_user_id', 'recipient_user_id', 'content', 'attachments', 'edited_at', 'created_at'],
-                [circleId, oneOf(row.channel, MESSAGE_CHANNELS, 'circle'), authorId,
-                    await userOrNull(row.recipient_user_id), row.content,
-                    JSON.stringify(asArray(row.attachments)), row.edited_at ?? null, tsOrNow(row.created_at)]
+                [circleId, channel, authorId,
+                    recipientId, row.content,
+                    JSON.stringify(cleanImportedAttachments(row.attachments)), row.edited_at ?? null, tsOrNow(row.created_at)]
             );
             bump(imported, 'messages');
         }

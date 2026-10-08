@@ -511,8 +511,8 @@ const Dashboard: React.FC = () => {
                 )}
             </div>
 
-            {/* Weekly AI digest: full width, below the grid */}
-            <WeeklyDigestCard />
+            {/* Weekly AI digest: full width, below the grid. Built from health data, so never for a neighbor. */}
+            {myRole !== 'neighbor' && <WeeklyDigestCard />}
             </>
             )}
         </div>

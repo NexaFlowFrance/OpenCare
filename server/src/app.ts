@@ -122,7 +122,9 @@ const apiRateLimiter = rateLimit({
 // apply an explicit CSP tailored to the SPA instead of helmet's default (which is
 // too strict for it): the Vite build has no inline scripts, but Radix/Recharts
 // inject inline styles, images can come from https URLs (and data URLs for
-// avatars), and the app talks to its own origin via fetch + WebSocket.
+// avatars), and the app talks to its own origin via fetch + WebSocket. The kiosk
+// also asks Open-Meteo for the weather and the city search, straight from the
+// browser: without those two hosts the weather card silently disappeared.
 const spaContentSecurityPolicy = {
     useDefaults: false,
     directives: {
@@ -130,7 +132,7 @@ const spaContentSecurityPolicy = {
         'script-src': ["'self'"],
         'style-src': ["'self'", "'unsafe-inline'"],
         'img-src': ["'self'", 'data:', 'blob:', 'https:'],
-        'connect-src': ["'self'", 'ws:', 'wss:'],
+        'connect-src': ["'self'", 'ws:', 'wss:', 'https://api.open-meteo.com', 'https://geocoding-api.open-meteo.com'],
         'font-src': ["'self'", 'data:'],
         'worker-src': ["'self'"],
         'manifest-src': ["'self'"],

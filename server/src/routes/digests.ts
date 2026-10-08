@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { query } from '../db';
 import { authMiddleware } from '../middleware/auth';
-import { circleMiddleware, requireAdmin, CircleRequest } from '../middleware/circle';
+import { circleMiddleware, requireAdmin, requireRole, CircleRequest } from '../middleware/circle';
 import { AiError } from '../services/ai';
 import { generateDigestForCircle, currentWeekStart } from '../lib/digestScheduler';
 import logger from '../lib/logger';
@@ -13,8 +13,10 @@ const router = Router();
 router.use(authMiddleware);
 router.use(circleMiddleware);
 
-// GET /api/digests : the 12 most recent weekly digests of the circle.
-router.get('/', async (req: CircleRequest, res) => {
+// GET /api/digests : the 12 most recent weekly digests of the circle. They are
+// written from vitals, missed doses and medications, so they follow the health
+// read roles of /api/vitals: never a neighbor.
+router.get('/', requireRole('admin', 'family', 'professional', 'viewer'), async (req: CircleRequest, res) => {
     try {
         const result = await query(
             `SELECT id, to_char(week_start, 'YYYY-MM-DD') AS week_start, content, created_at

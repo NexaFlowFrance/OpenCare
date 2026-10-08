@@ -47,6 +47,9 @@ You are hosting health data: a few minutes of hardening are worth it.
 - Restrict `CORS_ORIGINS` to trusted frontend domains.
 - Use HTTPS for both app and API in production (also required for web push and the PWA).
 - Set `REGISTRATION_ENABLED=false` once every member of the circle has an account.
+- Configure SMTP as soon as more than one family shares the instance. Without it, a
+  forgotten password is reset through a circle admin, who then holds a link that
+  opens the whole account.
 - Treat magic links (`/care/<token>`), the emergency sheet QR and handover links as
   secrets: share them only with the intended caregivers, set expirations, and revoke
   them when a caregiver stops intervening.

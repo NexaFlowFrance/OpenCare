@@ -5,10 +5,12 @@ import {
     circleMiddleware,
     requireJournalWriter,
     caregiverLinkMiddleware,
+    NEIGHBOR_HIDDEN_JOURNAL_TYPES,
     CircleRequest,
     CaregiverLinkRequest,
 } from '../middleware/circle';
 import { broadcastToCircle } from '../lib/broadcaster';
+import { IMAGE_DATA_URL_REGEX } from '../lib/dataUrls';
 import { ensureTodayIntakes, INTAKE_DISPLAY_COLUMNS, INTAKE_DISPLAY_FROM } from '../lib/intakes';
 
 const router = Router();
@@ -20,9 +22,6 @@ const VITAL_TYPES = ['weight', 'bp', 'pain', 'mood', 'temperature', 'glucose'];
 
 const MAX_PHOTOS = 4;
 const MAX_PHOTO_BYTES = Math.floor(1.5 * 1024 * 1024);
-// Strict allowlist: raster images only. SVG is excluded on purpose (stored XSS via
-// embedded scripts when a data URL is rendered inline).
-const IMAGE_DATA_URL_REGEX = /^data:(image\/(?:png|jpe?g|webp|gif));base64,([A-Za-z0-9+/]+={0,2})$/i;
 
 /** Approximate decoded size of a base64 payload without allocating a buffer */
 const base64ByteSize = (base64: string): number => {
@@ -179,9 +178,11 @@ router.get('/', async (req: CircleRequest, res: Response) => {
             values.push(req.query.author);
         }
 
-        // Neighbors have a partial read scope: the last 7 days only
+        // Neighbors have a partial read scope: the last 7 days, and no health entries
         if (req.circleRole === 'neighbor') {
             conditions.push(`e.occurred_at >= CURRENT_TIMESTAMP - INTERVAL '7 days'`);
+            conditions.push(`e.type <> ALL($${idx++}::text[])`);
+            values.push(NEIGHBOR_HIDDEN_JOURNAL_TYPES);
         }
 
         values.push(limit);

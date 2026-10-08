@@ -264,6 +264,25 @@ echo "$unpair" | jq -e '.success == true' >/dev/null
 dead=$(curl -sS -o /dev/null -w "%{http_code}" "$API_BASE/api/kiosk/today" -H "X-Kiosk-Token: $kiosk_token")
 [[ "$dead" == "401" ]] || { echo "[FAIL] revoked device token still accepted (got $dead)"; exit 1; }
 
+# Role neighbor : aucune donnee de sante, sur aucune route (synthese, journal,
+# tableau de bord), et pas le jeton de la fiche urgence en direct. L'admin, lui,
+# voit les entrees de sante : sans elles, le filtre ne prouverait rien.
+invite=$(request POST "/api/invites" '{"role":"neighbor"}')
+invite_token=$(echo "$invite" | jq -r '.data.token')
+# Inscription par le jeton d'invitation, comme un voisin invite : le role vient de l'invitation.
+nreg=$(curl -sS -X POST "$API_BASE/api/auth/register" -H "Content-Type: application/json" -d "{\"email\":\"neighbor-${RUN_ID}@example.com\",\"password\":\"$PASSWORD\",\"name\":\"Voisin ${RUN_ID}\",\"inviteToken\":\"$invite_token\"}")
+NTOKEN=$(echo "$nreg" | jq -r '.data.token')
+[[ -n "$NTOKEN" && "$NTOKEN" != "null" ]] || { echo "[FAIL] neighbor registration"; exit 1; }
+as_neighbor() { curl -sS "$API_BASE$1" -H "Authorization: Bearer $NTOKEN" -H "X-Circle-Id: $CIRCLE_ID"; }
+n_digests=$(curl -sS -o /dev/null -w "%{http_code}" "$API_BASE/api/digests" -H "Authorization: Bearer $NTOKEN" -H "X-Circle-Id: $CIRCLE_ID")
+[[ "$n_digests" == "403" ]] || { echo "[FAIL] neighbor read the weekly digests (got $n_digests)"; exit 1; }
+request GET "/api/digests" >/dev/null
+request GET "/api/journal" | jq -e 'any(.data[]; .type == "incident" or .type == "medication")' >/dev/null
+as_neighbor "/api/journal" | jq -e '(.data | length > 0) and all(.data[]; .type != "vital" and .type != "medication" and .type != "incident")' >/dev/null
+as_neighbor "/api/dashboard" | jq -e '(.data.last_journal_entries | all(.[]; .type != "vital" and .type != "medication" and .type != "incident")) and .data.latest_vitals == null' >/dev/null
+as_neighbor "/api/emergency/sheet" | jq -e '.success == true and (.data | has("public_token") | not) and (.data | has("url") | not)' >/dev/null
+request GET "/api/emergency/sheet" | jq -e '.data.public_token | length == 64' >/dev/null
+
 echo "[14/14] Cleanup"
 request DELETE "/api/circles/$CIRCLE_ID" >/dev/null
 request DELETE "/api/circles/$CIRCLE2_ID" >/dev/null

@@ -3,6 +3,7 @@ import { query } from '../db';
 import { authMiddleware } from '../middleware/auth';
 import { circleMiddleware, requireRole, CircleRequest } from '../middleware/circle';
 import { broadcastToCircle } from '../lib/broadcaster';
+import { FILE_DATA_URL_REGEX } from '../lib/dataUrls';
 
 const router = Router();
 
@@ -10,9 +11,6 @@ router.use(authMiddleware, circleMiddleware);
 
 const DOCUMENT_CATEGORIES = ['prescription', 'report', 'insurance', 'legal', 'other'];
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
-// Strict allowlist: raster images or PDF only. SVG is excluded on purpose (stored
-// XSS via embedded scripts when a data URL is rendered inline).
-const FILE_DATA_URL_REGEX = /^data:(image\/(?:png|jpe?g|webp|gif)|application\/pdf);base64,([A-Za-z0-9+/]+={0,2})$/i;
 
 /** Approximate decoded size of a base64 payload without allocating a buffer */
 const base64ByteSize = (base64: string): number => {
