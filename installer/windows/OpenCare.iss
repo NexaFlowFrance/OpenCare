@@ -7,13 +7,13 @@
 ;  Aucune dependance externe, aucune virtualisation, aucun redemarrage.
 ;  L'utilisateur final ne voit qu'une fenetre graphique avec 3 boutons.
 ;
-;  Compilation : Inno Setup 6.1+  (ISCC.exe OpenCare.iss /DMyAppVersion=1.2.0)
+;  Compilation : Inno Setup 6.1+  (ISCC.exe OpenCare.iss /DMyAppVersion=1.2.1)
 ;  Les dossiers app\runtime\node, app\runtime\pgsql, app\server, app\client,
 ;  app\schema.sql et les assets sont prepares par la CI avant compilation.
 ; =============================================================================
 
 #ifndef MyAppVersion
-  #define MyAppVersion "1.2.0"
+  #define MyAppVersion "1.2.1"
 #endif
 
 #define MyAppName "OpenCare"
