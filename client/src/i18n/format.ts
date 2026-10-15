@@ -1,6 +1,7 @@
 import type { Locale } from 'date-fns';
 import { enUS, fr, es, de, it, pt, nl } from 'date-fns/locale';
 import i18n from './index';
+import { formatClockIn } from '../lib/clock';
 
 // date-fns locales for the languages we may ship. Adding a new app language
 // only needs an extra entry here (falls back to English otherwise).
@@ -23,4 +24,9 @@ export function intlLocale(): string {
 
 export function formatNumber(value: number, options?: Intl.NumberFormatOptions): string {
     return new Intl.NumberFormat(intlLocale(), options).format(value);
+}
+
+/** Wall-clock time in the UI locale: "17:30" in French, "5:30 PM" in English. */
+export function formatClock(value: Date | string | null | undefined): string {
+    return formatClockIn(intlLocale(), value);
 }

@@ -5,7 +5,7 @@ import { Users, Trash2, DoorOpen } from 'lucide-react';
 import { api } from '../lib/api';
 import { useCircle } from '../contexts/CircleContext';
 import { useWebSocketUpdates } from '../hooks/useWebSocketUpdates';
-import { dateLocale } from '../i18n/format';
+import { dateLocale, formatClock } from '../i18n/format';
 import { Card, CardContent, Button, Badge, useToast } from '../components/ui';
 
 interface Visit {
@@ -111,8 +111,8 @@ const Visitors: React.FC = () => {
                                                     {present && <Badge variant="success">{t('visitors:present')}</Badge>}
                                                 </div>
                                                 <p className="text-caption text-muted-foreground">
-                                                    {t('visitors:arrived', { time: format(parseISO(visit.checked_in_at), 'HH:mm') })}
-                                                    {visit.checked_out_at ? ` · ${t('visitors:left', { time: format(parseISO(visit.checked_out_at), 'HH:mm') })}` : ''}
+                                                    {t('visitors:arrived', { time: formatClock(visit.checked_in_at) })}
+                                                    {visit.checked_out_at ? ` · ${t('visitors:left', { time: formatClock(visit.checked_out_at) })}` : ''}
                                                     {minutes !== null && minutes > 0 ? ` · ${t('visitors:duration', { minutes })}` : ''}
                                                 </p>
                                                 {visit.note && (

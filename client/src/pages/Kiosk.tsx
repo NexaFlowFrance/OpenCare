@@ -10,7 +10,7 @@ import { api } from '../lib/api';
 import { formatAmount } from '../lib/medications';
 import { clearPairedDevice, type PairedDevice } from '../lib/kioskDevice';
 import { useWebSocketUpdates } from '../hooks/useWebSocketUpdates';
-import { intlLocale } from '../i18n/format';
+import { formatClock, intlLocale } from '../i18n/format';
 import { SUPPORTED_LANGUAGES } from '../i18n';
 import { cn } from '../lib/utils';
 import KioskCompanion from '../components/app/KioskCompanion';
@@ -503,7 +503,7 @@ const Kiosk: React.FC<KioskProps> = ({ device }) => {
     const greeting = recipient
         ? t(hour >= 18 ? 'kiosk:greetingEvening' : 'kiosk:greeting', { name: recipient.first_name })
         : t('kiosk:greetingNoName');
-    const clock = new Intl.DateTimeFormat(intlLocale(), { hour: '2-digit', minute: '2-digit' }).format(now);
+    const clock = formatClock(now);
     const dateLabel = new Intl.DateTimeFormat(intlLocale(), { weekday: 'long', day: 'numeric', month: 'long' }).format(now);
     const dueNowTime = meds.due_now.length > 0 ? fmtTime(new Date(meds.due_now[0].due_at)) : null;
 

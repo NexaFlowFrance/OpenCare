@@ -11,7 +11,7 @@ import { cn } from '../lib/utils';
 import { formatAmount } from '../lib/medications';
 import { useCircle } from '../contexts/CircleContext';
 import { useWebSocketUpdates } from '../hooks/useWebSocketUpdates';
-import { dateLocale } from '../i18n/format';
+import { dateLocale, formatClock } from '../i18n/format';
 import { Card, CardContent, Button, Badge, Textarea, useToast } from '../components/ui';
 
 /**
@@ -290,7 +290,7 @@ const CarePlan: React.FC = () => {
                                         <ul className="space-y-1.5">
                                             {day.items.map((item, i) => (
                                                 <li key={`${item.id}-${i}`} className="text-caption text-foreground">
-                                                    <span className="font-medium tabular-nums">{item.start_time.slice(11, 16)}</span> {item.title}
+                                                    <span className="font-medium tabular-nums">{formatClock(item.start_time)}</span> {item.title}
                                                     {item.recurring && <Repeat className="ml-1 inline h-3 w-3 text-muted-foreground" aria-label={t('careplan:week.recurring')} />}
                                                     <span className="block text-micro text-muted-foreground">
                                                         {[item.members.join(', '), item.location, t(`dashboard:categories.${item.category}`, { defaultValue: '' })].filter(Boolean).join(' · ')}

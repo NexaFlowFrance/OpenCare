@@ -6,7 +6,7 @@ import { api } from '../../lib/api';
 import { cn } from '../../lib/utils';
 import { useCircle } from '../../contexts/CircleContext';
 import { useWebSocketUpdates } from '../../hooks/useWebSocketUpdates';
-import { dateLocale, intlLocale } from '../../i18n/format';
+import { dateLocale, formatClock } from '../../i18n/format';
 
 // Vue foyer (couple): un résumé compact de chaque proche du foyer, côte à côte,
 // depuis GET /api/dashboard/household. Les chiffres santé respectent déjà le
@@ -23,13 +23,7 @@ interface HouseholdCircle {
     last_journal: { author_name: string; occurred_at: string } | null;
 }
 
-const timeOf = (value: string): string => {
-    if (/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(?::\d{2})?$/.test(value)) return value.slice(11, 16);
-    const date = new Date(value);
-    return Number.isNaN(date.getTime())
-        ? ''
-        : new Intl.DateTimeFormat(intlLocale(), { hour: '2-digit', minute: '2-digit' }).format(date);
-};
+const timeOf = (value: string): string => formatClock(value);
 
 const relativeTime = (value: string): string => {
     const date = new Date(value);
