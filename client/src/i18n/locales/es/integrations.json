@@ -108,8 +108,9 @@
       "urlPlaceholder": "http://localhost:8000",
       "modelLabel": "Modelo (opcional)",
       "modelPlaceholder": "Systran/faster-whisper-small",
-      "languageLabel": "Idioma (opcional)",
-      "languagePlaceholder": "es",
+      "languageLabel": "Idioma de dictado (opcional)",
+      "languagePlaceholder": "Automático: el idioma de la aplicación",
+      "languageHint": "Déjelo vacío para usar el idioma de la aplicación de cada persona (el modo quiosco usa el idioma de su pantalla). Escriba un código como es o en para imponer un solo idioma a todos.",
       "keyLabel": "Clave API (opcional)",
       "keyPlaceholder": "Clave Bearer si su servicio la exige"
     }

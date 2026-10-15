@@ -25,7 +25,7 @@ import { useCircle } from '../contexts/CircleContext';
 import { useWebSocketUpdates } from '../hooks/useWebSocketUpdates';
 import { Badge, Button, Card, CardContent, Dialog, Input, Select, Textarea, useToast } from '../components/ui';
 import { EmptyState } from '../components/app';
-import { dateLocale, intlLocale } from '../i18n/format';
+import { dateLocale, formatClock, intlLocale } from '../i18n/format';
 import {
     displayUnit,
     formatVital,
@@ -853,7 +853,7 @@ const Journal: React.FC = () => {
                                                         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                                                             <span className="text-body font-semibold">{entry.author_name}</span>
                                                             <span className="text-micro text-muted-foreground">
-                                                                {format(new Date(entry.occurred_at), 'HH:mm')}
+                                                                {formatClock(entry.occurred_at)}
                                                             </span>
                                                             <Badge variant={badgeVariant(entry.type)}>
                                                                 {t(`journal:types.${entry.type}`)}

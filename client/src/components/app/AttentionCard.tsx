@@ -5,7 +5,7 @@ import { Activity, AlertTriangle, BellRing, CalendarDays, CheckSquare, ChevronRi
 import { formatDistanceToNow } from 'date-fns';
 import { api } from '../../lib/api';
 import { cn } from '../../lib/utils';
-import { dateLocale, intlLocale } from '../../i18n/format';
+import { dateLocale, formatClock, intlLocale } from '../../i18n/format';
 import { useCircle } from '../../contexts/CircleContext';
 import { formatVital, isVitalType, type UnitSystem } from '../../lib/units';
 
@@ -57,13 +57,8 @@ const SEVERITY_STYLE: Record<AttentionSeverity, { dot: string; icon: string }> =
     info: { dot: 'bg-info', icon: 'bg-info/10 text-info' },
 };
 
-/** "HH:mm" from a naive local ISO string, or via Intl when a timezone is present. */
-const timeOf = (value: string | null | undefined): string => {
-    if (!value) return '';
-    if (/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/.test(value)) return value.slice(11, 16);
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? '' : new Intl.DateTimeFormat(intlLocale(), { hour: '2-digit', minute: '2-digit' }).format(date);
-};
+/** Clock time of a naive local ISO string (no zone shift), or of a zoned one. */
+const timeOf = (value: string | null | undefined): string => formatClock(value);
 
 const dayOf = (value: string | null | undefined): string => {
     if (!value) return '';

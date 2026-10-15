@@ -21,7 +21,7 @@ import { MEDICATION_FORMS, MEDICATION_UNITS, formatAmount, safeQuantity } from '
 import { useCircle } from '../contexts/CircleContext';
 import { circleWeekStart, orderedIsoDays, sortIsoDays } from '../lib/weekStart';
 import { useWebSocketUpdates } from '../hooks/useWebSocketUpdates';
-import { dateLocale } from '../i18n/format';
+import { dateLocale, formatClock } from '../i18n/format';
 import {
     Card,
     CardContent,
@@ -432,7 +432,7 @@ const Medications: React.FC = () => {
                     <Check className="mr-1 h-3 w-3" />
                     {intake.confirmed_at
                         ? t('medications:today.status.takenAt', {
-                              time: format(parseISO(intake.confirmed_at), 'HH:mm'),
+                              time: formatClock(intake.confirmed_at),
                           })
                         : t('medications:today.status.taken')}
                 </Badge>
@@ -535,7 +535,7 @@ const Medications: React.FC = () => {
                                                     })}
                                                 </p>
                                                 <p className="text-caption text-muted-foreground">
-                                                    {format(parseISO(intake.due_at), 'HH:mm')}
+                                                    {formatClock(intake.due_at)}
                                                     {intake.schedule_label
                                                         ? ` · ${intake.schedule_label}`
                                                         : intake.prn
@@ -834,7 +834,7 @@ const Medications: React.FC = () => {
             schedule.days_of_week.length === 7
                 ? t('medications:treatments.everyDay')
                 : sortIsoDays(schedule.days_of_week, weekStart).map((d) => daysShort[d - 1]).join(', ');
-        return `${name} ${schedule.time_of_day}, ${days} : ${amountLabel(schedule.quantity, schedule.unit, form)}`;
+        return `${name} ${formatClock(schedule.time_of_day)}, ${days} : ${amountLabel(schedule.quantity, schedule.unit, form)}`;
     };
 
     const treatmentsSection = (

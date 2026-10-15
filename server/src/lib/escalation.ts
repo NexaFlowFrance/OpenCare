@@ -191,8 +191,9 @@ const fmtTime = (iso: string, lang: Lang): string => {
     if (Number.isNaN(d.getTime())) return '';
     const h = d.getHours();
     const m = String(d.getMinutes()).padStart(2, '0');
-    // "17 h 30" en francais, "17:30" en anglais et en espagnol.
-    if (lang !== 'fr') return `${h}:${m}`;
+    // "17 h 30" en francais, "5:30 PM" en anglais (US), "17:30" en espagnol.
+    if (lang === 'en') return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    if (lang === 'es') return `${h}:${m}`;
     return d.getMinutes() === 0 ? `${h} h` : `${h} h ${m}`;
 };
 

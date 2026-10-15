@@ -10,7 +10,7 @@ import { cn } from '../lib/utils';
 import { formatAmount } from '../lib/medications';
 import { useCircle } from '../contexts/CircleContext';
 import { useWebSocketUpdates } from '../hooks/useWebSocketUpdates';
-import { dateLocale, intlLocale } from '../i18n/format';
+import { dateLocale, formatClock, intlLocale } from '../i18n/format';
 import { formatVital, type UnitSystem } from '../lib/units';
 import WeeklyDigestCard from '../components/app/WeeklyDigestCard';
 import PresenceBanner from '../components/app/PresenceBanner';
@@ -92,17 +92,11 @@ interface DashboardData {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /**
- * Naive local "YYYY-MM-DDTHH:mm:ss" -> "HH:mm" by slicing (no timezone shift).
- * Strings carrying a timezone (recurring occurrences are serialized as UTC ISO
- * by the dashboard route) go through Date + Intl instead.
+ * Clock time in the UI locale. A naive local "YYYY-MM-DDTHH:mm:ss" is read
+ * without any timezone shift; strings carrying a timezone (recurring
+ * occurrences are serialized as UTC ISO by the dashboard route) are converted.
  */
-const timeOf = (value: string): string => {
-    if (/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(?::\d{2})?$/.test(value)) return value.slice(11, 16);
-    const date = new Date(value);
-    return Number.isNaN(date.getTime())
-        ? ''
-        : new Intl.DateTimeFormat(intlLocale(), { hour: '2-digit', minute: '2-digit' }).format(date);
-};
+const timeOf = (value: string): string => formatClock(value);
 
 const relativeTime = (value: string): string => {
     const date = new Date(value);

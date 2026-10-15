@@ -16,7 +16,7 @@ import { api } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useCircle } from '../contexts/CircleContext';
 import { useWebSocketUpdates } from '../hooks/useWebSocketUpdates';
-import { dateLocale } from '../i18n/format';
+import { dateLocale, formatClock } from '../i18n/format';
 import { Badge, Button, Dialog, Select, Textarea } from '../components/ui';
 import { EmptyState } from '../components/app';
 import { cn } from '../lib/utils';
@@ -139,7 +139,7 @@ const compressImage = async (file: File): Promise<string> => {
 const formatMessageTime = (createdAt: string): string => {
     const date = new Date(createdAt);
     return isToday(date)
-        ? format(date, 'HH:mm', { locale: dateLocale() })
+        ? formatClock(date)
         : format(date, 'd MMM HH:mm', { locale: dateLocale() });
 };
 

@@ -62,6 +62,8 @@ interface FieldDef {
     placeholder: string;
     type: 'text' | 'url' | 'password';
     optional?: boolean;
+    /** Short help line shown under the field. */
+    hint?: string;
     /** Champ rangé dans integrations.config (et non en credential/colonne). */
     config?: boolean;
 }
@@ -468,7 +470,7 @@ const Integrations: React.FC = () => {
             fields: [
                 { key: 'base_url', label: t('integrations:catalog.whisper.urlLabel'), placeholder: t('integrations:catalog.whisper.urlPlaceholder'), type: 'url' },
                 { key: 'model', label: t('integrations:catalog.whisper.modelLabel'), placeholder: t('integrations:catalog.whisper.modelPlaceholder'), type: 'text', optional: true, config: true },
-                { key: 'language', label: t('integrations:catalog.whisper.languageLabel'), placeholder: t('integrations:catalog.whisper.languagePlaceholder'), type: 'text', optional: true, config: true },
+                { key: 'language', label: t('integrations:catalog.whisper.languageLabel'), placeholder: t('integrations:catalog.whisper.languagePlaceholder'), hint: t('integrations:catalog.whisper.languageHint'), type: 'text', optional: true, config: true },
                 { key: 'apiKey', label: t('integrations:catalog.whisper.keyLabel'), placeholder: t('integrations:catalog.whisper.keyPlaceholder'), type: 'password', optional: true },
             ],
         },
@@ -728,14 +730,16 @@ const Integrations: React.FC = () => {
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 {item.fields.map((field) => (
-                                    <Input
-                                        key={field.key}
-                                        label={field.label}
-                                        type={field.type}
-                                        placeholder={field.placeholder}
-                                        value={formValues[field.key] || ''}
-                                        onChange={(e) => setFormValues((prev) => ({ ...prev, [field.key]: e.target.value }))}
-                                    />
+                                    <div key={field.key}>
+                                        <Input
+                                            label={field.label}
+                                            type={field.type}
+                                            placeholder={field.placeholder}
+                                            value={formValues[field.key] || ''}
+                                            onChange={(e) => setFormValues((prev) => ({ ...prev, [field.key]: e.target.value }))}
+                                        />
+                                        {field.hint && <p className="mt-1.5 text-micro text-muted-foreground">{field.hint}</p>}
+                                    </div>
                                 ))}
 
                                 {testStatus && (

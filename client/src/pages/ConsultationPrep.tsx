@@ -5,6 +5,7 @@ import { api } from '../lib/api';
 import { useCircle } from '../contexts/CircleContext';
 import { Card, CardContent, Button, DatePicker, Textarea } from '../components/ui';
 import { formatDate } from '../lib/utils';
+import { formatClock } from '../i18n/format';
 
 interface ConsultationRecipient {
     first_name: string;
@@ -322,7 +323,7 @@ const ConsultationPrep: React.FC = () => {
                                                 <td className="py-1.5 pr-3">{med.dosage ?? ''}</td>
                                                 <td className="py-1.5 pr-3">
                                                     {med.schedules
-                                                        .map((s) => (s.label ? `${s.time_of_day} (${s.label})` : s.time_of_day))
+                                                        .map((s) => (s.label ? `${formatClock(s.time_of_day)} (${s.label})` : formatClock(s.time_of_day)))
                                                         .join(', ')}
                                                 </td>
                                                 <td className="py-1.5">{med.instructions ?? ''}</td>

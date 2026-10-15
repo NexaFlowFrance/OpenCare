@@ -18,7 +18,7 @@ import { useCircle } from '../contexts/CircleContext';
 import { circleWeekStart, weekStartsOn, orderedIsoDays, inWeekOrder } from '../lib/weekStart';
 import { useAuth } from '../contexts/AuthContext';
 import { useWebSocketUpdates } from '../hooks/useWebSocketUpdates';
-import { dateLocale } from '../i18n/format';
+import { dateLocale, formatClock } from '../i18n/format';
 
 // ─── Domain types ─────────────────────────────────────────────────────────────
 
@@ -82,7 +82,7 @@ interface CircleMember {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** "YYYY-MM-DDTHH:mm:ss" -> "HH:mm" without any Date round-trip. */
+/** "YYYY-MM-DDTHH:mm:ss" -> "HH:mm" without any Date round-trip, for the form inputs. */
 const timeOf = (value: string | null | undefined): string => (value ? value.slice(11, 16) : '');
 
 /** Ecart maximal accepte par le serveur pour deplacer une occurrence. */
@@ -552,7 +552,7 @@ const Calendar: React.FC = () => {
 
     // ── Rendering helpers ─────────────────────────────────────────────────────
     const occurrenceTimeRange = (occ: EventOccurrence) =>
-        occ.end_time ? `${timeOf(occ.start_time)} - ${timeOf(occ.end_time)}` : timeOf(occ.start_time);
+        occ.end_time ? `${formatClock(occ.start_time)} - ${formatClock(occ.end_time)}` : formatClock(occ.start_time);
 
     if (loading && occurrences.length === 0) {
         return (
@@ -701,7 +701,7 @@ const Calendar: React.FC = () => {
                                                         <CalendarClock className="h-2.5 w-2.5 shrink-0 text-muted-foreground" aria-hidden="true" />
                                                     )}
                                                     <span className="truncate">
-                                                        <span className="font-medium tabular-nums">{timeOf(occ.start_time)}</span> {occ.title}
+                                                        <span className="font-medium tabular-nums">{formatClock(occ.start_time)}</span> {occ.title}
                                                     </span>
                                                 </button>
                                             ))}
