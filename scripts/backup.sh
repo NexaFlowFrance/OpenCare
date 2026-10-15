@@ -3,11 +3,13 @@
 #
 # Tout vit dans PostgreSQL : le journal, les photos, les documents, les
 # medicaments. Une sauvegarde de la base est donc une sauvegarde complete.
+# Le .env (secrets JWT et VAPID) est copie a cote, sous le meme horodatage.
 #
 #   bash scripts/backup.sh                  # pile Docker, dans ./backups
 #   bash scripts/backup.sh --dir /mnt/nas   # ailleurs (disque externe, NAS)
 #   bash scripts/backup.sh --keep 30        # ne garde que les 30 dernieres
 #   bash scripts/backup.sh --direct         # serveur PostgreSQL local, sans Docker
+#   bash scripts/backup.sh --no-env         # sans copie du .env
 #
 # Restauration : bash scripts/restore.sh <fichier>
 set -euo pipefail
@@ -17,6 +19,7 @@ cd "$(dirname "$0")/.."
 BACKUP_DIR="./backups"
 KEEP=14
 MODE="docker"
+WITH_ENV=1
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -24,7 +27,8 @@ while [[ $# -gt 0 ]]; do
     --keep) KEEP="$2"; shift 2 ;;
     --direct) MODE="direct"; shift ;;
     --docker) MODE="docker"; shift ;;
-    -h|--help) sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    --no-env) WITH_ENV=0; shift ;;
+    -h|--help) sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "Option inconnue : $1" >&2; exit 1 ;;
   esac
 done
@@ -104,11 +108,23 @@ chmod 600 "$TARGET"
 SIZE="$(du -h "$TARGET" | cut -f1)"
 echo "[2/3] Ecrit : $TARGET, $SIZE"
 
+# Sans le .env, une base restauree invalide les sessions et les abonnements
+# push. Copie cree en 600 d'emblee : les secrets ne sont jamais lisibles.
+if [[ "$WITH_ENV" -eq 1 ]]; then
+  if [[ -f .env ]]; then
+    ENV_TARGET="${TARGET%.sql.gz}.env"
+    (umask 077 && cp .env "$ENV_TARGET")
+    echo "      + $ENV_TARGET"
+  else
+    echo "      [ATTENTION] Pas de .env a copier : pensez a sauvegarder vos secrets."
+  fi
+fi
+
 echo "[3/3] Rotation : on garde les $KEEP plus recentes"
 REMOVED=0
 while IFS= read -r old; do
   REMOVED=$((REMOVED + 1))
-  rm -f "$old"
+  rm -f "$old" "${old%.sql.gz}.env"
   echo "      supprimee : $(basename "$old")"
 done < <(ls -1t "$BACKUP_DIR"/opencare-*.sql.gz 2>/dev/null | tail -n +"$((KEEP + 1))")
 if [[ "$REMOVED" -eq 0 ]]; then echo "      rien a supprimer"; fi
