@@ -269,9 +269,10 @@ bash scripts/backup.sh                  # pile Docker, écrit dans ./backups
 bash scripts/backup.sh --dir /mnt/nas   # ailleurs, disque externe ou NAS
 bash scripts/backup.sh --keep 30        # ne garde que les 30 plus récentes
 bash scripts/backup.sh --direct         # PostgreSQL local, sans Docker
+bash scripts/backup.sh --no-env         # sans copie du .env
 ```
 
-Le fichier est un `pg_dump` compressé, nommé par sa date, écrit en 600. Il n'apparaît qu'une fois vérifié : un dump vide ou tronqué est supprimé plutôt que publié, parce qu'une sauvegarde à laquelle on ne peut pas se fier est pire que pas de sauvegarde. Une ligne de cron suffit à l'automatiser :
+Le fichier est un `pg_dump` compressé, nommé par sa date, écrit en 600. Il n'apparaît qu'une fois vérifié : un dump vide ou tronqué est supprimé plutôt que publié, parce qu'une sauvegarde à laquelle on ne peut pas se fier est pire que pas de sauvegarde. Le `.env` est copié à côté, sous le même horodatage (`opencare-20260925-093000.env`), lui aussi en 600 : sans ses secrets JWT et VAPID, une base restaurée déconnecte tout le monde et casse les abonnements push. La rotation supprime les deux fichiers ensemble ; `--no-env` désactive la copie. Une ligne de cron suffit à l'automatiser :
 
 ```
 30 3 * * * cd /opt/opencare && bash scripts/backup.sh --keep 30 >> /var/log/opencare-backup.log 2>&1
@@ -285,7 +286,7 @@ Pour restaurer, arrêtez d'abord le serveur applicatif (`docker compose stop ser
 bash scripts/restore.sh backups/opencare-20260925-093000.sql.gz
 ```
 
-La restauration demande une confirmation explicite, vérifie que le fichier ressemble bien à une sauvegarde OpenCare, et prend une sauvegarde de sécurité de l'état actuel avant de l'écraser. L'export JSON par cercle des Paramètres reste disponible pour un besoin plus fin : emporter un cercle, pas toute l'instance.
+La restauration demande une confirmation explicite, vérifie que le fichier ressemble bien à une sauvegarde OpenCare, et prend une sauvegarde de sécurité de l'état actuel avant de l'écraser. Elle ne remplace jamais le `.env` : elle indique la copie prise avec ce dump, à remettre à la main si le vôtre est perdu. L'export JSON par cercle des Paramètres reste disponible pour un besoin plus fin : emporter un cercle, pas toute l'instance.
 
 ### Tests
 
