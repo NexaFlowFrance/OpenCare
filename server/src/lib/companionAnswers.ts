@@ -91,18 +91,20 @@ export function fmtTime(iso: string, lang: CompanionLang): string {
     const h = d.getHours();
     const m = String(d.getMinutes()).padStart(2, '0');
     if (lang === 'fr') return d.getMinutes() === 0 ? `${h} h` : `${h} h ${m}`;
+    // English (US) reads the time on a 12-hour clock: "5:30 PM", not "17:30".
+    if (lang === 'en') return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
     return `${h}:${m}`;
 }
 
 /** L'article espagnol devant une heure : "a la 1:30", "a las 10:00". */
 const esArticle = (iso: string): string => (new Date(iso).getHours() === 1 ? 'la' : 'las');
 
-/** "à 10 h", "at 10:00", "a las 10:00". */
+/** "à 10 h", "at 10:00 AM", "a las 10:00". */
 const atTime = (iso: string, lang: CompanionLang): string =>
     pick(lang, { fr: `à ${fmtTime(iso, lang)}`, en: `at ${fmtTime(iso, lang)}`, es: `a ${esArticle(iso)} ${fmtTime(iso, lang)}` });
 
 const fmtDate = (now: Date, lang: CompanionLang): string =>
-    new Intl.DateTimeFormat(pick(lang, { fr: 'fr-FR', en: 'en-GB', es: 'es-ES' }), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(now);
+    new Intl.DateTimeFormat(pick(lang, { fr: 'fr-FR', en: 'en-US', es: 'es-ES' }), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(now);
 
 const UNIT_LABELS: Record<CompanionLang, Record<string, [string, string]>> = {
     fr: { tablet: ['comprimé', 'comprimés'], capsule: ['gélule', 'gélules'], ml: ['ml', 'ml'], drop: ['goutte', 'gouttes'], sachet: ['sachet', 'sachets'], patch: ['patch', 'patchs'], injection: ['injection', 'injections'], puff: ['bouffée', 'bouffées'], application: ['application', 'applications'], dose: ['dose', 'doses'] },

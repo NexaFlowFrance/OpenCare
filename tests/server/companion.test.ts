@@ -12,6 +12,9 @@ import {
 
 const NOW = new Date('2026-09-25T10:00:00');
 
+// Intl may put a narrow no-break space before AM/PM: compare on plain spaces.
+const plain = (text: string): string => text.replace(/\s/g, ' ');
+
 const facts: CompanionFactsInput = {
     recipientFirstName: 'Jeanne',
     medications: {
@@ -122,7 +125,17 @@ describe('answerIntent', () => {
 
     it('repond en anglais avec les memes faits', () => {
         expect(answerIntent('medications', facts, 'en', NOW)).toContain('Metformine, 2 tablets');
-        expect(answerIntent('visitors', facts, 'en', NOW)).toContain('the home aide at 18:00');
+        expect(plain(answerIntent('visitors', facts, 'en', NOW))).toContain('the home aide at 6:00 PM');
+    });
+
+    it('donne la date et l heure a l americaine en anglais', () => {
+        const reply = plain(answerIntent('datetime', facts, 'en', NOW));
+        expect(reply).toBe('Today is Friday, September 25, 2026, it is 10:00 AM.');
+    });
+
+    it('garde l heure francaise et espagnole', () => {
+        expect(answerIntent('datetime', facts, 'fr', NOW)).toBe('Nous sommes vendredi 25 septembre 2026, il est 10 h.');
+        expect(answerIntent('datetime', facts, 'es', NOW)).toContain('son las 10:00');
     });
 });
 
