@@ -99,9 +99,13 @@ router.post('/register', async (req, res) => {
 
         const password_hash = await bcrypt.hash(password, 12);
 
+        // The account starts in the language the person signed up in (the client
+        // sends its UI language as Accept-Language). Without it the column default
+        // ('fr') would switch an English or Spanish newcomer's screen to French on
+        // first login, and their notifications too.
         const result = await query(
-            `INSERT INTO users (email, password_hash, name) VALUES ($1, $2, $3) RETURNING ${USER_FIELDS}`,
-            [normalizedEmail, password_hash, cleanedName]
+            `INSERT INTO users (email, password_hash, name, language) VALUES ($1, $2, $3, $4) RETURNING ${USER_FIELDS}`,
+            [normalizedEmail, password_hash, cleanedName, lang]
         );
 
         const user = result.rows[0];
