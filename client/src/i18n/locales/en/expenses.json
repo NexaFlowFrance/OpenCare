@@ -54,7 +54,7 @@
   },
   "aids": {
     "title": "Aid and benefits",
-    "subtitle": "APA, CESU, tax credit",
+    "subtitle": "Benefits, insurance and tax credits",
     "add": "Add an aid",
     "empty": "No aid recorded yet.",
     "yearTotal": "Total aid {{year}}",
@@ -69,7 +69,7 @@
     "form": {
       "type": "Type",
       "label": "Label",
-      "labelPlaceholder": "E.g. APA from the county council",
+      "labelPlaceholder": "E.g. monthly home care allowance",
       "amount": "Amount ({{currency}})",
       "periodStart": "Period start",
       "periodEnd": "Period end",

@@ -8,11 +8,12 @@ import RegionSectionHeader from './RegionSectionHeader';
 import UnitSystemSection from './UnitSystemSection';
 import WeekStartSection from './WeekStartSection';
 import EmergencyNumbersSection from './EmergencyNumbersSection';
+import AidTypesSection from './AidTypesSection';
 
 /**
  * Langue et region : la langue (propre a chaque personne), puis, pour les
- * admins, les unites, le premier jour de la semaine et les numeros d'urgence
- * (valables pour tout le cercle). Les autres membres ne voient que la langue, comme avant.
+ * admins, les unites, le premier jour de la semaine, les numeros d'urgence et
+ * les types d'aides (valables pour tout le cercle). Les autres membres ne voient que la langue, comme avant.
  */
 const RegionSettingsCard: React.FC = () => {
     const { t } = useTranslation('settings');
@@ -43,6 +44,7 @@ const RegionSettingsCard: React.FC = () => {
                     {isAdmin && <UnitSystemSection />}
                     {isAdmin && <WeekStartSection />}
                     {isAdmin && <EmergencyNumbersSection />}
+                    {isAdmin && <AidTypesSection />}
                 </div>
             </CardContent>
         </Card>

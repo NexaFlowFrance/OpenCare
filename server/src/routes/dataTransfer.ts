@@ -4,6 +4,7 @@ import { authMiddleware } from '../middleware/auth';
 import { circleMiddleware, requireAdmin, CircleRequest } from '../middleware/circle';
 import { broadcastToCircle } from '../lib/broadcaster';
 import { FILE_DATA_URL_REGEX, IMAGE_DATA_URL_REGEX, cleanImportedAttachments } from '../lib/dataUrls';
+import { cleanAidType } from '../lib/circleSettings';
 
 /**
  * Per-circle export/import (admin only).
@@ -61,7 +62,6 @@ const EVENT_CATEGORIES = ['visit', 'medical', 'nurse', 'aide', 'other'] as const
 const DOCUMENT_CATEGORIES = ['prescription', 'report', 'insurance', 'legal', 'other'] as const;
 const MESSAGE_CHANNELS = ['circle', 'dm'] as const;
 const SPLIT_MODES = ['equal', 'custom'] as const;
-const AID_TYPES = ['apa', 'cesu', 'tax_credit', 'other'] as const;
 
 const router = Router();
 router.use(authMiddleware);
@@ -566,7 +566,7 @@ router.post('/import', async (req: CircleRequest, res: Response) => {
             }
             await insert('aid_records',
                 ['circle_id', 'type', 'label', 'amount', 'period_start', 'period_end', 'notes', 'created_at', 'updated_at'],
-                [circleId, oneOf(row.type, AID_TYPES, 'other'), textOrNull(row.label), amount,
+                [circleId, cleanAidType(row.type) ?? 'other', textOrNull(row.label), amount,
                     row.period_start ?? null, row.period_end ?? null, textOrNull(row.notes),
                     tsOrNow(row.created_at), tsOrNow(row.updated_at)]
             );

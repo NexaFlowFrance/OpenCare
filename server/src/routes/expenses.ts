@@ -5,6 +5,7 @@ import { circleMiddleware, requireContentWriter, CircleRequest } from '../middle
 import { broadcastToCircle } from '../lib/broadcaster';
 import { toNullIfEmpty, toOptionalNumber } from '../lib/normalize';
 import { langFromRequest, t, type Lang } from '../lib/i18n';
+import { cleanAidType, effectiveAidTypes, getPublicSettings } from '../lib/circleSettings';
 
 const router = Router();
 
@@ -12,7 +13,6 @@ const router = Router();
 router.use(authMiddleware, circleMiddleware, requireContentWriter);
 
 const EXPENSE_CATEGORIES = ['pharmacy', 'aide', 'equipment', 'works', 'food', 'transport', 'other'];
-const AID_TYPES = ['apa', 'cesu', 'tax_credit', 'other'];
 
 interface Split {
     member_id: string;
@@ -510,7 +510,7 @@ router.delete('/settlements/:id', async (req: CircleRequest, res: Response) => {
 });
 
 // ============================================================
-// Aides (APA, CESU, crédit d'impôt)
+// Aides (types propres au cercle, par defaut APA, CESU, crédit d'impôt)
 // ============================================================
 
 router.get('/aids', async (req: CircleRequest, res: Response) => {
@@ -533,7 +533,8 @@ router.post('/aids', async (req: CircleRequest, res: Response) => {
         const { type, label, period_start, period_end, notes } = req.body;
         const amount = toOptionalNumber(req.body.amount);
 
-        if (typeof type !== 'string' || !AID_TYPES.includes(type)) {
+        const aidType = cleanAidType(type);
+        if (!aidType || !effectiveAidTypes(await getPublicSettings(req.circleId!)).includes(aidType)) {
             return res.status(400).json({ success: false, error: t(lang, 'expenses.aidTypeInvalid') });
         }
         if (amount === null || amount <= 0) {
@@ -549,7 +550,7 @@ router.post('/aids', async (req: CircleRequest, res: Response) => {
         const result = await query(
             `INSERT INTO aid_records (circle_id, type, label, amount, period_start, period_end, notes)
              VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-            [req.circleId, type, toNullIfEmpty(label), amount, toNullIfEmpty(period_start), toNullIfEmpty(period_end), toNullIfEmpty(notes)]
+            [req.circleId, aidType, toNullIfEmpty(label), amount, toNullIfEmpty(period_start), toNullIfEmpty(period_end), toNullIfEmpty(notes)]
         );
 
         await broadcastToCircle(req.circleId!, { type: 'update', entity: 'expenses', action: 'created' });
@@ -568,11 +569,19 @@ router.put('/aids/:id', async (req: CircleRequest, res: Response) => {
         let idx = 1;
 
         if ('type' in req.body) {
-            if (typeof req.body.type !== 'string' || !AID_TYPES.includes(req.body.type)) {
+            // A type removed from the circle's list stays valid on the aids that
+            // already carry it: editing one must not force a new type on it.
+            const aidType = cleanAidType(req.body.type);
+            const allowed = aidType !== null && (
+                effectiveAidTypes(await getPublicSettings(req.circleId!)).includes(aidType)
+                || (await query('SELECT 1 FROM aid_records WHERE id = $1 AND circle_id = $2 AND type = $3',
+                    [req.params.id, req.circleId, aidType])).rows.length > 0
+            );
+            if (!allowed) {
                 return res.status(400).json({ success: false, error: t(lang, 'expenses.aidTypeInvalid') });
             }
             fields.push(`type = $${idx++}`);
-            values.push(req.body.type);
+            values.push(aidType);
         }
         if ('amount' in req.body) {
             const amount = toOptionalNumber(req.body.amount);

@@ -13,7 +13,7 @@ import { pick, type Lang } from './i18n';
  */
 
 /** Ce qu'un membre du cercle peut lire. */
-export const PUBLIC_SETTING_KEYS = ['unit_system', 'week_start', 'emergency_numbers'] as const;
+export const PUBLIC_SETTING_KEYS = ['unit_system', 'week_start', 'emergency_numbers', 'aid_types'] as const;
 
 /** Systeme d'unites de saisie et d'affichage des constantes. */
 export const UNIT_SYSTEMS = ['metric', 'imperial'] as const;
@@ -36,10 +36,23 @@ export type WeekStart = (typeof WEEK_STARTS)[number];
  */
 export const MAX_EMERGENCY_NUMBERS_LENGTH = 80;
 
+/**
+ * Types d'aides proposes dans Depenses > Aides. Les aides et leur fiscalite
+ * dependent du pays : le cercle saisit sa propre liste ("Medicaid", "VA
+ * benefits"...). Sans reglage, la liste francaise d'origine. Une aide garde le
+ * texte de son type : retirer un type de la liste ne touche pas les aides
+ * deja saisies. Les quatre cles d'origine restent traduites a l'ecran.
+ */
+export const DEFAULT_AID_TYPES = ['apa', 'cesu', 'tax_credit', 'other'] as const;
+export const MAX_AID_TYPES = 15;
+export const MAX_AID_TYPE_LENGTH = 40;
+
 export interface PublicCircleSettings {
     unit_system: UnitSystem;
     week_start: WeekStart;
     emergency_numbers: string | null;
+    /** null : rien de saisi, DEFAULT_AID_TYPES s'applique. */
+    aid_types: string[] | null;
 }
 
 const isUnitSystem = (value: unknown): value is UnitSystem =>
@@ -59,6 +72,40 @@ const cleanEmergencyNumbers = (value: unknown): string | null => {
     return trimmed;
 };
 
+/** Un type d'aide nettoye (une ligne, 40 caracteres au plus), ou null. */
+export const cleanAidType = (value: unknown): string | null => {
+    if (typeof value !== 'string') return null;
+    const trimmed = value.trim().replace(/\s+/g, ' ');
+    if (!trimmed || trimmed.length > MAX_AID_TYPE_LENGTH || CONTROL_CHARS.test(trimmed)) return null;
+    return trimmed;
+};
+
+type AidTypesCheck = { list: string[] | null } | { error: 'invalid' | 'tooMany' | 'duplicate' };
+
+/** Valide une liste saisie. null ou [] : retour a la liste par defaut. */
+const checkAidTypes = (value: unknown): AidTypesCheck => {
+    if (value === null) return { list: null };
+    if (!Array.isArray(value)) return { error: 'invalid' };
+    if (value.length === 0) return { list: null };
+    if (value.length > MAX_AID_TYPES) return { error: 'tooMany' };
+    const list: string[] = [];
+    const seen = new Set<string>();
+    for (const item of value) {
+        const cleaned = cleanAidType(item);
+        if (!cleaned) return { error: 'invalid' };
+        const key = cleaned.toLocaleLowerCase();
+        if (seen.has(key)) return { error: 'duplicate' };
+        seen.add(key);
+        list.push(cleaned);
+    }
+    return { list };
+};
+
+/** La liste proposee par le cercle : la sienne, ou celle par defaut. */
+export function effectiveAidTypes(settings: Pick<PublicCircleSettings, 'aid_types'>): string[] {
+    return settings.aid_types ?? [...DEFAULT_AID_TYPES];
+}
+
 /** La vue publique des reglages, valeurs par defaut comprises. Rien d'autre ne sort. */
 export function publicSettings(raw: unknown): PublicCircleSettings {
     const source = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
@@ -66,6 +113,10 @@ export function publicSettings(raw: unknown): PublicCircleSettings {
         unit_system: isUnitSystem(source.unit_system) ? source.unit_system : 'metric',
         week_start: isWeekStart(source.week_start) ? source.week_start : 'monday',
         emergency_numbers: cleanEmergencyNumbers(source.emergency_numbers),
+        aid_types: (() => {
+            const check = checkAidTypes(source.aid_types ?? null);
+            return 'list' in check ? check.list : null;
+        })(),
     };
 }
 
@@ -117,6 +168,25 @@ export function validateSettingsPatch(input: unknown, lang: Lang): { patch?: Rec
                 };
             }
             patch.emergency_numbers = cleaned;
+        }
+        if (key === 'aid_types') {
+            const check = checkAidTypes(value);
+            if ('error' in check) {
+                const max = MAX_AID_TYPES;
+                const len = MAX_AID_TYPE_LENGTH;
+                return {
+                    error: check.error === 'tooMany'
+                        ? pick(lang, { fr: `aid_types : ${max} types au plus`, en: `aid_types: at most ${max} types`, es: `aid_types: ${max} tipos como máximo` })
+                        : check.error === 'duplicate'
+                            ? pick(lang, { fr: 'aid_types : ce type est déjà dans la liste', en: 'aid_types: that type is already in the list', es: 'aid_types: ese tipo ya está en la lista' })
+                            : pick(lang, {
+                                fr: `aid_types doit être une liste de textes d'une ligne, de ${len} caractères au plus`,
+                                en: `aid_types must be a list of one-line texts of at most ${len} characters`,
+                                es: `aid_types debe ser una lista de textos de una línea, de ${len} caracteres como máximo`,
+                            }),
+                };
+            }
+            patch.aid_types = check.list;
         }
     }
     return { patch };

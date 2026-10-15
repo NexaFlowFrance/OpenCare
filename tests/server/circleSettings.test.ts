@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { publicSettings, withPublicSettings, validateSettingsPatch, PUBLIC_SETTING_KEYS } from '../../server/src/lib/circleSettings';
+import {
+    publicSettings, withPublicSettings, validateSettingsPatch, effectiveAidTypes, cleanAidType, PUBLIC_SETTING_KEYS,
+} from '../../server/src/lib/circleSettings';
 
 /**
  * care_circles.settings melange des preferences lisibles par tout le cercle et
@@ -16,12 +18,12 @@ describe('publicSettings', () => {
             kiosk_pin_hash: '$2b$10$uneEmpreinteQuiNeDoitPasSortir',
             secret_futur: 'jamais',
         });
-        expect(filtered).toEqual({ unit_system: 'imperial', week_start: 'monday', emergency_numbers: null });
+        expect(filtered).toEqual({ unit_system: 'imperial', week_start: 'monday', emergency_numbers: null, aid_types: null });
         expect(JSON.stringify(filtered)).not.toContain('2b$10');
     });
 
     it('donne une valeur par defaut utilisable', () => {
-        const defaults = { unit_system: 'metric', week_start: 'monday', emergency_numbers: null };
+        const defaults = { unit_system: 'metric', week_start: 'monday', emergency_numbers: null, aid_types: null };
         expect(publicSettings({})).toEqual(defaults);
         expect(publicSettings(null)).toEqual(defaults);
         expect(publicSettings('texte')).toEqual(defaults);
@@ -29,7 +31,7 @@ describe('publicSettings', () => {
     });
 
     it('garde le dimanche quand le cercle l a choisi', () => {
-        expect(publicSettings({ week_start: 'sunday' })).toEqual({ unit_system: 'metric', week_start: 'sunday', emergency_numbers: null });
+        expect(publicSettings({ week_start: 'sunday' })).toEqual({ unit_system: 'metric', week_start: 'sunday', emergency_numbers: null, aid_types: null });
     });
 
     it('filtre aussi une ligne de cercle entiere, sans perdre le reste', () => {
@@ -37,7 +39,7 @@ describe('publicSettings', () => {
         const safe = withPublicSettings(row);
         expect(safe.id).toBe('c1');
         expect(safe.name).toBe('Jeanne');
-        expect(safe.settings).toEqual({ unit_system: 'imperial', week_start: 'monday', emergency_numbers: null });
+        expect(safe.settings).toEqual({ unit_system: 'imperial', week_start: 'monday', emergency_numbers: null, aid_types: null });
         expect(JSON.stringify(safe)).not.toContain('secret');
     });
 });
@@ -64,7 +66,7 @@ describe('validateSettingsPatch', () => {
         expect(validateSettingsPatch({ emergency_numbers: '  911  ' }, 'en').patch).toEqual({ emergency_numbers: '911' });
         expect(validateSettingsPatch({ emergency_numbers: 'SAMU 15, Pompiers 18, 112' }, 'fr').patch)
             .toEqual({ emergency_numbers: 'SAMU 15, Pompiers 18, 112' });
-        expect(validateSettingsPatch({ emergency_numbers: null }, 'fr').patch).toEqual({ emergency_numbers: null });
+        expect(validateSettingsPatch({ emergency_numbers: null, aid_types: null }, 'fr').patch).toEqual({ emergency_numbers: null, aid_types: null });
         expect(validateSettingsPatch({ emergency_numbers: '   ' }, 'fr').patch).toEqual({ emergency_numbers: null });
     });
 
@@ -101,6 +103,41 @@ describe('validateSettingsPatch', () => {
     });
 
     it('ne declare publique que ce qui a ete relu', () => {
-        expect([...PUBLIC_SETTING_KEYS]).toEqual(['unit_system', 'week_start', 'emergency_numbers']);
+        expect([...PUBLIC_SETTING_KEYS]).toEqual(['unit_system', 'week_start', 'emergency_numbers', 'aid_types']);
+    });
+});
+
+describe('aid_types', () => {
+    it('garde la liste saisie, nettoyee', () => {
+        expect(validateSettingsPatch({ aid_types: ['  Medicaid ', 'VA   benefits', 'tax_credit'] }, 'en').patch)
+            .toEqual({ aid_types: ['Medicaid', 'VA benefits', 'tax_credit'] });
+    });
+
+    it('revient a la liste par defaut avec null ou une liste vide', () => {
+        expect(validateSettingsPatch({ aid_types: null }, 'en').patch).toEqual({ aid_types: null });
+        expect(validateSettingsPatch({ aid_types: [] }, 'en').patch).toEqual({ aid_types: null });
+        expect(effectiveAidTypes({ aid_types: null })).toEqual(['apa', 'cesu', 'tax_credit', 'other']);
+        expect(effectiveAidTypes({ aid_types: ['Medicaid'] })).toEqual(['Medicaid']);
+    });
+
+    it('refuse un doublon, une valeur invalide ou une liste trop longue', () => {
+        expect(validateSettingsPatch({ aid_types: ['Medicaid', 'medicaid'] }, 'en').error).toBeTruthy();
+        expect(validateSettingsPatch({ aid_types: 'Medicaid' }, 'en').error).toBeTruthy();
+        expect(validateSettingsPatch({ aid_types: ['ok', 42] }, 'en').error).toBeTruthy();
+        expect(validateSettingsPatch({ aid_types: ['bip\u0007'] }, 'en').error).toBeTruthy();
+        expect(validateSettingsPatch({ aid_types: ['x'.repeat(41)] }, 'en').error).toBeTruthy();
+        expect(validateSettingsPatch({ aid_types: Array.from({ length: 16 }, (_, i) => `T${i}`) }, 'en').error).toBeTruthy();
+    });
+
+    it('ne laisse sortir qu une liste valide', () => {
+        expect(publicSettings({ aid_types: ['Medicaid'] }).aid_types).toEqual(['Medicaid']);
+        expect(publicSettings({ aid_types: 'Medicaid' }).aid_types).toBeNull();
+        expect(publicSettings({ aid_types: [] }).aid_types).toBeNull();
+    });
+
+    it('nettoie un type isole', () => {
+        expect(cleanAidType('  Long-term care  insurance ')).toBe('Long-term care insurance');
+        expect(cleanAidType('')).toBeNull();
+        expect(cleanAidType(7)).toBeNull();
     });
 });

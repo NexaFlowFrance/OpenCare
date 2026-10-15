@@ -19,9 +19,9 @@ import { useWebSocketUpdates } from '../hooks/useWebSocketUpdates';
 import { Badge, Button, Card, CardContent, Dialog, DatePicker, Input, Select, Textarea, useToast } from '../components/ui';
 import { ChartCard, EmptyState } from '../components/app';
 import { dateLocale } from '../i18n/format';
+import { aidTypeLabel, aidTypeOptions, circleAidTypes } from '../lib/aidTypes';
 
 const EXPENSE_CATEGORIES = ['pharmacy', 'aide', 'equipment', 'works', 'food', 'transport', 'other'] as const;
-const AID_TYPES = ['apa', 'cesu', 'tax_credit', 'other'] as const;
 
 interface ExpenseSplit {
     member_id: string;
@@ -103,7 +103,7 @@ const emptyExpenseForm = {
 };
 
 const emptyAidForm = {
-    type: 'apa',
+    type: '',
     label: '',
     amount: '',
     period_start: '',
@@ -139,6 +139,7 @@ const Expenses: React.FC = () => {
     const [aidFormError, setAidFormError] = useState('');
 
     const currency = activeCircle?.currency || 'EUR';
+    const aidTypes = circleAidTypes(activeCircle);
     const formatMoney = useMemo(() => {
         let nf: Intl.NumberFormat;
         try {
@@ -338,7 +339,7 @@ const Expenses: React.FC = () => {
     const openCreateAid = () => {
         setEditingAid(null);
         setAidFormError('');
-        setAidForm(emptyAidForm);
+        setAidForm({ ...emptyAidForm, type: aidTypes[0] });
         setAidDialogOpen(true);
     };
 
@@ -603,7 +604,7 @@ const Expenses: React.FC = () => {
                                 >
                                     <div className="min-w-0 flex-1">
                                         <div className="flex flex-wrap items-center gap-2">
-                                            <Badge variant="success">{t(`expenses:aids.types.${aid.type}`, { defaultValue: aid.type })}</Badge>
+                                            <Badge variant="success">{aidTypeLabel(aid.type, t)}</Badge>
                                             {aid.label ? <span className="text-body-sm font-medium">{aid.label}</span> : null}
                                         </div>
                                         {aidPeriod(aid) ? (
@@ -887,9 +888,9 @@ const Expenses: React.FC = () => {
                             <Select
                                 value={aidForm.type}
                                 onValueChange={(value) => setAidForm({ ...aidForm, type: value })}
-                                options={AID_TYPES.map((type) => ({
+                                options={aidTypeOptions(aidTypes, editingAid?.type).map((type) => ({
                                     value: type,
-                                    label: t(`expenses:aids.types.${type}`, { defaultValue: type }),
+                                    label: aidTypeLabel(type, t),
                                 }))}
                             />
                         </div>

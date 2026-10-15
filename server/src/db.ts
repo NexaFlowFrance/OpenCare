@@ -325,6 +325,11 @@ export const runMigrations = async () => {
                     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
             END IF;
         END $$;`,
+        // Types d'aides propres a chaque cercle (settings.aid_types) : le type
+        // d'une aide devient un texte libre, valide par le serveur, et non plus
+        // un des quatre types francais.
+        `ALTER TABLE aid_records DROP CONSTRAINT IF EXISTS aid_records_type_check;`,
+        `ALTER TABLE aid_records ALTER COLUMN type TYPE VARCHAR(40);`,
     ];
 
     for (const migration of migrations) {
