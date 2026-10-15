@@ -3,6 +3,7 @@ import { Router } from 'express';
 import { query } from '../db';
 import { authMiddleware, AuthRequest } from '../middleware/auth';
 import { expandEventOccurrences, toLocalISO } from './events';
+import { nodeTimeZone } from '../lib/dbTimeZone';
 
 const router = Router();
 
@@ -37,7 +38,7 @@ const foldLine = (line: string): string => {
 // Events are stored as naive local TIMESTAMPs, so we keep them floating.
 const formatICSDate = (value: Date): string => toLocalISO(value).replace(/[-:]/g, '');
 
-interface FeedEvent {
+export interface FeedEvent {
     id: string;
     circle_id: string;
     title: string;
@@ -48,7 +49,15 @@ interface FeedEvent {
     rrule: string | null;
 }
 
-const buildICS = (events: FeedEvent[], recipientNames: Map<string, string>, windowStart: Date, windowEnd: Date): string => {
+// Floating times are the server's wall-clock times, so the calendar declares the
+// server's zone: Google Calendar reads floating times in X-WR-TIMEZONE.
+export const buildICS = (
+    events: FeedEvent[],
+    recipientNames: Map<string, string>,
+    windowStart: Date,
+    windowEnd: Date,
+    timeZone: string = nodeTimeZone(),
+): string => {
     const lines: string[] = [
         'BEGIN:VCALENDAR',
         'VERSION:2.0',
@@ -56,7 +65,7 @@ const buildICS = (events: FeedEvent[], recipientNames: Map<string, string>, wind
         'CALSCALE:GREGORIAN',
         'METHOD:PUBLISH',
         'X-WR-CALNAME:OpenCare',
-        'X-WR-TIMEZONE:Europe/Paris',
+        `X-WR-TIMEZONE:${timeZone}`,
     ];
 
     const stamp = formatICSDate(new Date());
