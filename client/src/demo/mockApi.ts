@@ -923,7 +923,7 @@ async function route(method: string, path: string, q: Record<string, string>, bo
                 if (body.settings && typeof body.settings === 'object') {
                     const patch = body.settings as Record<string, unknown>;
                     for (const key of Object.keys(patch)) {
-                        if (key !== 'unit_system' && key !== 'week_start' && key !== 'emergency_numbers') throw new Error('Unknown setting: ' + key);
+                        if (key !== 'unit_system' && key !== 'week_start' && key !== 'emergency_numbers' && key !== 'aid_types') throw new Error('Unknown setting: ' + key);
                     }
                     if (patch.unit_system !== undefined) {
                         if (patch.unit_system !== 'metric' && patch.unit_system !== 'imperial') throw new Error('unit_system must be metric or imperial');
@@ -935,6 +935,14 @@ async function route(method: string, path: string, q: Record<string, string>, bo
                             throw new Error('emergency_numbers must be one line of at most 80 characters');
                         }
                         target.settings = { ...(target.settings as Json), emergency_numbers: typeof raw === 'string' && raw.trim() ? raw.trim() : null };
+                    }
+                    if (patch.aid_types !== undefined) {
+                        const raw = patch.aid_types;
+                        if (raw !== null && (!Array.isArray(raw) || raw.length > 15 || raw.some((v) => typeof v !== 'string' || !v.trim() || v.trim().length > 40))) {
+                            throw new Error('aid_types must be a list of one-line texts of at most 40 characters');
+                        }
+                        const list = Array.isArray(raw) ? raw.map((v) => String(v).trim()) : [];
+                        target.settings = { ...(target.settings as Json), aid_types: list.length > 0 ? list : null };
                     }
                     if (patch.week_start !== undefined) {
                         if (patch.week_start !== 'monday' && patch.week_start !== 'sunday') throw new Error('week_start must be monday or sunday');

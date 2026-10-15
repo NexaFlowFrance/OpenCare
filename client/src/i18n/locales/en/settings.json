@@ -115,5 +115,21 @@
     "saving": "Saving",
     "saved": "Saved. Print the poster again to update it.",
     "error": "Could not save the emergency numbers."
+  },
+  "aidTypes": {
+    "title": "Aid types",
+    "subtitle": "Offered under Expenses, Aid and benefits. Match the list to the programs where your loved one lives.",
+    "placeholder": "e.g. Medicaid, VA benefits",
+    "newLabel": "New aid type",
+    "add": "Add",
+    "remove": "Remove {{type}}",
+    "save": "Save",
+    "saving": "Saving",
+    "saved": "Saved. Aid already recorded keeps its type.",
+    "reset": "Back to the default list",
+    "empty": "Add at least one type before saving.",
+    "duplicate": "That type is already in the list.",
+    "tooMany": "At most {{max}} types.",
+    "error": "Could not save the aid types."
   }
 }

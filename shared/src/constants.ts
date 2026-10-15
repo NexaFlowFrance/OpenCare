@@ -60,9 +60,10 @@ export type ContactCategory = typeof CONTACT_CATEGORIES[number];
 export const EXPENSE_CATEGORIES = ['pharmacy', 'aide', 'equipment', 'works', 'food', 'transport', 'other'] as const;
 export type ExpenseCategory = typeof EXPENSE_CATEGORIES[number];
 
-// Types d'aides francaises
+// Types d'aides par defaut (les aides francaises). Chaque cercle peut saisir
+// sa propre liste (settings.aid_types) : un type d'aide est donc un texte libre.
 export const AID_TYPES = ['apa', 'cesu', 'tax_credit', 'other'] as const;
-export type AidType = typeof AID_TYPES[number];
+export type AidType = string;
 
 // Categories de taches
 export const TASK_CATEGORIES = ['shopping', 'pharmacy', 'laundry', 'admin', 'transport', 'other'] as const;

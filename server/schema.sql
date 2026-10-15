@@ -434,12 +434,12 @@ CREATE TABLE expense_settlements (
 );
 CREATE INDEX idx_expense_settlements_circle ON expense_settlements(circle_id);
 
--- Aides francaises: apa, cesu, tax_credit, other
+-- Aides. type : un des types du cercle (care_circles.settings.aid_types), par
+-- defaut apa, cesu, tax_credit, other. Texte libre, valide par le serveur.
 CREATE TABLE aid_records (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     circle_id UUID NOT NULL REFERENCES care_circles(id) ON DELETE CASCADE,
-    type VARCHAR(20) NOT NULL DEFAULT 'other'
-        CHECK (type IN ('apa', 'cesu', 'tax_credit', 'other')),
+    type VARCHAR(40) NOT NULL DEFAULT 'other',
     label VARCHAR(255),
     amount DECIMAL(10, 2) NOT NULL,
     period_start DATE,

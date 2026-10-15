@@ -115,5 +115,21 @@
     "saving": "Guardando",
     "saved": "Guardado. Vuelva a imprimir el cartel para actualizarlo.",
     "error": "No se han podido guardar los números de emergencia."
+  },
+  "aidTypes": {
+    "title": "Tipos de ayuda",
+    "subtitle": "Se proponen en Gastos, Ayudas. Adapte la lista a las ayudas del país donde vive su ser querido.",
+    "placeholder": "p. ej. Ley de Dependencia",
+    "newLabel": "Nuevo tipo de ayuda",
+    "add": "Añadir",
+    "remove": "Quitar {{type}}",
+    "save": "Guardar",
+    "saving": "Guardando",
+    "saved": "Guardado. Las ayudas ya registradas conservan su tipo.",
+    "reset": "Volver a la lista por defecto",
+    "empty": "Añada al menos un tipo antes de guardar.",
+    "duplicate": "Ese tipo ya está en la lista.",
+    "tooMany": "{{max}} tipos como máximo.",
+    "error": "No se han podido guardar los tipos de ayuda."
   }
 }

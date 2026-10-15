@@ -115,5 +115,21 @@
     "saving": "Enregistrement",
     "saved": "Enregistré. Réimprimez l'affiche pour la mettre à jour.",
     "error": "Impossible d'enregistrer les numéros d'urgence."
+  },
+  "aidTypes": {
+    "title": "Types d'aides",
+    "subtitle": "Proposés dans Dépenses, Aides. Adaptez la liste aux aides du pays où vit votre proche.",
+    "placeholder": "ex. Allocation logement",
+    "newLabel": "Nouveau type d'aide",
+    "add": "Ajouter",
+    "remove": "Retirer {{type}}",
+    "save": "Enregistrer",
+    "saving": "Enregistrement",
+    "saved": "Enregistré. Les aides déjà saisies gardent leur type.",
+    "reset": "Revenir à la liste par défaut",
+    "empty": "Ajoutez au moins un type avant d'enregistrer.",
+    "duplicate": "Ce type est déjà dans la liste.",
+    "tooMany": "{{max}} types au plus.",
+    "error": "Impossible d'enregistrer les types d'aides."
   }
 }

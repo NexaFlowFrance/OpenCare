@@ -54,7 +54,7 @@
   },
   "aids": {
     "title": "Ayudas",
-    "subtitle": "APA, CESU, crédito fiscal",
+    "subtitle": "Prestaciones, seguros y deducciones fiscales",
     "add": "Añadir una ayuda",
     "empty": "No hay ninguna ayuda registrada.",
     "yearTotal": "Total de ayudas {{year}}",
@@ -69,7 +69,7 @@
     "form": {
       "type": "Tipo",
       "label": "Concepto",
-      "labelPlaceholder": "Ej.: APA del consejo departamental",
+      "labelPlaceholder": "Ej.: prestación mensual para la atención a domicilio",
       "amount": "Importe ({{currency}})",
       "periodStart": "Inicio del periodo",
       "periodEnd": "Fin del periodo",
