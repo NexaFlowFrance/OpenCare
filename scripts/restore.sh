@@ -69,7 +69,8 @@ if [[ "$FILE" == *.gz ]]; then
 else
   READ_CMD=(cat "$FILE")
 fi
-if ! "${READ_CMD[@]}" | grep -q "CREATE TABLE"; then
+# grep -c et non grep -q : voir la meme verification dans backup.sh.
+if ! "${READ_CMD[@]}" | grep -c "CREATE TABLE" >/dev/null; then
   echo "[ERREUR] Ce fichier ne ressemble pas a une sauvegarde OpenCare." >&2
   exit 1
 fi
