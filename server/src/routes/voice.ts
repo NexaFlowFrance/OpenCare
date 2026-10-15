@@ -41,7 +41,6 @@ const AUDIO_EXTENSIONS: Record<string, string> = {
 const MAX_AUDIO_BYTES = 10 * 1024 * 1024;
 const TRANSCRIBE_TIMEOUT_MS = 120_000;
 const DEFAULT_WHISPER_MODEL = 'Systran/faster-whisper-small';
-const DEFAULT_WHISPER_LANGUAGE = 'fr';
 const MAX_TEXT_LENGTH = 8000;
 
 /** Approximate decoded size of a base64 payload without allocating a buffer */
@@ -110,9 +109,13 @@ router.post('/transcribe', allowDeviceOr(...JOURNAL_WRITER_ROLES), async (req: C
         const model = typeof config.model === 'string' && config.model.trim()
             ? config.model.trim()
             : DEFAULT_WHISPER_MODEL;
+        // A blank language follows the caller's screen language (Accept-Language:
+        // the app language for a caregiver, the kiosk's own language for a paired
+        // device) rather than a fixed one: Whisper transcribes in the language it is
+        // told, so a wrong default turns English dictation into French gibberish.
         const language = typeof config.language === 'string' && config.language.trim()
             ? config.language.trim()
-            : DEFAULT_WHISPER_LANGUAGE;
+            : lang;
 
         const buffer = Buffer.from(match[3], 'base64');
         const form = new FormData();

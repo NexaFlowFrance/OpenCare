@@ -108,8 +108,9 @@
       "urlPlaceholder": "http://localhost:8000",
       "modelLabel": "Model (optional)",
       "modelPlaceholder": "Systran/faster-whisper-small",
-      "languageLabel": "Language (optional)",
-      "languagePlaceholder": "en",
+      "languageLabel": "Dictation language (optional)",
+      "languagePlaceholder": "Automatic: the app's language",
+      "languageHint": "Leave blank to use each person's app language (the kiosk uses its screen language). Enter a code like en or es to force one language for everyone.",
       "keyLabel": "API key (optional)",
       "keyPlaceholder": "Bearer key if your service requires one"
     }
