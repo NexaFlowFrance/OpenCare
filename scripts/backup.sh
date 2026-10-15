@@ -93,7 +93,9 @@ if [[ ! -s "$TMP" ]] || ! gzip -t "$TMP" 2>/dev/null; then
   echo "[ERREUR] Sauvegarde vide ou illisible, rien n'a ete ecrit." >&2
   exit 1
 fi
-if ! gzip -dc "$TMP" | grep -q "CREATE TABLE"; then
+# grep -c et non grep -q : -q s'arrete au premier resultat, gzip recoit alors
+# SIGPIPE et, avec pipefail, tout dump de plus de 64 Ko serait rejete.
+if ! gzip -dc "$TMP" | grep -c "CREATE TABLE" >/dev/null; then
   rm -f "$TMP"
   echo "[ERREUR] Le dump ne contient aucune table, rien n'a ete ecrit." >&2
   exit 1
