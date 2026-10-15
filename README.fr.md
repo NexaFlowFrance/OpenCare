@@ -94,10 +94,11 @@ docker-compose up -d --build
 
 ### 💾 Sauvegardes
 
-Tout vit dans PostgreSQL : un dump suffit à tout sauvegarder.
+Tout vit dans PostgreSQL : un dump suffit à tout sauvegarder. Votre `.env`
+(secrets JWT et VAPID) est copié à côté.
 
 ```bash
-bash scripts/backup.sh              # dump compressé et vérifié dans ./backups
+bash scripts/backup.sh              # dump compressé et vérifié, et copie du .env, dans ./backups
 bash scripts/restore.sh <fichier>   # restauration, après une sauvegarde de sécurité
 ```
 

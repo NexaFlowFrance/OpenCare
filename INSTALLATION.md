@@ -164,7 +164,7 @@ cat backup-2026-06-12.sql | docker exec -i opencare-db psql -U opencare opencare
 
 2. **Le dossier `server/uploads/`** (fichiers envoyés), monté en volume dans Docker Compose.
 
-3. **Votre fichier `.env`** (secrets JWT et VAPID : sans lui, les sessions et abonnements push existants sont invalidés).
+3. **Votre fichier `.env`** (secrets JWT et VAPID : sans lui, les sessions et abonnements push existants sont invalidés). `scripts/backup.sh` le copie à côté de chaque dump.
 
 En complément, chaque cercle peut exporter l'intégralité de ses données depuis l'interface (Paramètres, export de données, endpoint `GET /api/data/export`) : pratique pour une copie de précaution lisible ou une migration.
 
