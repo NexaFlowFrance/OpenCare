@@ -4,7 +4,7 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Copy package files
-COPY package.json ./
+COPY package.json package-lock.json ./
 COPY server/package.json ./server/
 COPY shared/package.json ./shared/
 
@@ -28,7 +28,7 @@ FROM node:20-alpine
 WORKDIR /app
 
 # Copy package files
-COPY package.json ./
+COPY package.json package-lock.json ./
 COPY server/package.json ./server/
 COPY shared/package.json ./shared/
 
