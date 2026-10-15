@@ -122,6 +122,22 @@ export function validateSettingsPatch(input: unknown, lang: Lang): { patch?: Rec
     return { patch };
 }
 
+/**
+ * Les preferences regionales qu'un nouveau cercle reprend du cercle auquel il
+ * est rattache (meme foyer, donc meme pays) : unites, premier jour de la
+ * semaine, numeros d'urgence. Seules les cles reellement choisies et valides
+ * passent ; jamais une cle privee comme l'empreinte du code Kiosk.
+ */
+export function inheritedSettings(raw: unknown): Partial<PublicCircleSettings> {
+    const source = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+    const inherited: Partial<PublicCircleSettings> = {};
+    if (isUnitSystem(source.unit_system)) inherited.unit_system = source.unit_system;
+    if (isWeekStart(source.week_start)) inherited.week_start = source.week_start;
+    const numbers = cleanEmergencyNumbers(source.emergency_numbers);
+    if (numbers) inherited.emergency_numbers = numbers;
+    return inherited;
+}
+
 /** Les reglages publics d'un cercle, lus en base (valeurs par defaut si absent). */
 export async function getPublicSettings(circleId: string): Promise<PublicCircleSettings> {
     const result = await query('SELECT settings FROM care_circles WHERE id = $1', [circleId]);

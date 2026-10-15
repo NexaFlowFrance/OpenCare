@@ -5,7 +5,7 @@ import { authMiddleware, AuthRequest } from '../middleware/auth';
 import { circleMiddleware, requireAdmin, CircleRequest } from '../middleware/circle';
 import { broadcastToCircle } from '../lib/broadcaster';
 import { langFromRequest, t } from '../lib/i18n';
-import { withPublicSettings, validateSettingsPatch, mergeCircleSettings } from '../lib/circleSettings';
+import { withPublicSettings, validateSettingsPatch, mergeCircleSettings, inheritedSettings } from '../lib/circleSettings';
 
 const router = Router();
 
@@ -72,16 +72,23 @@ router.post('/', async (req: AuthRequest, res: Response) => {
         await client.query('BEGIN');
 
         // Resolve the household to attach to, if linking to an existing circle.
+        // A linked circle also starts with that circle's currency and regional
+        // preferences (units, week start, emergency numbers): same household,
+        // same country, so the defaults (EUR, metric, Monday) would only have to
+        // be set again by hand.
         let householdId: string | null = null;
+        let currency: string | null = null;
+        let settings: Record<string, unknown> = {};
         if (linkCircleId) {
             const linkResult = await client.query(
-                `SELECT c.household_id, m.role
+                `SELECT c.household_id, c.currency, c.settings, m.role
                  FROM care_circles c
                  JOIN circle_members m ON m.circle_id = c.id AND m.user_id = $2
                  WHERE c.id = $1`,
                 [linkCircleId, req.userId]
             );
-            const linkRow = linkResult.rows[0] as { household_id: string | null; role: string } | undefined;
+            const linkRow = linkResult.rows[0] as
+                { household_id: string | null; currency: string | null; settings: unknown; role: string } | undefined;
             if (!linkRow || linkRow.role !== 'admin') {
                 await client.query('ROLLBACK');
                 return res.status(403).json({ success: false, error: t(lang, 'circles.mustAdminLinked') });
@@ -90,11 +97,14 @@ router.post('/', async (req: AuthRequest, res: Response) => {
             if (!linkRow.household_id) {
                 await client.query('UPDATE care_circles SET household_id = $1 WHERE id = $2', [householdId, linkCircleId]);
             }
+            currency = linkRow.currency;
+            settings = inheritedSettings(linkRow.settings);
         }
 
         const circleResult = await client.query(
-            'INSERT INTO care_circles (name, created_by, household_id) VALUES ($1, $2, $3) RETURNING *',
-            [circleName, req.userId, householdId]
+            `INSERT INTO care_circles (name, created_by, household_id, currency, settings)
+             VALUES ($1, $2, $3, COALESCE($4, 'EUR'), $5::jsonb) RETURNING *`,
+            [circleName, req.userId, householdId, currency, JSON.stringify(settings)]
         );
         const circle = circleResult.rows[0];
 

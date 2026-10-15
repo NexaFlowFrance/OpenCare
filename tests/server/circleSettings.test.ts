@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { publicSettings, withPublicSettings, validateSettingsPatch, PUBLIC_SETTING_KEYS } from '../../server/src/lib/circleSettings';
+import { publicSettings, withPublicSettings, validateSettingsPatch, inheritedSettings, PUBLIC_SETTING_KEYS } from '../../server/src/lib/circleSettings';
 
 /**
  * care_circles.settings melange des preferences lisibles par tout le cercle et
@@ -102,5 +102,22 @@ describe('validateSettingsPatch', () => {
 
     it('ne declare publique que ce qui a ete relu', () => {
         expect([...PUBLIC_SETTING_KEYS]).toEqual(['unit_system', 'week_start', 'emergency_numbers']);
+    });
+});
+
+describe('inheritedSettings', () => {
+    it('reprend les preferences regionales choisies, sans la cle privee', () => {
+        const inherited = inheritedSettings({
+            unit_system: 'imperial',
+            week_start: 'sunday',
+            emergency_numbers: '911',
+            kiosk_pin_hash: '$2b$10$uneEmpreinteQuiNeDoitPasSortir',
+        });
+        expect(inherited).toEqual({ unit_system: 'imperial', week_start: 'sunday', emergency_numbers: '911' });
+    });
+
+    it('laisse les defauts aux cles absentes ou invalides', () => {
+        expect(inheritedSettings({ unit_system: 'furlongs', emergency_numbers: '  ' })).toEqual({});
+        expect(inheritedSettings(null)).toEqual({});
     });
 });
