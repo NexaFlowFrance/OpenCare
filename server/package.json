@@ -9,22 +9,22 @@
         "start": "node dist/index.js"
     },
     "dependencies": {
-        "@anthropic-ai/sdk": "^0.135.0",
+        "@anthropic-ai/sdk": "^0.137.0",
         "bcrypt": "^6.0.0",
         "cors": "^2.8.5",
         "date-fns": "^3.0.6",
         "dotenv": "^16.3.1",
         "express": "^4.22.3",
-        "express-rate-limit": "^8.7.1",
+        "express-rate-limit": "^8.7.3",
         "helmet": "^8.3.0",
         "jsonwebtoken": "^9.0.2",
         "node-cron": "^4.6.0",
-        "nodemailer": "^10.1.2",
+        "nodemailer": "^10.3.1",
         "pg": "^8.23.1",
-        "qs": "^6.16.1",
-        "undici": "^8.12.2",
+        "qs": "^6.17.1",
+        "undici": "^8.12.4",
         "web-push": "^3.6.6",
-        "ws": "^8.22.0"
+        "ws": "^8.22.1"
     },
     "devDependencies": {
         "@types/bcrypt": "^5.0.2",
