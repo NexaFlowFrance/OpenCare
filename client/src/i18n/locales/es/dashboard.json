@@ -53,6 +53,7 @@
       "bp": "Tensión",
       "temperature": "Temperatura",
       "glucose": "Glucemia",
+      "spo2": "Saturación O2",
       "pain": "Dolor",
       "mood": "Ánimo"
     }

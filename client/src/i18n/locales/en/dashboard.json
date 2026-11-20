@@ -53,6 +53,7 @@
       "bp": "Blood pressure",
       "temperature": "Temperature",
       "glucose": "Glucose",
+      "spo2": "O2 saturation",
       "pain": "Pain",
       "mood": "Mood"
     }

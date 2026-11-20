@@ -52,7 +52,8 @@
     "pain": "Dolor",
     "mood": "Ánimo",
     "temperature": "Temperatura",
-    "glucose": "Glucemia"
+    "glucose": "Glucemia",
+    "spo2": "Saturación de oxígeno"
   },
   "form": {
     "title": "Nueva medición",
