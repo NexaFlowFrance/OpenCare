@@ -12,6 +12,7 @@ import {
     Smile,
     Thermometer,
     Trash2,
+    Wind,
     type LucideIcon,
 } from 'lucide-react';
 import {
@@ -45,7 +46,7 @@ import {
 
 // ─── Types alignés sur server/src/routes/vitals.ts ──────────────────────────
 
-type VitalType = 'weight' | 'bp' | 'pain' | 'mood' | 'temperature' | 'glucose';
+type VitalType = 'weight' | 'bp' | 'pain' | 'mood' | 'temperature' | 'glucose' | 'spo2';
 
 interface Vital {
     id: string;
@@ -83,7 +84,7 @@ interface ThresholdDraft {
     max2: string;
 }
 
-const VITAL_TYPES: VitalType[] = ['weight', 'bp', 'pain', 'mood', 'temperature', 'glucose'];
+const VITAL_TYPES: VitalType[] = ['weight', 'bp', 'pain', 'mood', 'temperature', 'glucose', 'spo2'];
 
 const VITAL_ICONS: Record<VitalType, LucideIcon> = {
     weight: Scale,
@@ -92,6 +93,7 @@ const VITAL_ICONS: Record<VitalType, LucideIcon> = {
     mood: Smile,
     temperature: Thermometer,
     glucose: Droplet,
+    spo2: Wind,
 };
 
 type PeriodKey = '30' | '90' | '365';
@@ -131,6 +133,7 @@ const emptyDrafts = (): Record<VitalType, ThresholdDraft> => ({
     mood: { min: '', max: '', min2: '', max2: '' },
     temperature: { min: '', max: '', min2: '', max2: '' },
     glucose: { min: '', max: '', min2: '', max2: '' },
+    spo2: { min: '', max: '', min2: '', max2: '' },
 });
 
 /** Couleur d'un jeton CSS (triplet RGB) résolue pour les attributs SVG de recharts. */
@@ -431,7 +434,7 @@ const Health: React.FC = () => {
     const formatShown = (type: VitalType, shown: number): string => {
         const text = formatNumber(shown, { maximumFractionDigits: decimalsFor(type, unitSystem) });
         const unit = displayUnit(type, unitSystem);
-        return type === 'pain' || type === 'mood' ? `${text}${unit}` : `${text} ${unit}`;
+        return type === 'pain' || type === 'mood' || type === 'spo2' ? `${text}${unit}` : `${text} ${unit}`;
     };
 
     const relativeDate = (iso: string) =>

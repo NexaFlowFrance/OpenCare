@@ -9,9 +9,9 @@
  */
 
 export type UnitSystem = 'metric' | 'imperial';
-export type VitalType = 'weight' | 'bp' | 'pain' | 'mood' | 'temperature' | 'glucose';
+export type VitalType = 'weight' | 'bp' | 'pain' | 'mood' | 'temperature' | 'glucose' | 'spo2';
 
-const VITAL_TYPES: readonly string[] = ['weight', 'bp', 'pain', 'mood', 'temperature', 'glucose'];
+const VITAL_TYPES: readonly string[] = ['weight', 'bp', 'pain', 'mood', 'temperature', 'glucose', 'spo2'];
 /** Un libelle venu du serveur est-il bien un type de constante ? */
 export const isVitalType = (value: unknown): value is VitalType =>
     typeof value === 'string' && VITAL_TYPES.includes(value);
@@ -32,6 +32,7 @@ export const displayUnit = (type: VitalType, system: UnitSystem): string => {
         case 'temperature': return '°C';
         case 'glucose': return 'g/L';
         case 'bp': return 'mmHg';
+        case 'spo2': return '%';
         default: return '/10';
     }
 };
@@ -63,7 +64,7 @@ export const toStorageValue = (type: VitalType, shown: number, system: UnitSyste
  * personne, et "58 kg" cache une perte de poids de 400 grammes.
  */
 export const decimalsFor = (type: VitalType, system: UnitSystem): number => {
-    if (type === 'bp' || type === 'pain' || type === 'mood') return 0;
+    if (type === 'bp' || type === 'pain' || type === 'mood' || type === 'spo2') return 0;
     if (type === 'temperature') return 1;
     if (type === 'glucose') return system === 'imperial' ? 0 : 2;
     return 1;
@@ -78,7 +79,8 @@ export const formatValue = (type: VitalType, metric: number, system: UnitSystem,
 
 /**
  * La mesure complete, prete a lire : "58,2 kg", "128/78 mmHg", "6/10".
- * La tension garde ses deux valeurs, le moral et la douleur leur echelle.
+ * La tension garde ses deux valeurs, le moral et la douleur leur echelle,
+ * la saturation son pourcentage ("96%").
  */
 export const formatVital = (
     type: VitalType,
@@ -91,7 +93,7 @@ export const formatVital = (
     if (type === 'bp' && value2 !== null && value2 !== undefined) {
         return `${formatValue(type, value, system, locale)}/${formatValue(type, value2, system, locale)} ${unit}`;
     }
-    if (type === 'pain' || type === 'mood') return `${formatValue(type, value, system, locale)}${unit}`;
+    if (type === 'pain' || type === 'mood' || type === 'spo2') return `${formatValue(type, value, system, locale)}${unit}`;
     return `${formatValue(type, value, system, locale)} ${unit}`;
 };
 
