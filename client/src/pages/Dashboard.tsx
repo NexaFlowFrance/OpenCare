@@ -70,7 +70,7 @@ interface MedicationIntake {
 }
 
 interface Vital {
-    type: 'weight' | 'bp' | 'pain' | 'mood' | 'temperature' | 'glucose' | 'spo2';
+    type: 'weight' | 'bp' | 'pain' | 'mood' | 'temperature' | 'glucose' | 'spo2' | 'heart_rate';
     value: string | number;
     value2?: string | number | null;
     unit?: string | null;
@@ -104,7 +104,7 @@ const relativeTime = (value: string): string => {
     return formatDistanceToNow(date, { addSuffix: true, locale: dateLocale() });
 };
 
-const VITAL_ORDER: Vital['type'][] = ['weight', 'bp', 'spo2', 'temperature', 'glucose', 'pain', 'mood'];
+const VITAL_ORDER: Vital['type'][] = ['weight', 'bp', 'heart_rate', 'spo2', 'temperature', 'glucose', 'pain', 'mood'];
 
 /**
  * Systeme d'unites du cercle, lu sans faire confiance au reglage stocke: un

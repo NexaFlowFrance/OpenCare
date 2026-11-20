@@ -56,7 +56,7 @@ const boolOr = (value: unknown, fallback: boolean): boolean =>
 const tsOrNow = (value: unknown): unknown => value ?? new Date();
 
 const JOURNAL_TYPES = ['visit', 'note', 'vital', 'medication', 'incident', 'mood'] as const;
-const VITAL_TYPES = ['weight', 'bp', 'pain', 'mood', 'temperature', 'glucose', 'spo2'] as const;
+const VITAL_TYPES = ['weight', 'bp', 'pain', 'mood', 'temperature', 'glucose', 'spo2', 'heart_rate'] as const;
 const INTAKE_STATUSES = ['pending', 'taken', 'skipped', 'missed'] as const;
 const EVENT_CATEGORIES = ['visit', 'medical', 'nurse', 'aide', 'other'] as const;
 const DOCUMENT_CATEGORIES = ['prescription', 'report', 'insurance', 'legal', 'other'] as const;

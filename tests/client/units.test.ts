@@ -10,7 +10,7 @@ import {
  * ecran de sante : l'aller-retour se teste.
  */
 
-const TYPES: VitalType[] = ['weight', 'bp', 'pain', 'mood', 'temperature', 'glucose', 'spo2'];
+const TYPES: VitalType[] = ['weight', 'bp', 'pain', 'mood', 'temperature', 'glucose', 'spo2', 'heart_rate'];
 
 describe('unites affichees', () => {
     it('donne les unites metriques par defaut', () => {
@@ -28,6 +28,7 @@ describe('unites affichees', () => {
         expect(displayUnit('pain', 'imperial')).toBe('/10');
         expect(displayUnit('mood', 'imperial')).toBe('/10');
         expect(displayUnit('spo2', 'imperial')).toBe('%');
+        expect(displayUnit('heart_rate', 'imperial')).toBe('bpm');
     });
 
     it('enregistre toujours dans l unite metrique', () => {
@@ -54,8 +55,8 @@ describe('conversions', () => {
         expect(toStorageValue('glucose', 104, 'imperial')).toBeCloseTo(1.04, 6);
     });
 
-    it('laisse la tension, la douleur, le moral et la saturation tranquilles', () => {
-        for (const type of ['bp', 'pain', 'mood', 'spo2'] as VitalType[]) {
+    it('laisse la tension, la douleur, le moral, la saturation et le pouls tranquilles', () => {
+        for (const type of ['bp', 'pain', 'mood', 'spo2', 'heart_rate'] as VitalType[]) {
             expect(toDisplayValue(type, 128, 'imperial'), type).toBe(128);
             expect(toStorageValue(type, 128, 'imperial'), type).toBe(128);
         }
@@ -92,6 +93,7 @@ describe('mise en forme', () => {
         expect(formatVital('weight', 58.2, null, 'metric', 'en')).toBe('58.2 kg');
         expect(formatVital('spo2', 96, null, 'imperial', 'en')).toBe('96%');
         expect(formatVital('spo2', 95.6, null, 'metric', 'fr-FR')).toBe('96%');
+        expect(formatVital('heart_rate', 71.6, null, 'imperial', 'en')).toBe('72 bpm');
         expect(formatVital('weight', 68.04, null, 'imperial', 'en')).toBe('150 lb');
         expect(formatVital('bp', 128, 78, 'imperial', 'en')).toBe('128/78 mmHg');
         expect(formatVital('mood', 6, null, 'metric', 'en')).toBe('6/10');

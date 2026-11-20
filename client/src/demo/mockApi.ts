@@ -1744,7 +1744,7 @@ async function route(method: string, path: string, q: Record<string, string>, bo
     if (path === '/api/vitals/thresholds' && method === 'GET') return ok(c.vitalThresholds);
     if (path === '/api/vitals/thresholds' && method === 'PUT') {
         const type = String(body.type || '');
-        if (!['weight', 'bp', 'pain', 'mood', 'temperature', 'glucose', 'spo2'].includes(type)) throw new Error('Unknown vital type');
+        if (!['weight', 'bp', 'pain', 'mood', 'temperature', 'glucose', 'spo2', 'heart_rate'].includes(type)) throw new Error('Unknown vital type');
         const bounds = ['min_value', 'max_value', 'min_value2', 'max_value2'].map((k) => (body[k] === null || body[k] === '' || body[k] === undefined ? null : Number(body[k])));
         if (bounds.some((b) => b !== null && !Number.isFinite(b))) throw new Error('Invalid threshold');
         const [minV, maxV, minV2, maxV2] = bounds;

@@ -54,6 +54,7 @@
       "temperature": "Température",
       "glucose": "Glycémie",
       "spo2": "Sat",
+      "heart_rate": "Pouls",
       "pain": "Douleur",
       "mood": "Moral"
     }

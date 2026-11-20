@@ -31,7 +31,8 @@
         "mood": "Mood",
         "temperature": "Temperature",
         "glucose": "Blood sugar",
-        "spo2": "Oxygen saturation"
+        "spo2": "Oxygen saturation",
+        "heart_rate": "Heart rate"
     },
     "vitalSummary": "{{label}}: {{measure}}",
     "filters": {

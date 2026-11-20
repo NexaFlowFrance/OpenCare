@@ -64,6 +64,7 @@
     "mood": "Humeur",
     "temperature": "Température",
     "glucose": "Glycémie",
-    "spo2": "Saturation en oxygène"
+    "spo2": "Saturation en oxygène",
+    "heart_rate": "Fréquence cardiaque"
   }
 }
