@@ -16,7 +16,7 @@ router.use(authMiddleware, circleMiddleware, requireRole('admin', 'family', 'pro
 
 const requireHealthWriter = requireRole('admin', 'family', 'professional');
 
-const VITAL_TYPES = ['weight', 'bp', 'pain', 'mood', 'temperature', 'glucose'];
+const VITAL_TYPES = ['weight', 'bp', 'pain', 'mood', 'temperature', 'glucose', 'spo2', 'heart_rate'];
 
 const parseDate = (value: unknown): Date | null => {
     if (typeof value !== 'string' && typeof value !== 'number') return null;
@@ -115,6 +115,8 @@ const VITAL_LABELS: Record<string, Record<Lang, string>> = {
     mood: { fr: 'Moral', en: 'Mood', es: 'Ánimo' },
     temperature: { fr: 'Température', en: 'Temperature', es: 'Temperatura' },
     glucose: { fr: 'Glycémie', en: 'Blood sugar', es: 'Glucemia' },
+    spo2: { fr: 'Saturation en oxygène', en: 'Oxygen saturation', es: 'Saturación de oxígeno' },
+    heart_rate: { fr: 'Fréquence cardiaque', en: 'Heart rate', es: 'Frecuencia cardiaca' },
 };
 
 const num = (raw: unknown): number | null => {

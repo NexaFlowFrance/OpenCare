@@ -30,7 +30,9 @@
         "pain": "Dolor",
         "mood": "Ánimo",
         "temperature": "Temperatura",
-        "glucose": "Glucemia"
+        "glucose": "Glucemia",
+        "spo2": "Saturación de oxígeno",
+        "heart_rate": "Frecuencia cardiaca"
     },
     "vitalSummary": "{{label}}: {{measure}}",
     "filters": {

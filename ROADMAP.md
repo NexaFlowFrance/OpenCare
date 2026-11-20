@@ -15,7 +15,7 @@ Everything described in docs/SPEC.md is implemented and released:
   recipient profile (medical history, allergies, directives).
 - **Care journal**: the heart of the app. Typed entries (visit, note, vital, medication,
   incident, mood) with photos, real time over WebSocket.
-- **Health tracking**: vitals (weight, blood pressure, pain, mood, temperature, glucose)
+- **Health tracking**: vitals (weight, blood pressure, pain, mood, temperature, glucose, oxygen saturation, heart rate)
   with curves over time.
 - **Medications**: treatments, schedules, generated intakes with confirmation written to
   the journal, prescriptions and renewal alerts.

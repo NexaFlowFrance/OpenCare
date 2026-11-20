@@ -63,6 +63,8 @@
     "pain": "Douleur",
     "mood": "Humeur",
     "temperature": "Température",
-    "glucose": "Glycémie"
+    "glucose": "Glycémie",
+    "spo2": "Saturation en oxygène",
+    "heart_rate": "Fréquence cardiaque"
   }
 }

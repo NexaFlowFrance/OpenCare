@@ -39,7 +39,7 @@ les données de santé d'une personne vulnérable n'ont rien à faire sur le clo
 | 📔 **Journal de liaison** | Le cahier de transmission numérique : entrées horodatées avec photos, en temps réel sur tous les appareils. Le cœur de l'application |
 | 💊 **Médicaments** | Traitements et horaires, confirmation de prise reportée au journal, alertes de renouvellement d'ordonnance |
 | 📅 **Calendrier partagé** | Visites, rendez-vous médicaux, passages infirmière, récurrences, rappels, export iCal (.ics / webcal) |
-| ❤️ **Suivi santé** | Constantes saisies à la main (poids, tension, douleur, moral, température, glycémie), courbes dans le temps |
+| ❤️ **Suivi santé** | Constantes saisies à la main (poids, tension, douleur, moral, température, glycémie, saturation en oxygène, fréquence cardiaque), courbes dans le temps |
 | ✅ **Tâches et courses** | Le « qui fait quoi cette semaine », et une liste de courses partagée que l'auxiliaire peut utiliser |
 | 💬 **Messagerie** | Fil du cercle et messages directs, pièces jointes |
 | 📁 **Documents et contacts** | Ordonnances, comptes-rendus, mutuelle, jugement de tutelle ; le carnet d'adresses du cercle (médecin traitant, SSIAD, la voisine qui a la clé) |

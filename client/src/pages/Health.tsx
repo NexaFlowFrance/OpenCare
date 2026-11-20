@@ -6,12 +6,14 @@ import {
     AlertTriangle,
     Droplet,
     Gauge,
+    Heart,
     HeartPulse,
     Plus,
     Scale,
     Smile,
     Thermometer,
     Trash2,
+    Wind,
     type LucideIcon,
 } from 'lucide-react';
 import {
@@ -45,7 +47,7 @@ import {
 
 // ─── Types alignés sur server/src/routes/vitals.ts ──────────────────────────
 
-type VitalType = 'weight' | 'bp' | 'pain' | 'mood' | 'temperature' | 'glucose';
+type VitalType = 'weight' | 'bp' | 'pain' | 'mood' | 'temperature' | 'glucose' | 'spo2' | 'heart_rate';
 
 interface Vital {
     id: string;
@@ -83,7 +85,7 @@ interface ThresholdDraft {
     max2: string;
 }
 
-const VITAL_TYPES: VitalType[] = ['weight', 'bp', 'pain', 'mood', 'temperature', 'glucose'];
+const VITAL_TYPES: VitalType[] = ['weight', 'bp', 'pain', 'mood', 'temperature', 'glucose', 'spo2', 'heart_rate'];
 
 const VITAL_ICONS: Record<VitalType, LucideIcon> = {
     weight: Scale,
@@ -92,7 +94,12 @@ const VITAL_ICONS: Record<VitalType, LucideIcon> = {
     mood: Smile,
     temperature: Thermometer,
     glucose: Droplet,
+    spo2: Wind,
+    heart_rate: Heart,
 };
+
+/** Le tensiometre et l'oxymetre affichent aussi le pouls: on le saisit avec eux. */
+const WITH_PULSE: VitalType[] = ['bp', 'spo2'];
 
 type PeriodKey = '30' | '90' | '365';
 const PERIODS: Array<{ key: PeriodKey; days: number }> = [
@@ -131,6 +138,8 @@ const emptyDrafts = (): Record<VitalType, ThresholdDraft> => ({
     mood: { min: '', max: '', min2: '', max2: '' },
     temperature: { min: '', max: '', min2: '', max2: '' },
     glucose: { min: '', max: '', min2: '', max2: '' },
+    spo2: { min: '', max: '', min2: '', max2: '' },
+    heart_rate: { min: '', max: '', min2: '', max2: '' },
 });
 
 /** Couleur d'un jeton CSS (triplet RGB) résolue pour les attributs SVG de recharts. */
@@ -168,6 +177,7 @@ const Health: React.FC = () => {
     const [formType, setFormType] = useState<VitalType>('bp');
     const [formValue, setFormValue] = useState('');
     const [formValue2, setFormValue2] = useState('');
+    const [formPulse, setFormPulse] = useState('');
     const [formMeasuredAt, setFormMeasuredAt] = useState(() => toLocalInputValue(new Date()));
     const [formNotes, setFormNotes] = useState('');
     const [saving, setSaving] = useState(false);
@@ -244,6 +254,7 @@ const Health: React.FC = () => {
         setFormType('bp');
         setFormValue('');
         setFormValue2('');
+        setFormPulse('');
         setFormMeasuredAt(toLocalInputValue(new Date()));
         setFormNotes('');
         setDialogOpen(true);
@@ -266,6 +277,11 @@ const Health: React.FC = () => {
                 return;
             }
         }
+        const pulse = WITH_PULSE.includes(formType) && formPulse.trim() ? parseLocaleNumber(formPulse) : null;
+        if (pulse !== null && !Number.isFinite(pulse)) {
+            setError(t('health:errors.valueRequired'));
+            return;
+        }
 
         setSaving(true);
         setError('');
@@ -282,6 +298,17 @@ const Health: React.FC = () => {
             if (formNotes.trim()) payload.notes = formNotes.trim();
 
             await api.post('/api/vitals', payload);
+            // Le pouls devient sa propre mesure, a la meme heure, pour avoir sa courbe et ses alertes.
+            // shortcut: two requests, so a failed pulse leaves the main reading saved; make it one server call if that bites.
+            if (pulse !== null) {
+                await api.post('/api/vitals', {
+                    type: 'heart_rate',
+                    value: pulse,
+                    value2: null,
+                    unit: storageUnit('heart_rate'),
+                    measured_at: payload.measured_at,
+                });
+            }
             setDialogOpen(false);
             showToast({ title: t('health:toasts.saved') });
             await refreshAll(false);
@@ -431,7 +458,7 @@ const Health: React.FC = () => {
     const formatShown = (type: VitalType, shown: number): string => {
         const text = formatNumber(shown, { maximumFractionDigits: decimalsFor(type, unitSystem) });
         const unit = displayUnit(type, unitSystem);
-        return type === 'pain' || type === 'mood' ? `${text}${unit}` : `${text} ${unit}`;
+        return type === 'pain' || type === 'mood' || type === 'spo2' ? `${text}${unit}` : `${text} ${unit}`;
     };
 
     const relativeDate = (iso: string) =>
@@ -885,6 +912,15 @@ const Health: React.FC = () => {
                                 value={formValue2}
                                 onChange={(e) => setFormValue2(e.target.value)}
                                 required
+                            />
+                        )}
+                        {WITH_PULSE.includes(formType) && (
+                            <Input
+                                label={t('health:form.pulseLabel', { unit: displayUnit('heart_rate', unitSystem) })}
+                                type="text"
+                                inputMode="numeric"
+                                value={formPulse}
+                                onChange={(e) => setFormPulse(e.target.value)}
                             />
                         )}
                     </div>

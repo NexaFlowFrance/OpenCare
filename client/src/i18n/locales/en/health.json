@@ -52,7 +52,9 @@
     "pain": "Pain",
     "mood": "Mood",
     "temperature": "Temperature",
-    "glucose": "Blood sugar"
+    "glucose": "Blood sugar",
+    "spo2": "Oxygen saturation",
+    "heart_rate": "Heart rate"
   },
   "form": {
     "title": "New measurement",
@@ -61,6 +63,7 @@
     "valueLabel": "Value",
     "systolicLabel": "Systolic",
     "diastolicLabel": "Diastolic",
+    "pulseLabel": "Pulse in {{unit}} (optional)",
     "dateLabel": "Date and time",
     "notesLabel": "Notes (optional)"
   },

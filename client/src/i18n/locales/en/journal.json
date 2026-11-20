@@ -30,7 +30,9 @@
         "pain": "Pain",
         "mood": "Mood",
         "temperature": "Temperature",
-        "glucose": "Blood sugar"
+        "glucose": "Blood sugar",
+        "spo2": "Oxygen saturation",
+        "heart_rate": "Heart rate"
     },
     "vitalSummary": "{{label}}: {{measure}}",
     "filters": {

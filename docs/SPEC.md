@@ -33,7 +33,7 @@ Principe : tout est rattaché à un cercle de soin. Un cercle correspond à un p
 - `journal_photos` : fichiers liés à une entrée.
 
 ### Santé
-- `vitals` : circle_id, type (`weight`, `bp`, `pain`, `mood`, `temperature`, `glucose`), valeur(s), unité, mesuré le, lien vers entrée de journal. Courbes dans le temps.
+- `vitals` : circle_id, type (`weight`, `bp`, `pain`, `mood`, `temperature`, `glucose`, `spo2`, `heart_rate`), valeur(s), unité, mesuré le, lien vers entrée de journal. Courbes dans le temps.
 - `medications` : nom, dosage (« 500 mg »), forme, photo, prescripteur, début/fin, consignes, actif, « si besoin » (`prn`, sans horaire), prise par rapport aux repas (`with_food`), pourquoi (`reason`), aspect (`appearance`).
 - `medication_schedules` : horaires de prise (matin/midi/soir/heures précises, jours) avec quantité et unité par prise (« 2 comprimés »).
 - `medication_intakes` : occurrences générées (quantité copiée de l'horaire), statut (`pending`, `taken`, `skipped`, `missed`), confirmé par qui et depuis où (`caregiver`, `kiosk`, `phone`, `link`), répercuté au journal. Le patient ne voit que ce qui est à prendre maintenant.

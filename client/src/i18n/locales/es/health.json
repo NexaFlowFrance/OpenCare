@@ -52,7 +52,9 @@
     "pain": "Dolor",
     "mood": "Ánimo",
     "temperature": "Temperatura",
-    "glucose": "Glucemia"
+    "glucose": "Glucemia",
+    "spo2": "Saturación de oxígeno",
+    "heart_rate": "Frecuencia cardiaca"
   },
   "form": {
     "title": "Nueva medición",
@@ -61,6 +63,7 @@
     "valueLabel": "Valor",
     "systolicLabel": "Sistólica",
     "diastolicLabel": "Diastólica",
+    "pulseLabel": "Pulso en {{unit}} (opcional)",
     "dateLabel": "Fecha y hora",
     "notesLabel": "Notas (opcional)"
   },
