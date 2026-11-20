@@ -74,7 +74,7 @@ const MAX_PHOTO_DIMENSION = 1280;
 /** Types proposés dans le composeur (medication est alimenté par le module dédié). */
 const COMPOSER_TYPES: EntryType[] = ['visit', 'note', 'vital', 'incident', 'mood'];
 const FILTER_TYPES: EntryType[] = ['visit', 'note', 'vital', 'medication', 'incident', 'mood'];
-const VITAL_TYPES: VitalType[] = ['weight', 'bp', 'pain', 'mood', 'temperature', 'glucose', 'spo2'];
+const VITAL_TYPES: VitalType[] = ['weight', 'bp', 'pain', 'mood', 'temperature', 'glucose', 'spo2', 'heart_rate'];
 
 const TYPE_ICONS: Record<EntryType, LucideIcon> = {
     visit: Footprints,

@@ -166,12 +166,12 @@ CREATE INDEX idx_journal_photos_entry ON journal_photos(entry_id);
 -- ============================================================
 -- Sante: constantes et medicaments
 -- ============================================================
--- Types: weight, bp (value=systolique, value2=diastolique), pain, mood, temperature, glucose, spo2 (%)
+-- Types: weight, bp (value=systolique, value2=diastolique), pain, mood, temperature, glucose, spo2 (%), heart_rate (bpm)
 CREATE TABLE vitals (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     circle_id UUID NOT NULL REFERENCES care_circles(id) ON DELETE CASCADE,
     type VARCHAR(20) NOT NULL
-        CHECK (type IN ('weight', 'bp', 'pain', 'mood', 'temperature', 'glucose', 'spo2')),
+        CHECK (type IN ('weight', 'bp', 'pain', 'mood', 'temperature', 'glucose', 'spo2', 'heart_rate')),
     value NUMERIC(8, 2) NOT NULL,
     value2 NUMERIC(8, 2),
     unit VARCHAR(20),
@@ -570,7 +570,7 @@ CREATE TABLE vital_thresholds (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     circle_id UUID NOT NULL REFERENCES care_circles(id) ON DELETE CASCADE,
     type VARCHAR(20) NOT NULL
-        CHECK (type IN ('weight', 'bp', 'pain', 'mood', 'temperature', 'glucose', 'spo2')),
+        CHECK (type IN ('weight', 'bp', 'pain', 'mood', 'temperature', 'glucose', 'spo2', 'heart_rate')),
     min_value NUMERIC(8, 2),
     max_value NUMERIC(8, 2),
     min_value2 NUMERIC(8, 2),

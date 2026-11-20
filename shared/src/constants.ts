@@ -7,7 +7,7 @@ export const JOURNAL_ENTRY_TYPES = ['visit', 'note', 'vital', 'medication', 'inc
 export type JournalEntryType = typeof JOURNAL_ENTRY_TYPES[number];
 
 // Types de constantes de sante
-export const VITAL_TYPES = ['weight', 'bp', 'pain', 'mood', 'temperature', 'glucose', 'spo2'] as const;
+export const VITAL_TYPES = ['weight', 'bp', 'pain', 'mood', 'temperature', 'glucose', 'spo2', 'heart_rate'] as const;
 export type VitalType = typeof VITAL_TYPES[number];
 
 // Statuts d'une prise de medicament

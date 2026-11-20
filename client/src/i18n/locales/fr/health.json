@@ -53,7 +53,8 @@
     "mood": "Moral",
     "temperature": "Température",
     "glucose": "Glycémie",
-    "spo2": "Saturation en oxygène"
+    "spo2": "Saturation en oxygène",
+    "heart_rate": "Fréquence cardiaque"
   },
   "form": {
     "title": "Nouvelle mesure",
@@ -62,6 +63,7 @@
     "valueLabel": "Valeur",
     "systolicLabel": "Systolique",
     "diastolicLabel": "Diastolique",
+    "pulseLabel": "Pouls en {{unit}} (facultatif)",
     "dateLabel": "Date et heure",
     "notesLabel": "Notes (facultatif)"
   },

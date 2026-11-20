@@ -12,12 +12,12 @@
 import type { UnitSystem } from './circleSettings';
 import { intlLocale, pickLang } from './i18n';
 
-export type VitalType = 'weight' | 'bp' | 'pain' | 'mood' | 'temperature' | 'glucose' | 'spo2';
+export type VitalType = 'weight' | 'bp' | 'pain' | 'mood' | 'temperature' | 'glucose' | 'spo2' | 'heart_rate';
 
 const LB_PER_KG = 2.2046226218;
 const MGDL_PER_GL = 100;
 
-const VITAL_TYPES: readonly string[] = ['weight', 'bp', 'pain', 'mood', 'temperature', 'glucose', 'spo2'];
+const VITAL_TYPES: readonly string[] = ['weight', 'bp', 'pain', 'mood', 'temperature', 'glucose', 'spo2', 'heart_rate'];
 export const isVitalType = (value: unknown): value is VitalType =>
     typeof value === 'string' && VITAL_TYPES.includes(value);
 
@@ -33,6 +33,7 @@ export const displayUnit = (type: VitalType, system: UnitSystem): string => {
         case 'glucose': return 'g/L';
         case 'bp': return 'mmHg';
         case 'spo2': return '%';
+        case 'heart_rate': return 'bpm';
         default: return '/10';
     }
 };
@@ -46,7 +47,7 @@ export const toDisplayValue = (type: VitalType, metric: number, system: UnitSyst
 };
 
 export const decimalsFor = (type: VitalType, system: UnitSystem): number => {
-    if (type === 'bp' || type === 'pain' || type === 'mood' || type === 'spo2') return 0;
+    if (type === 'bp' || type === 'pain' || type === 'mood' || type === 'spo2' || type === 'heart_rate') return 0;
     if (type === 'temperature') return 1;
     if (type === 'glucose') return system === 'imperial' ? 0 : 2;
     return 1;

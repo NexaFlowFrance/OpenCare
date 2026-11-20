@@ -18,7 +18,7 @@ const router = Router();
 const JOURNAL_ENTRY_TYPES = ['visit', 'note', 'vital', 'medication', 'incident', 'mood'];
 // Magic links cannot log medication entries (intakes are confirmed elsewhere)
 const LINK_ENTRY_TYPES = ['visit', 'note', 'vital', 'mood', 'incident'];
-const VITAL_TYPES = ['weight', 'bp', 'pain', 'mood', 'temperature', 'glucose', 'spo2'];
+const VITAL_TYPES = ['weight', 'bp', 'pain', 'mood', 'temperature', 'glucose', 'spo2', 'heart_rate'];
 
 const MAX_PHOTOS = 4;
 const MAX_PHOTO_BYTES = Math.floor(1.5 * 1024 * 1024);

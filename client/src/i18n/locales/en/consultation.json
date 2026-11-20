@@ -64,6 +64,7 @@
     "mood": "Mood",
     "temperature": "Temperature",
     "glucose": "Blood glucose",
-    "spo2": "Oxygen saturation"
+    "spo2": "Oxygen saturation",
+    "heart_rate": "Heart rate"
   }
 }

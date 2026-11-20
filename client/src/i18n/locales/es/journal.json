@@ -31,7 +31,8 @@
         "mood": "Ánimo",
         "temperature": "Temperatura",
         "glucose": "Glucemia",
-        "spo2": "Saturación de oxígeno"
+        "spo2": "Saturación de oxígeno",
+        "heart_rate": "Frecuencia cardiaca"
     },
     "vitalSummary": "{{label}}: {{measure}}",
     "filters": {

@@ -8,7 +8,7 @@ import * as client from '../../client/src/lib/units';
  * client : sinon une alerte et l'ecran Sante donneraient deux poids differents.
  */
 
-const TYPES: server.VitalType[] = ['weight', 'bp', 'pain', 'mood', 'temperature', 'glucose', 'spo2'];
+const TYPES: server.VitalType[] = ['weight', 'bp', 'pain', 'mood', 'temperature', 'glucose', 'spo2', 'heart_rate'];
 const SYSTEMS = ['metric', 'imperial'] as const;
 const SAMPLES: Record<server.VitalType, number[]> = {
     weight: [0, 45.3, 68.04, 81.5, 120],
@@ -18,6 +18,7 @@ const SAMPLES: Record<server.VitalType, number[]> = {
     temperature: [35.2, 37, 38.65],
     glucose: [0.7, 1.04, 2.5],
     spo2: [88, 95.6, 100],
+    heart_rate: [48, 72.4, 130],
 };
 
 describe('conversion serveur = conversion client', () => {

@@ -9,9 +9,9 @@
  */
 
 export type UnitSystem = 'metric' | 'imperial';
-export type VitalType = 'weight' | 'bp' | 'pain' | 'mood' | 'temperature' | 'glucose' | 'spo2';
+export type VitalType = 'weight' | 'bp' | 'pain' | 'mood' | 'temperature' | 'glucose' | 'spo2' | 'heart_rate';
 
-const VITAL_TYPES: readonly string[] = ['weight', 'bp', 'pain', 'mood', 'temperature', 'glucose', 'spo2'];
+const VITAL_TYPES: readonly string[] = ['weight', 'bp', 'pain', 'mood', 'temperature', 'glucose', 'spo2', 'heart_rate'];
 /** Un libelle venu du serveur est-il bien un type de constante ? */
 export const isVitalType = (value: unknown): value is VitalType =>
     typeof value === 'string' && VITAL_TYPES.includes(value);
@@ -33,6 +33,7 @@ export const displayUnit = (type: VitalType, system: UnitSystem): string => {
         case 'glucose': return 'g/L';
         case 'bp': return 'mmHg';
         case 'spo2': return '%';
+        case 'heart_rate': return 'bpm';
         default: return '/10';
     }
 };
@@ -64,7 +65,7 @@ export const toStorageValue = (type: VitalType, shown: number, system: UnitSyste
  * personne, et "58 kg" cache une perte de poids de 400 grammes.
  */
 export const decimalsFor = (type: VitalType, system: UnitSystem): number => {
-    if (type === 'bp' || type === 'pain' || type === 'mood' || type === 'spo2') return 0;
+    if (type === 'bp' || type === 'pain' || type === 'mood' || type === 'spo2' || type === 'heart_rate') return 0;
     if (type === 'temperature') return 1;
     if (type === 'glucose') return system === 'imperial' ? 0 : 2;
     return 1;
