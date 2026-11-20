@@ -1128,7 +1128,8 @@ async function route(method: string, path: string, q: Record<string, string>, bo
         c.vitals.push(vitalRow);
         return ok(vitalRow);
     }
-    if (seg[1] === 'vitals' && seg.length === 3) {
+    // /api/vitals/thresholds a ses propres handlers plus bas
+    if (seg[1] === 'vitals' && seg.length === 3 && seg[2] !== 'thresholds') {
         if (method === 'PUT') return ok(updateIn(c.vitals, seg[2], body));
         if (method === 'DELETE') { removeFrom(c.vitals, seg[2]); return ok({}); }
     }
@@ -1741,7 +1742,8 @@ async function route(method: string, path: string, q: Record<string, string>, bo
         return ok(med);
     }
     // Seuils sur les constantes
-    if (path === '/api/vitals/thresholds' && method === 'GET') return ok(c.vitalThresholds);
+    // Copie: la PUT modifie ce tableau sur place, et React ignore un setState avec la même référence.
+    if (path === '/api/vitals/thresholds' && method === 'GET') return ok([...c.vitalThresholds]);
     if (path === '/api/vitals/thresholds' && method === 'PUT') {
         const type = String(body.type || '');
         if (!['weight', 'bp', 'pain', 'mood', 'temperature', 'glucose'].includes(type)) throw new Error('Unknown vital type');
