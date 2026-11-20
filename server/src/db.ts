@@ -232,7 +232,7 @@ export const runMigrations = async () => {
             id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
             circle_id UUID NOT NULL REFERENCES care_circles(id) ON DELETE CASCADE,
             type VARCHAR(20) NOT NULL
-                CHECK (type IN ('weight', 'bp', 'pain', 'mood', 'temperature', 'glucose')),
+                CHECK (type IN ('weight', 'bp', 'pain', 'mood', 'temperature', 'glucose', 'spo2')),
             min_value NUMERIC(8, 2),
             max_value NUMERIC(8, 2),
             min_value2 NUMERIC(8, 2),
@@ -330,6 +330,19 @@ export const runMigrations = async () => {
         // un des quatre types francais.
         `ALTER TABLE aid_records DROP CONSTRAINT IF EXISTS aid_records_type_check;`,
         `ALTER TABLE aid_records ALTER COLUMN type TYPE VARCHAR(40);`,
+        // Saturation en oxygene (spo2) : CREATE TABLE IF NOT EXISTS ne touche pas
+        // les bases existantes, on y remplace donc la liste des types autorises.
+        // Le test sur la definition evite de reverifier la table a chaque demarrage.
+        ...['vitals', 'vital_thresholds'].map((table) => `DO $$ BEGIN
+            IF NOT EXISTS (
+                SELECT 1 FROM pg_constraint
+                WHERE conname = '${table}_type_check' AND pg_get_constraintdef(oid) LIKE '%spo2%'
+            ) THEN
+                ALTER TABLE ${table} DROP CONSTRAINT IF EXISTS ${table}_type_check;
+                ALTER TABLE ${table} ADD CONSTRAINT ${table}_type_check
+                    CHECK (type IN ('weight', 'bp', 'pain', 'mood', 'temperature', 'glucose', 'spo2'));
+            END IF;
+        END $$;`),
     ];
 
     for (const migration of migrations) {

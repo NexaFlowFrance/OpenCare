@@ -12,12 +12,12 @@
 import type { UnitSystem } from './circleSettings';
 import { intlLocale, pickLang } from './i18n';
 
-export type VitalType = 'weight' | 'bp' | 'pain' | 'mood' | 'temperature' | 'glucose';
+export type VitalType = 'weight' | 'bp' | 'pain' | 'mood' | 'temperature' | 'glucose' | 'spo2';
 
 const LB_PER_KG = 2.2046226218;
 const MGDL_PER_GL = 100;
 
-const VITAL_TYPES: readonly string[] = ['weight', 'bp', 'pain', 'mood', 'temperature', 'glucose'];
+const VITAL_TYPES: readonly string[] = ['weight', 'bp', 'pain', 'mood', 'temperature', 'glucose', 'spo2'];
 export const isVitalType = (value: unknown): value is VitalType =>
     typeof value === 'string' && VITAL_TYPES.includes(value);
 
@@ -32,6 +32,7 @@ export const displayUnit = (type: VitalType, system: UnitSystem): string => {
         case 'temperature': return '°C';
         case 'glucose': return 'g/L';
         case 'bp': return 'mmHg';
+        case 'spo2': return '%';
         default: return '/10';
     }
 };
@@ -45,7 +46,7 @@ export const toDisplayValue = (type: VitalType, metric: number, system: UnitSyst
 };
 
 export const decimalsFor = (type: VitalType, system: UnitSystem): number => {
-    if (type === 'bp' || type === 'pain' || type === 'mood') return 0;
+    if (type === 'bp' || type === 'pain' || type === 'mood' || type === 'spo2') return 0;
     if (type === 'temperature') return 1;
     if (type === 'glucose') return system === 'imperial' ? 0 : 2;
     return 1;
@@ -57,7 +58,7 @@ export const formatValue = (type: VitalType, metric: number, system: UnitSystem,
     return new Intl.NumberFormat(locale, { maximumFractionDigits: decimals, minimumFractionDigits: 0 }).format(shown);
 };
 
-/** "150 lb", "128/78 mmHg", "6/10" : la mesure complete dans le systeme du cercle. */
+/** "150 lb", "128/78 mmHg", "6/10", "96%" : la mesure complete dans le systeme du cercle. */
 export const formatVital = (
     type: VitalType,
     value: number,
@@ -69,7 +70,7 @@ export const formatVital = (
     if (type === 'bp' && value2 !== null && value2 !== undefined) {
         return `${formatValue(type, value, system, locale)}/${formatValue(type, value2, system, locale)} ${unit}`;
     }
-    if (type === 'pain' || type === 'mood') return `${formatValue(type, value, system, locale)}${unit}`;
+    if (type === 'pain' || type === 'mood' || type === 'spo2') return `${formatValue(type, value, system, locale)}${unit}`;
     return `${formatValue(type, value, system, locale)} ${unit}`;
 };
 

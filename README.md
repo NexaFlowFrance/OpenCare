@@ -38,7 +38,7 @@ All on **your** server: the health data of a vulnerable person should not live o
 | 📔 **Care journal** | The digital liaison book: timestamped entries with photos, real time on every device (WebSocket). The heart of the app |
 | 💊 **Medications** | Treatments and schedules, intake confirmation written to the journal, prescription renewal alerts |
 | 📅 **Shared calendar** | Visits, medical appointments, nurse rounds, recurrences, reminders, iCal export (.ics / webcal) |
-| ❤️ **Health tracking** | Hand-entered vitals (weight, blood pressure, pain, mood, temperature, glucose), curves over time |
+| ❤️ **Health tracking** | Hand-entered vitals (weight, blood pressure, pain, mood, temperature, glucose, oxygen saturation), curves over time |
 | ✅ **Tasks and shopping** | Who does what this week, plus a shared shopping list the home aide can use too |
 | 💬 **Messages** | Circle thread and direct messages, attachments |
 | 📁 **Documents and contacts** | Prescriptions, reports, insurance, legal papers; the circle address book (GP, nurse, the neighbour who has the key) |

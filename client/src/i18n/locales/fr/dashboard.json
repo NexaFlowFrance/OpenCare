@@ -53,6 +53,7 @@
       "bp": "Tension",
       "temperature": "Température",
       "glucose": "Glycémie",
+      "spo2": "Sat",
       "pain": "Douleur",
       "mood": "Moral"
     }

@@ -63,6 +63,7 @@
     "pain": "Pain",
     "mood": "Mood",
     "temperature": "Temperature",
-    "glucose": "Blood glucose"
+    "glucose": "Blood glucose",
+    "spo2": "Oxygen saturation"
   }
 }
