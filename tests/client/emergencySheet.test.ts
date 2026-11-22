@@ -51,6 +51,11 @@ describe('encodeSheet', () => {
         expect(d.u).toBe('2026-09-29');
     });
 
+    it('date la fiche du jour local, meme juste apres minuit', () => {
+        // 00:30 a Paris (TZ des tests) = encore la veille en UTC.
+        expect(decode(encodeSheet(payload, new Date('2026-09-29T00:30:00'))).u).toBe('2026-09-29');
+    });
+
     it('garde les accents intacts apres l aller-retour', () => {
         const d = decode(encodeSheet(payload, DAY));
         expect(d.r[3]).toBe('Pénicilline');

@@ -10,6 +10,8 @@
  * restent identiques, et que docs/urgence.html n'ait qu'un format a decoder.
  */
 
+import { format } from 'date-fns';
+
 /** Lecteur public, heberge sur la page GitHub du projet. Il ne contient aucune donnee. */
 export const EMERGENCY_VIEWER_URL = 'https://nexaflowfrance.github.io/OpenCare/urgence.html';
 
@@ -50,7 +52,7 @@ export const encodeSheet = (payload: EmergencyPayload, today: Date = new Date())
         ]),
         c: payload.contacts.slice(0, 8).map((c) => [s(c.name), s(c.organization), s(c.phone)]),
         x: s(payload.extra_notes, 120),
-        u: today.toISOString().slice(0, 10),
+        u: format(today, 'yyyy-MM-dd'), // local day: toISOString() gives yesterday after midnight in France
     };
     const json = JSON.stringify(compact);
     const b64 = btoa(unescape(encodeURIComponent(json)));

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { format } from 'date-fns';
 import { api } from '../lib/api';
 import {
     Download,
@@ -469,7 +470,7 @@ const Settings: React.FC = () => {
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `opencare-export-${new Date().toISOString().split('T')[0]}.json`;
+            a.download = `opencare-export-${format(new Date(), 'yyyy-MM-dd')}.json`;
             a.click();
             URL.revokeObjectURL(url);
         } catch (error) {
