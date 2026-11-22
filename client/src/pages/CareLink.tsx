@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { BookOpen, Check, ChevronDown, ChevronUp, Clock, Send, X, AlertCircle } from 'lucide-react';
 import { API_BASE_URL } from '../lib/api';
 import { formatAmount } from '../lib/medications';
+import { formatClock } from '../i18n/format';
 
 /**
  * Page publique du lien magique intervenant (auxiliaire, infirmière).
@@ -48,9 +49,6 @@ interface StoryData {
 }
 
 const ENTRY_TYPES = ['visit', 'note', 'mood', 'incident'] as const;
-
-const formatTime = (iso: string) =>
-    new Date(iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 
 const CareLink: React.FC = () => {
     const { token } = useParams<{ token: string }>();
@@ -263,7 +261,7 @@ const CareLink: React.FC = () => {
                                         {intake.with_food ? ` · ${t(`medications:withFood.${intake.with_food}`)}` : ''}
                                     </p>
                                     <p className="text-caption text-muted-foreground">
-                                        {formatTime(intake.due_at)}
+                                        {formatClock(intake.due_at)}
                                         {intake.instructions ? ` · ${intake.instructions}` : ''}
                                     </p>
                                 </div>
@@ -298,7 +296,7 @@ const CareLink: React.FC = () => {
                                             <X className="h-4 w-4 text-muted-foreground" />
                                         )}
                                         <span>
-                                            {intake.medication_name} ({formatTime(intake.due_at)}) :{' '}
+                                            {intake.medication_name} ({formatClock(intake.due_at)}) :{' '}
                                             {t(`medications.status.${intake.status}`)}
                                         </span>
                                     </li>
@@ -318,7 +316,7 @@ const CareLink: React.FC = () => {
                                 <li key={entry.id} className="rounded-card border border-border bg-surface p-3">
                                     <div className="mb-1 flex items-center justify-between gap-2">
                                         <span className="text-caption font-semibold text-foreground">{entry.author_name}</span>
-                                        <span className="text-caption text-muted-foreground">{formatTime(entry.occurred_at)}</span>
+                                        <span className="text-caption text-muted-foreground">{formatClock(entry.occurred_at)}</span>
                                     </div>
                                     <p className="whitespace-pre-wrap text-body text-foreground">{entry.content}</p>
                                 </li>
