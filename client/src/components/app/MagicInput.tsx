@@ -92,13 +92,14 @@ const postProposal = async (proposal: AiProposal): Promise<void> => {
             });
             return;
         case 'appointment':
-            await api.post('/api/appointments', {
+            await api.post('/api/events', {
                 title: proposal.title,
+                category: 'other', // the AI does not pick an event category
                 ...(proposal.description ? { description: proposal.description } : {}),
                 start_time: proposal.start_time,
                 ...(proposal.end_time ? { end_time: proposal.end_time } : {}),
                 ...(proposal.location ? { location: proposal.location } : {}),
-                family_member_ids: proposal.family_member_ids,
+                member_ids: proposal.family_member_ids,
             });
             return;
         case 'shopping_item':
@@ -110,12 +111,11 @@ const postProposal = async (proposal: AiProposal): Promise<void> => {
             });
             return;
         case 'budget_entry':
-            await api.post('/api/budget/entries', {
+            await api.post('/api/expenses', {
                 category: proposal.category,
                 amount: proposal.amount,
                 ...(proposal.description ? { description: proposal.description } : {}),
                 date: proposal.date,
-                is_expense: proposal.is_expense,
             });
             return;
     }

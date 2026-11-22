@@ -11,9 +11,11 @@ import { pick, pickLang } from '../../lib/i18n';
 
 export const TASK_PRIORITIES = ['Haute', 'Moyenne', 'Basse'] as const;
 export const TASK_FREQUENCIES = ['Une fois', 'Quotidien', 'Hebdomadaire', 'Mensuel', 'Annuel'] as const;
-export const SHOPPING_CATEGORIES = ['Alimentation', 'Hygiene', 'Menage', 'Sante', 'Autre'] as const;
+// Must match the codes the shopping list groups by (client ShoppingList.tsx).
+export const SHOPPING_CATEGORIES = ['food', 'hygiene', 'household', 'pharmacy', 'other'] as const;
+// Must match the categories POST /api/expenses accepts (routes/expenses.ts).
 export const EXPENSE_CATEGORIES = [
-    'Pharmacie', 'Auxiliaire', 'Travaux', 'Transport', 'Sante', 'Autre',
+    'pharmacy', 'aide', 'equipment', 'works', 'food', 'transport', 'other',
 ] as const;
 
 /** A member of the care circle (circle_members.id + display name). */
@@ -96,8 +98,8 @@ export function buildParsePrompt(members: CircleMemberRef[]): string {
         ``,
         `Règles :`,
         `- Chaque champ non pertinent vaut "" (chaîne vide), 0 (nombre) ou [] (liste). is_expense vaut true par défaut.`,
-        `- "Rendez-vous cardiologue mardi 14h" = appointment. "Racheter du paracétamol" = shopping_item (catégorie Sante). "Penser à renouveler l'ordonnance" sans horaire = task.`,
-        `- "Ordonnance pharmacie 23,50" avec un montant = budget_entry (catégorie Pharmacie).`,
+        `- "Rendez-vous cardiologue mardi 14h" = appointment. "Racheter du paracétamol" = shopping_item (catégorie pharmacy). "Penser à renouveler l'ordonnance" sans horaire = task.`,
+        `- "Ordonnance pharmacie 23,50" avec un montant = budget_entry (catégorie pharmacy).`,
         `- Un passage d'intervenant (infirmière, auxiliaire) avec un horaire = appointment.`,
         `- N'invente rien : pas de date si la note n'en donne pas, pas de membre non listé.`,
         `- Réponds UNIQUEMENT avec un objet JSON de la forme {"items":[...]} respectant exactement les champs ci-dessus, sans texte autour.`,
@@ -433,7 +435,7 @@ export function validateParsedItems(raw: Record<string, unknown>, members: Circl
                 proposals.push({
                     type: 'shopping_item',
                     name: title,
-                    category: (SHOPPING_CATEGORIES as readonly string[]).includes(category) ? category : 'Autre',
+                    category: (SHOPPING_CATEGORIES as readonly string[]).includes(category) ? category : 'other',
                     quantity: cleanPositiveNumber(item.quantity, 9999),
                     unit: cleanString(item.unit, 20) || null,
                 });
@@ -442,14 +444,15 @@ export function validateParsedItems(raw: Record<string, unknown>, members: Circl
             case 'budget_entry': {
                 const amount = cleanPositiveNumber(item.amount, 1_000_000);
                 if (amount === null) continue; // amount is mandatory for budget entries
+                if (item.is_expense === false) continue; // shared expenses have no income side
                 const category = cleanString(item.category, 50);
                 proposals.push({
                     type: 'budget_entry',
-                    category: (EXPENSE_CATEGORIES as readonly string[]).includes(category) ? category : 'Autre',
+                    category: (EXPENSE_CATEGORIES as readonly string[]).includes(category) ? category : 'other',
                     amount,
                     description: description ?? title,
                     date: cleanDate(item.date) ?? localToday().iso,
-                    is_expense: item.is_expense === false ? false : true,
+                    is_expense: true,
                 });
                 break;
             }
