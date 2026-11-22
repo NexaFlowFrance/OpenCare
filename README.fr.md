@@ -4,7 +4,7 @@
   <p><strong>L'application open source et auto-hébergée de coordination des aidants familiaux</strong><br>
   Coordonnez le cercle autour d'un proche âgé. Sur votre serveur, avec vos données.</p>
 
-  🇬🇧 <a href="README.md">English</a> · 🇫🇷 <strong>Français</strong>
+  🇬🇧 <a href="README.md">English</a> · 🇫🇷 <strong>Français</strong> · 🇪🇸 <a href="README.es.md">Español</a>
 
   [![Release](https://img.shields.io/github/v/release/NexaFlowFrance/OpenCare?color=3E6B54&label=version)](https://github.com/NexaFlowFrance/OpenCare/releases/latest)
   [![CI](https://img.shields.io/github/actions/workflow/status/NexaFlowFrance/OpenCare/ci.yml?branch=main&label=CI)](https://github.com/NexaFlowFrance/OpenCare/actions/workflows/ci.yml)

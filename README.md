@@ -4,7 +4,7 @@
   <p><strong>The open-source, self-hosted care coordination app for family caregivers</strong><br>
   Coordinate the circle around an elderly loved one. On your server, with your data.</p>
 
-  🇬🇧 <strong>English</strong> · 🇫🇷 <a href="README.fr.md">Français</a>
+  🇬🇧 <strong>English</strong> · 🇫🇷 <a href="README.fr.md">Français</a> · 🇪🇸 <a href="README.es.md">Español</a>
 
   [![Release](https://img.shields.io/github/v/release/NexaFlowFrance/OpenCare?color=3E6B54&label=version)](https://github.com/NexaFlowFrance/OpenCare/releases/latest)
   [![CI](https://img.shields.io/github/actions/workflow/status/NexaFlowFrance/OpenCare/ci.yml?branch=main&label=CI)](https://github.com/NexaFlowFrance/OpenCare/actions/workflows/ci.yml)
