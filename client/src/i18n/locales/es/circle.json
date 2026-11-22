@@ -80,6 +80,7 @@
     "role": "Rol",
     "email": "Dirección de correo (opcional)",
     "emailHint": "Si la indica, solo esa dirección podrá aceptar la invitación.",
+    "emailPlaceholder": "nombre.apellido@ejemplo.com",
     "duration": "Validez del enlace",
     "days_7": "7 días",
     "days_14": "14 días",

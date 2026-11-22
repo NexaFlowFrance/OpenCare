@@ -80,6 +80,7 @@
     "role": "Role",
     "email": "Email address (optional)",
     "emailHint": "If set, only this address will be able to accept the invitation.",
+    "emailPlaceholder": "firstname.lastname@example.com",
     "duration": "Link validity",
     "days_7": "7 days",
     "days_14": "14 days",
