@@ -2,6 +2,7 @@ import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AlertCircle, Phone, Pill, HeartPulse, FileText } from 'lucide-react';
+import { parseISO } from 'date-fns';
 import { API_BASE_URL } from '../lib/api';
 
 /**
@@ -44,7 +45,7 @@ interface EmergencyData {
 }
 
 const computeAge = (birthDate: string): number => {
-    const birth = new Date(birthDate);
+    const birth = parseISO(birthDate); // local midnight, not UTC
     const now = new Date();
     let age = now.getFullYear() - birth.getFullYear();
     const m = now.getMonth() - birth.getMonth();
@@ -129,7 +130,7 @@ const Emergency: React.FC = () => {
                                 <div>
                                     <dt className="inline font-medium">{t('fields.birthDate')} : </dt>
                                     <dd className="inline">
-                                        {new Date(r.birth_date).toLocaleDateString(i18n.language)} ({t('fields.age', { age: computeAge(r.birth_date) })})
+                                        {parseISO(r.birth_date).toLocaleDateString(i18n.language)} ({t('fields.age', { age: computeAge(r.birth_date) })})
                                     </dd>
                                 </div>
                             )}
