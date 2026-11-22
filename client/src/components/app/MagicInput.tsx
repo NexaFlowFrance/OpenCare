@@ -126,7 +126,7 @@ const ProposalCard: React.FC<{
     checked: boolean;
     onToggle: () => void;
 }> = ({ proposal, checked, onToggle }) => {
-    const { t } = useTranslation(['ai', 'shopping']);
+    const { t } = useTranslation(['ai', 'shopping', 'tasks', 'expenses']);
     const meta = TYPE_META[proposal.type];
     const Icon = meta.icon;
     const locale = dateLocale();
@@ -137,15 +137,17 @@ const ProposalCard: React.FC<{
     const details: string[] = [];
     if (proposal.type === 'task') {
         if (proposal.due_date) details.push(formatDay(proposal.due_date));
-        if (proposal.priority) details.push(proposal.priority);
-        if (proposal.frequency && proposal.frequency !== 'Une fois') details.push(proposal.frequency);
+        if (proposal.priority) details.push(t(`tasks:priorities.${proposal.priority}`, { defaultValue: proposal.priority }));
+        if (proposal.frequency && proposal.frequency !== 'Une fois') {
+            details.push(t(`tasks:frequencies.${proposal.frequency}`, { defaultValue: proposal.frequency }));
+        }
     } else if (proposal.type === 'appointment') {
         details.push(formatDateTime(proposal.start_time));
     } else if (proposal.type === 'shopping_item') {
         details.push(t(`shopping:categories.${proposal.category}`, { defaultValue: proposal.category }));
         if (proposal.quantity) details.push(`×${proposal.quantity}${proposal.unit ? ` ${proposal.unit}` : ''}`);
     } else {
-        details.push(proposal.category);
+        details.push(t(`expenses:categories.${proposal.category}`, { defaultValue: proposal.category }));
         details.push(
             `${proposal.is_expense ? '−' : '+'}${proposal.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
         );
