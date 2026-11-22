@@ -1,4 +1,5 @@
 import type { TFunction } from 'i18next';
+import { formatNumber } from '../i18n/format';
 
 /**
  * Helpers d'affichage des medicaments partages par la page Medicaments, le
@@ -43,7 +44,7 @@ export const formatAmount = (
     form: string | null | undefined
 ): string => {
     const value = safeQuantity(quantity);
-    const shown = value.toLocaleString(undefined, { maximumFractionDigits: 2 });
+    const shown = formatNumber(value, { maximumFractionDigits: 2 });
     const unitKey = unitFor(unit, form);
     return `${shown} ${t(`medications:units.${unitKey}`, { count: value, defaultValue: unitKey })}`;
 };

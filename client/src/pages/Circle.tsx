@@ -13,6 +13,7 @@ import {
     Button, Input, Select, Dialog, Badge, useToast,
 } from '../components/ui';
 import { formatDate } from '../lib/utils';
+import { formatClock } from '../i18n/format';
 
 // Demande de reinitialisation de mot de passe en attente (instance sans SMTP :
 // l'administrateur transmet le lien a la personne).
@@ -770,7 +771,7 @@ const Circle: React.FC = () => {
                                     <p className="truncate text-body font-medium text-foreground">{reset.name}</p>
                                     <p className="truncate text-caption text-muted-foreground">
                                         {t('circle:resets.expires', {
-                                            time: new Date(reset.expires_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }),
+                                            time: formatClock(reset.expires_at),
                                         })}
                                     </p>
                                 </div>

@@ -14,7 +14,7 @@ import {
 import { format } from 'date-fns';
 import { api } from '../../lib/api';
 import { useAiEnabled } from '../../lib/aiStatus';
-import { dateLocale } from '../../i18n/format';
+import { dateLocale, formatNumber } from '../../i18n/format';
 import { Button, Dialog, Textarea, useToast } from '../ui';
 
 // Proposal shapes mirror server/src/services/ai/assistant.ts (already validated
@@ -149,7 +149,7 @@ const ProposalCard: React.FC<{
     } else {
         details.push(t(`expenses:categories.${proposal.category}`, { defaultValue: proposal.category }));
         details.push(
-            `${proposal.is_expense ? '−' : '+'}${proposal.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+            `${proposal.is_expense ? '−' : '+'}${formatNumber(proposal.amount, { minimumFractionDigits: 2 })}`
         );
         details.push(formatDay(proposal.date));
     }
