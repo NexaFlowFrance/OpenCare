@@ -16,12 +16,13 @@ Everything described in docs/SPEC.md is implemented and released:
 - **Care journal**: the heart of the app. Typed entries (visit, note, vital, medication,
   incident, mood) with photos, real time over WebSocket.
 - **Health tracking**: vitals (weight, blood pressure, pain, mood, temperature, glucose, oxygen saturation, heart rate)
-  with curves over time.
+  with curves over time and a normal range per vital that alerts the family.
 - **Medications**: treatments, schedules, generated intakes with confirmation written to
-  the journal, prescriptions and renewal alerts.
-- **Calendar**: visit and medical categories, simple recurrences, reminders, iCal export.
+  the journal, prescriptions and renewal alerts, stock tracking with a refill threshold.
+- **Calendar**: visit and medical categories, simple recurrences where a single
+  occurrence can be skipped or moved, reminders, iCal export.
 - **Tasks and shared shopping list.**
-- **Messages**: circle thread and direct messages, attachments.
+- **Messages**: circle thread and direct messages, attachments, unread counts.
 - **Documents and contacts**: the circle's paperwork and address book.
 - **Shared expenses**: Tricount-style balances and settlements, plus tracking of French
   aids (APA, CESU, tax credit).
@@ -41,7 +42,7 @@ Everything described in docs/SPEC.md is implemented and released:
   Nextcloud (CalDAV), Grocy, and a multi-provider AI layer (Ollama, Anthropic,
   OpenAI-compatible) with keys encrypted at rest.
 - **Foundation**: self-bootstrapping PostgreSQL schema, offline-friendly PWA, web push,
-  full data export/import, French and English UI, Docker deployment and the one-click
+  full data export/import, French, English and Spanish UI, Docker deployment and the one-click
   Windows installer.
 
 ## Future ideas
@@ -52,13 +53,13 @@ Everything described in docs/SPEC.md is implemented and released:
   caregivers who do not use smartphones or push notifications.
 - **DMP / Mon Espace Sante import**: import health documents and treatment data from
   the French national health record.
-- **More languages**: the interface is currently French/English. The i18n
+- **More languages**: the interface is currently French, English and Spanish. The i18n
   infrastructure is in place (namespaced JSON locales); the goal is to add German,
-  Spanish, Italian, Dutch and more, ideally through a community translation workflow
+  Italian, Dutch and more, ideally through a community translation workflow
   (e.g. Weblate). Contributions welcome.
 - **Multi-circle aggregation for professionals**: a cross-circle view for nurses and
   home aides who follow several cared-for persons (today each circle is consulted
   separately).
-- **Per-occurrence exceptions for recurrences**: edit or cancel a single occurrence of
-  a recurring event or task without breaking the series.
+- **Per-occurrence exceptions for recurring tasks**: a recurring calendar event can
+  already skip or move a single occurrence; tasks cannot yet.
 - **Message read-tracking**: show who has seen a message in the circle thread.
