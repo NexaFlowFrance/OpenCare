@@ -4,14 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script>
-    // Premiere visite : les navigateurs en francais sont envoyes vers la version FR.
+    // Premiere visite : les navigateurs en francais ou en espagnol sont envoyes vers leur version.
     // Un choix explicite (drapeau, ou ?lang=en) est memorise et respecte.
     (function () {
       try {
         if (/[?&]lang=en/.test(location.search)) return;
         var pref = localStorage.getItem('oc-lang');
         if (pref === 'en') return;
-        if (pref === 'fr' || /^fr\b/i.test(navigator.language || '')) location.replace('index.fr.html' + location.hash);
+        var m = /^(fr|es)\b/i.exec(pref || navigator.language || '');
+        if (m) location.replace('index.' + m[1].toLowerCase() + '.html' + location.hash);
       } catch (e) {}
     })();
   </script>
@@ -449,6 +450,7 @@
     <a href="#tech">Tech</a>
     <a href="#contributors">Credits</a>
     <a href="index.fr.html" onclick="try{localStorage.setItem('oc-lang','fr')}catch(e){}" title="Français" aria-label="Français" style="display:inline-flex;align-items:center;"><img src="https://flagcdn.com/fr.svg" alt="Français" width="22" height="16" style="border-radius:3px;display:block;box-shadow:0 0 0 1px rgba(0,0,0,.08);" loading="lazy" /></a>
+    <a href="index.es.html" onclick="try{localStorage.setItem('oc-lang','es')}catch(e){}" title="Español" aria-label="Español" style="display:inline-flex;align-items:center;"><img src="https://flagcdn.com/es.svg" alt="Español" width="22" height="16" style="border-radius:3px;display:block;box-shadow:0 0 0 1px rgba(0,0,0,.08);" loading="lazy" /></a>
     <a href="demo/">Live demo</a>
     <a class="btn-nav" href="https://github.com/NexaFlowFrance/OpenCare" target="_blank" rel="noopener">GitHub</a>
   </div>
@@ -852,7 +854,7 @@ API:      http://localhost:3001/health</pre>
     <span class="tech-chip">Vite 7</span>
     <span class="tech-chip">TailwindCSS</span>
     <span class="tech-chip">Radix UI</span>
-    <span class="tech-chip">i18next (FR + EN)</span>
+    <span class="tech-chip">i18next (FR + EN + ES)</span>
     <span class="tech-chip">Node.js 20</span>
     <span class="tech-chip">Express</span>
     <span class="tech-chip">PostgreSQL 14+</span>
