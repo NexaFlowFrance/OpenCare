@@ -1126,7 +1126,7 @@ const Circle: React.FC = () => {
                             label={t('circle:invites.email')}
                             value={inviteEmail}
                             onChange={(e) => setInviteEmail(e.target.value)}
-                            placeholder="prenom.nom@exemple.fr"
+                            placeholder={t('circle:invites.emailPlaceholder')}
                         />
                         <p className="mt-1.5 text-micro text-muted-foreground">{t('circle:invites.emailHint')}</p>
                     </div>

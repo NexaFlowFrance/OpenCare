@@ -80,6 +80,7 @@
     "role": "Rôle",
     "email": "Adresse e-mail (facultatif)",
     "emailHint": "Si renseignée, seule cette adresse pourra accepter l'invitation.",
+    "emailPlaceholder": "prenom.nom@exemple.fr",
     "duration": "Validité du lien",
     "days_7": "7 jours",
     "days_14": "14 jours",
