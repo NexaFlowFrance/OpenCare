@@ -50,7 +50,7 @@ Base de référence : `.env.production.example`. En production, définir au mini
 - `POSTGRES_PASSWORD` fort (le serveur refuse de démarrer en production sans mot de passe)
 - `JWT_SECRET` fort (32+ caractères ; les valeurs d'exemple sont refusées au démarrage)
 - `CORS_ORIGINS` vers le domaine du frontend
-- `VITE_API_URL` et `VITE_WS_URL` vers votre endpoint public API (variables de build du client)
+- `VITE_API_URL` et `VITE_WS_URL` seulement si l'API a son propre nom de domaine (variables de build du client). Laissées vides, l'interface appelle l'API à sa propre adresse et le conteneur client relaie `/api` et `/ws` vers le serveur : un seul nom de domaine suffit, et les images publiées sur ghcr.io fonctionnent telles quelles
 - les clés VAPID si vous voulez le Web Push (`npx web-push generate-vapid-keys`)
 
 Pensez aussi à `REGISTRATION_ENABLED=false` une fois tous les comptes du cercle créés.
@@ -143,6 +143,8 @@ server {
     }
 }
 ```
+
+Avec le conteneur client de `docker-compose.yml` (ou l'image `ghcr.io/nexaflowfrance/opencare-client`), les deux derniers blocs sont facultatifs : son nginx relaie déjà `/api` et `/ws` vers le serveur (`API_UPSTREAM`, `server:3001` par défaut), un seul `location /` vers le port 3000 suffit. Il reprend l'adresse du visiteur dans `X-Forwarded-For` quand la requête vient d'un réseau privé, pour que le rate limiting compte chaque visiteur et non le proxy.
 
 Avec Caddy, l'équivalent tient en quelques lignes (`reverse_proxy` gère l'upgrade WebSocket nativement). Le serveur Express est configuré avec `trust proxy`, les en-têtes `X-Forwarded-*` sont donc correctement pris en compte (rate limiting, logs).
 

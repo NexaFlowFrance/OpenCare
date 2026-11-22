@@ -65,8 +65,11 @@ services:
       context: .
       dockerfile: ./client/Dockerfile
       args:
-        VITE_API_URL: ${VITE_API_URL:-http://localhost:3001}
-        VITE_WS_URL: ${VITE_WS_URL:-ws://localhost:3001}
+        # Vides par defaut : l'interface appelle l'API a sa propre adresse et le
+        # nginx du conteneur relaie /api et /ws vers le serveur. A renseigner
+        # seulement si l'API a sa propre adresse publique.
+        VITE_API_URL: ${VITE_API_URL:-}
+        VITE_WS_URL: ${VITE_WS_URL:-}
     container_name: opencare-client
     restart: unless-stopped
     ports:
