@@ -19,6 +19,7 @@ import { circleWeekStart, weekStartsOn, orderedIsoDays, inWeekOrder } from '../l
 import { useAuth } from '../contexts/AuthContext';
 import { useWebSocketUpdates } from '../hooks/useWebSocketUpdates';
 import { dateLocale, formatClock } from '../i18n/format';
+import { shiftEndTime } from '../lib/clock';
 
 // ─── Domain types ─────────────────────────────────────────────────────────────
 
@@ -1094,7 +1095,11 @@ const Calendar: React.FC = () => {
                                 label={t('calendar:form.startTime')}
                                 type="time"
                                 value={formData.startTime}
-                                onChange={(value) => setFormData({ ...formData, startTime: value })}
+                                onChange={(value) => setFormData({
+                                    ...formData,
+                                    startTime: value,
+                                    endTime: shiftEndTime(formData.startTime, value, formData.endTime),
+                                })}
                             />
                             <DatePicker
                                 label={t('calendar:form.endTime')}

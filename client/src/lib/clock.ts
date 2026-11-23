@@ -42,3 +42,18 @@ export function formatClockIn(locale: string, value: Date | string | null | unde
         minute: '2-digit',
     }).format(date);
 }
+
+const minutesOf = (time: string): number => Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
+
+/**
+ * The end time ("HH:mm") once the start moves from `prevStart` to `nextStart`:
+ * it keeps the event's length, or one hour when there was none. An empty end
+ * stays empty (it is optional).
+ */
+export function shiftEndTime(prevStart: string, nextStart: string, end: string): string {
+    if (!end || !nextStart) return end;
+    const length = prevStart && minutesOf(end) > minutesOf(prevStart) ? minutesOf(end) - minutesOf(prevStart) : 60;
+    // The form has a single date, so the end cannot pass midnight.
+    const next = Math.min(minutesOf(nextStart) + length, 23 * 60 + 59);
+    return `${String(Math.floor(next / 60)).padStart(2, '0')}:${String(next % 60).padStart(2, '0')}`;
+}
