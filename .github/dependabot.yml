@@ -17,6 +17,10 @@ updates:
       # Majeures a traiter a la main (migrations)
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
+      # qs suit Express 4 et body-parser, qui n'acceptent que la branche 6.16
+      # (override exact dans package.json) : 6.17 et au-dela casseraient l'arbre.
+      - dependency-name: "qs"
+        versions: [">= 6.17.0"]
 
   - package-ecosystem: github-actions
     directory: /
