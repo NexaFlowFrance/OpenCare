@@ -6,9 +6,12 @@
   "newEvent": "New event",
   "prevMonth": "Previous month",
   "nextMonth": "Next month",
+  "prevWeek": "Previous week",
+  "nextWeek": "Next week",
   "view": {
     "label": "View",
     "month": "Month",
+    "week": "Week",
     "list": "List"
   },
   "moreCount_one": "+{{count}} more",
