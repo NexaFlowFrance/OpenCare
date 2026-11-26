@@ -2,12 +2,12 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     Plus, ChevronLeft, ChevronRight, MapPin, Clock, Users, Repeat,
-    Trash2, Edit2, Copy, Check, CalendarPlus, RefreshCw, CalendarDays, List, Bell,
+    Trash2, Edit2, Copy, Check, CalendarPlus, RefreshCw, CalendarDays, CalendarRange, List, Bell,
     CalendarClock, CalendarOff, Undo2,
 } from 'lucide-react';
 import {
     format, startOfMonth, endOfMonth, startOfWeek, endOfWeek,
-    eachDayOfInterval, isSameMonth, isToday, addMonths, subMonths, parseISO,
+    eachDayOfInterval, isSameMonth, isToday, addMonths, addWeeks, parseISO,
     addDays, subDays, addMinutes, differenceInMinutes,
 } from 'date-fns';
 import { Card, CardContent, Button, Dialog, Input, Textarea, Select, DatePicker } from '../components/ui';
@@ -208,7 +208,7 @@ const Calendar: React.FC = () => {
     const { user } = useAuth();
 
     const [currentDate, setCurrentDate] = useState(new Date());
-    const [view, setView] = useState<'month' | 'list'>(() =>
+    const [view, setView] = useState<'month' | 'week' | 'list'>(() =>
         typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches ? 'list' : 'month'
     );
     const [occurrences, setOccurrences] = useState<EventOccurrence[]>([]);
@@ -326,6 +326,13 @@ const Calendar: React.FC = () => {
     );
 
     const calendarDays = eachDayOfInterval({ start: gridStart, end: gridEnd });
+    // La grille du mois chargee contient toujours la semaine de currentDate : rien de plus a charger.
+    const isWeek = view === 'week';
+    const weekViewDays = eachDayOfInterval({
+        start: startOfWeek(currentDate, { weekStartsOn: weekStartsOn(weekStart) }),
+        end: endOfWeek(currentDate, { weekStartsOn: weekStartsOn(weekStart) }),
+    });
+    const shiftPeriod = (n: number) => setCurrentDate(isWeek ? addWeeks(currentDate, n) : addMonths(currentDate, n));
     // Les traductions restent rangees du lundi au dimanche ; seul l'affichage tourne.
     const weekDays = inWeekOrder(t('common:daysShort', { returnObjects: true }) as string[], weekStart);
     const dayLetters = t('calendar:form.dayLetters', { returnObjects: true }) as string[];
@@ -577,39 +584,31 @@ const Calendar: React.FC = () => {
             ) : null}
 
             {/* Header */}
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                 <div>
                     <h1 className="mb-1 text-h1">{t('calendar:title')}</h1>
                     <p className="text-body text-muted-foreground">
                         {recipientName ? t('calendar:subtitle', { name: recipientName }) : t('calendar:subtitleNoName')}
                     </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                     <div className="flex overflow-hidden rounded-input border border-border" role="group" aria-label={t('calendar:view.label')}>
-                        <button
-                            type="button"
-                            onClick={() => setView('month')}
-                            aria-pressed={view === 'month'}
-                            className={cn(
-                                'flex min-h-[44px] items-center gap-1.5 px-3 text-caption font-medium transition-colors duration-fast',
-                                view === 'month' ? 'bg-primary-soft text-primary' : 'bg-surface text-muted-foreground hover:text-foreground'
-                            )}
-                        >
-                            <CalendarDays className="h-4 w-4" />
-                            {t('calendar:view.month')}
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setView('list')}
-                            aria-pressed={view === 'list'}
-                            className={cn(
-                                'flex min-h-[44px] items-center gap-1.5 border-l border-border px-3 text-caption font-medium transition-colors duration-fast',
-                                view === 'list' ? 'bg-primary-soft text-primary' : 'bg-surface text-muted-foreground hover:text-foreground'
-                            )}
-                        >
-                            <List className="h-4 w-4" />
-                            {t('calendar:view.list')}
-                        </button>
+                        {([['month', CalendarDays], ['week', CalendarRange], ['list', List]] as const).map(([v, Icon], i) => (
+                            <button
+                                key={v}
+                                type="button"
+                                onClick={() => setView(v)}
+                                aria-pressed={view === v}
+                                className={cn(
+                                    'flex min-h-[44px] items-center gap-1.5 whitespace-nowrap px-3 text-caption font-medium transition-colors duration-fast',
+                                    i > 0 && 'border-l border-border',
+                                    view === v ? 'bg-primary-soft text-primary' : 'bg-surface text-muted-foreground hover:text-foreground'
+                                )}
+                            >
+                                <Icon className="h-4 w-4" />
+                                {t(`calendar:view.${v}`)}
+                            </button>
+                        ))}
                     </div>
                     {canCreate && (
                         <Button onClick={() => openCreate()}>
@@ -624,15 +623,17 @@ const Calendar: React.FC = () => {
             <Card>
                 <CardContent className="p-4 md:p-6">
                     <div className="mb-4 flex items-center justify-between gap-2">
-                        <h2 className="text-h2 font-semibold capitalize">
-                            {format(currentDate, 'MMMM yyyy', { locale: dateLocale() })}
+                        <h2 className={cn('text-h2 font-semibold', !isWeek && 'capitalize')}>
+                            {isWeek
+                                ? `${format(weekViewDays[0], 'd MMM', { locale: dateLocale() })} – ${format(weekViewDays[6], 'd MMM yyyy', { locale: dateLocale() })}`
+                                : format(currentDate, 'MMMM yyyy', { locale: dateLocale() })}
                         </h2>
                         <div className="flex gap-2">
                             <Button
                                 variant="secondary"
                                 size="icon"
-                                aria-label={t('calendar:prevMonth')}
-                                onClick={() => setCurrentDate(subMonths(currentDate, 1))}
+                                aria-label={t(isWeek ? 'calendar:prevWeek' : 'calendar:prevMonth')}
+                                onClick={() => shiftPeriod(-1)}
                             >
                                 <ChevronLeft className="h-4 w-4" />
                             </Button>
@@ -642,8 +643,8 @@ const Calendar: React.FC = () => {
                             <Button
                                 variant="secondary"
                                 size="icon"
-                                aria-label={t('calendar:nextMonth')}
-                                onClick={() => setCurrentDate(addMonths(currentDate, 1))}
+                                aria-label={t(isWeek ? 'calendar:nextWeek' : 'calendar:nextMonth')}
+                                onClick={() => shiftPeriod(1)}
                             >
                                 <ChevronRight className="h-4 w-4" />
                             </Button>
@@ -711,6 +712,65 @@ const Calendar: React.FC = () => {
                                                     {t('calendar:moreCount', { count: dayOccurrences.length - 3 })}
                                                 </p>
                                             )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ) : isWeek ? (
+                        <div className="grid grid-cols-1 gap-1.5 xl:grid-cols-7">
+                            {weekViewDays.map((day, i) => {
+                                const key = format(day, 'yyyy-MM-dd');
+                                const today = isToday(day);
+                                return (
+                                    <div
+                                        key={key}
+                                        onClick={() => canCreate && openCreate(day)}
+                                        className={cn(
+                                            'min-h-[72px] rounded-input border bg-card p-1.5 transition-colors duration-fast xl:min-h-[320px]',
+                                            today ? 'border-primary' : 'border-border',
+                                            canCreate && 'cursor-pointer hover:bg-surface-2/60'
+                                        )}
+                                    >
+                                        <div className="mb-2 flex items-center gap-1.5 text-caption font-medium">
+                                            <span className="text-label font-semibold text-muted-foreground">{weekDays[i]}</span>
+                                            <span
+                                                className={cn(
+                                                    'flex h-6 w-6 items-center justify-center rounded-full',
+                                                    today ? 'bg-primary text-primary-foreground' : 'text-foreground'
+                                                )}
+                                            >
+                                                {format(day, 'd')}
+                                            </span>
+                                        </div>
+                                        <div className="space-y-1">
+                                            {(occurrencesByDay.get(key) ?? []).map((occ) => (
+                                                <button
+                                                    type="button"
+                                                    key={`${occ.id}-${occ.occurrence_date}-${occ.start_time}`}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setSelected(occ);
+                                                    }}
+                                                    title={isMovedOccurrence(occ) ? t('calendar:occurrence.movedBadge') : undefined}
+                                                    className={cn(
+                                                        'block w-full rounded px-1.5 py-1 text-left text-micro text-foreground transition-colors duration-fast hover:opacity-80',
+                                                        CATEGORY_CHIP[occ.category]
+                                                    )}
+                                                >
+                                                    <span className="flex items-center gap-1 whitespace-nowrap font-medium tabular-nums">
+                                                        <CategoryDot category={occ.category} className="h-1.5 w-1.5" />
+                                                        {occurrenceTimeRange(occ)}
+                                                        {isMovedOccurrence(occ) && (
+                                                            <CalendarClock className="h-2.5 w-2.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+                                                        )}
+                                                    </span>
+                                                    <span className="block break-words">{occ.title}</span>
+                                                    {occ.location && (
+                                                        <span className="block truncate text-muted-foreground">{occ.location}</span>
+                                                    )}
+                                                </button>
+                                            ))}
                                         </div>
                                     </div>
                                 );
