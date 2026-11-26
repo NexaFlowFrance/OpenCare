@@ -43,7 +43,6 @@
   "meds": {
     "title": "Your medicines",
     "timeTitle": "It's time for your medication",
-    "empty": "No medication today.",
     "at": "at {{time}}",
     "taken": "Taken, well done",
     "take": "Take {{amount}}",

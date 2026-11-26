@@ -43,7 +43,6 @@
   "meds": {
     "title": "Tes médicaments",
     "timeTitle": "C'est l'heure de tes médicaments",
-    "empty": "Pas de médicament aujourd'hui.",
     "at": "à {{time}}",
     "taken": "C'est pris, bravo",
     "take": "Prends {{amount}}",

@@ -639,81 +639,81 @@ const Kiosk: React.FC<KioskProps> = ({ device }) => {
                 )}
 
                 {/* A. Ce que je dois faire maintenant : uniquement les prises dues */}
-                <section className="rounded-3xl p-5 sm:p-6" style={{ backgroundColor: C.greenSoft, border: `1px solid ${C.border}` }}>
-                    {meds.due_now.length > 0 ? (
-                        <>
-                            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                                <h2 className="flex items-center gap-3" style={sectionTitle(C.text)}>
-                                    <span className="flex h-11 w-11 items-center justify-center rounded-full text-white" style={{ backgroundColor: C.green }}>
-                                        <Pill className="h-6 w-6" aria-hidden="true" />
-                                    </span>
-                                    {t('kiosk:meds.timeTitle')}
-                                </h2>
-                                {dueNowTime && <span className="font-bold tabular-nums" style={fs(28)}>{dueNowTime}</span>}
-                            </div>
-                            <ul className={cn('grid gap-3', isPhone ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4')}>
-                                {meds.due_now.map((intake) => (
-                                    <li key={intake.id} className="flex items-center gap-4 rounded-2xl p-3 sm:flex-col sm:items-stretch sm:p-4" style={tile}>
-                                        {intake.photo_url ? (
-                                            <img src={intake.photo_url} alt="" className="h-24 w-24 shrink-0 rounded-2xl object-cover sm:h-32 sm:w-full" style={{ border: `1px solid ${C.border}` }} />
-                                        ) : (
-                                            <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl sm:h-32 sm:w-full" style={{ backgroundColor: C.blueSoft, color: C.blue }} aria-hidden="true">
-                                                <Pill className="h-12 w-12" />
-                                            </div>
-                                        )}
-                                        <div className="min-w-0">
-                                            <p className="font-bold leading-tight" style={fs(22)}>{intake.medication_name}</p>
-                                            {intake.dosage && <p style={{ ...fs(18), color: C.muted }}>{intake.dosage}</p>}
-                                            <p className="mt-1 font-bold" style={{ ...fs(20), color: C.green }}>
-                                                {t('kiosk:meds.take', { amount: formatAmount(t, intake.quantity, intake.unit, intake.form) })}
-                                            </p>
-                                            {intake.with_food && (
-                                                <p style={{ ...fs(16), color: C.muted }}>{t(`medications:withFood.${intake.with_food}`)}</p>
+                {meds.total > 0 && (
+                    <section className="rounded-3xl p-5 sm:p-6" style={{ backgroundColor: C.greenSoft, border: `1px solid ${C.border}` }}>
+                        {meds.due_now.length > 0 ? (
+                            <>
+                                <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                                    <h2 className="flex items-center gap-3" style={sectionTitle(C.text)}>
+                                        <span className="flex h-11 w-11 items-center justify-center rounded-full text-white" style={{ backgroundColor: C.green }}>
+                                            <Pill className="h-6 w-6" aria-hidden="true" />
+                                        </span>
+                                        {t('kiosk:meds.timeTitle')}
+                                    </h2>
+                                    {dueNowTime && <span className="font-bold tabular-nums" style={fs(28)}>{dueNowTime}</span>}
+                                </div>
+                                <ul className={cn('grid gap-3', isPhone ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4')}>
+                                    {meds.due_now.map((intake) => (
+                                        <li key={intake.id} className="flex items-center gap-4 rounded-2xl p-3 sm:flex-col sm:items-stretch sm:p-4" style={tile}>
+                                            {intake.photo_url ? (
+                                                <img src={intake.photo_url} alt="" className="h-24 w-24 shrink-0 rounded-2xl object-cover sm:h-32 sm:w-full" style={{ border: `1px solid ${C.border}` }} />
+                                            ) : (
+                                                <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl sm:h-32 sm:w-full" style={{ backgroundColor: C.blueSoft, color: C.blue }} aria-hidden="true">
+                                                    <Pill className="h-12 w-12" />
+                                                </div>
                                             )}
-                                        </div>
-                                    </li>
-                                ))}
-                            </ul>
-                            <button
-                                type="button"
-                                onClick={() => void confirmAllDue()}
-                                disabled={medsState !== 'idle'}
-                                className="mt-4 flex min-h-[80px] w-full flex-col items-center justify-center rounded-2xl text-white shadow-md active:shadow-inner"
-                                style={{ backgroundColor: C.green }}
-                            >
-                                <span className="flex items-center gap-3 font-bold" style={fs(26)}>
-                                    <Check className="h-9 w-9" strokeWidth={3} aria-hidden="true" />
-                                    {medsState === 'done' ? t('kiosk:meds.confirmed') : t('kiosk:meds.takeAll')}
+                                            <div className="min-w-0">
+                                                <p className="font-bold leading-tight" style={fs(22)}>{intake.medication_name}</p>
+                                                {intake.dosage && <p style={{ ...fs(18), color: C.muted }}>{intake.dosage}</p>}
+                                                <p className="mt-1 font-bold" style={{ ...fs(20), color: C.green }}>
+                                                    {t('kiosk:meds.take', { amount: formatAmount(t, intake.quantity, intake.unit, intake.form) })}
+                                                </p>
+                                                {intake.with_food && (
+                                                    <p style={{ ...fs(16), color: C.muted }}>{t(`medications:withFood.${intake.with_food}`)}</p>
+                                                )}
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ul>
+                                <button
+                                    type="button"
+                                    onClick={() => void confirmAllDue()}
+                                    disabled={medsState !== 'idle'}
+                                    className="mt-4 flex min-h-[80px] w-full flex-col items-center justify-center rounded-2xl text-white shadow-md active:shadow-inner"
+                                    style={{ backgroundColor: C.green }}
+                                >
+                                    <span className="flex items-center gap-3 font-bold" style={fs(26)}>
+                                        <Check className="h-9 w-9" strokeWidth={3} aria-hidden="true" />
+                                        {medsState === 'done' ? t('kiosk:meds.confirmed') : t('kiosk:meds.takeAll')}
+                                    </span>
+                                    <span style={{ ...fs(16), opacity: 0.9 }}>{t('kiosk:meds.takeAllHint')}</span>
+                                </button>
+                            </>
+                        ) : (
+                            <div className="flex items-center gap-4">
+                                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-white" style={{ backgroundColor: C.green }}>
+                                    <Check className="h-8 w-8" strokeWidth={3} aria-hidden="true" />
                                 </span>
-                                <span style={{ ...fs(16), opacity: 0.9 }}>{t('kiosk:meds.takeAllHint')}</span>
-                            </button>
-                        </>
-                    ) : (
-                        <div className="flex items-center gap-4">
-                            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-white" style={{ backgroundColor: C.green }}>
-                                <Check className="h-8 w-8" strokeWidth={3} aria-hidden="true" />
-                            </span>
-                            <div>
-                                <p className="font-bold" style={fs(24)}>
-                                    {medsState === 'done'
-                                        ? t('kiosk:meds.confirmed')
-                                        : meds.total === 0
-                                            ? t('kiosk:meds.empty')
+                                <div>
+                                    <p className="font-bold" style={fs(24)}>
+                                        {medsState === 'done'
+                                            ? t('kiosk:meds.confirmed')
                                             : meds.taken_count === meds.total
                                                 ? t('kiosk:meds.allDone')
                                                 : t('kiosk:meds.nothingTitle')}
-                                </p>
-                                <p style={{ ...fs(18), color: C.muted }}>
-                                    {meds.next_due_at
-                                        ? t('kiosk:meds.nextAt', { time: fmtTime(new Date(meds.next_due_at)) })
-                                        : meds.total > 0 && meds.taken_count < meds.total
-                                            ? t('kiosk:meds.someDone', { taken: meds.taken_count, total: meds.total })
-                                            : ''}
-                                </p>
+                                    </p>
+                                    <p style={{ ...fs(18), color: C.muted }}>
+                                        {meds.next_due_at
+                                            ? t('kiosk:meds.nextAt', { time: fmtTime(new Date(meds.next_due_at)) })
+                                            : meds.taken_count < meds.total
+                                                ? t('kiosk:meds.someDone', { taken: meds.taken_count, total: meds.total })
+                                                : ''}
+                                    </p>
+                                </div>
                             </div>
-                        </div>
-                    )}
-                </section>
+                        )}
+                    </section>
+                )}
 
                 {/* B + C. Qui vient, rendez-vous */}
                 <div className={cn('grid gap-4 sm:gap-5', isPhone ? 'grid-cols-1' : 'lg:grid-cols-2')}>
