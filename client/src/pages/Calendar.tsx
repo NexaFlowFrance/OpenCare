@@ -637,7 +637,7 @@ const Calendar: React.FC = () => {
                             >
                                 <ChevronLeft className="h-4 w-4" />
                             </Button>
-                            <Button variant="secondary" size="sm" onClick={() => setCurrentDate(new Date())}>
+                            <Button variant="secondary" size="sm" className="whitespace-nowrap" onClick={() => setCurrentDate(new Date())}>
                                 {t('common:actions.today')}
                             </Button>
                             <Button
