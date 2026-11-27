@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { format, parseISO } from 'date-fns';
-import { Download, Edit2, Eye, FileText, FolderLock, Image as ImageIcon, Plus, Trash2 } from 'lucide-react';
+import { Camera, Download, Edit2, Eye, FileText, FolderLock, Image as ImageIcon, Plus, Trash2 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useCircle } from '../contexts/CircleContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -222,6 +222,12 @@ const Documents: React.FC = () => {
         }
 
         setFormError(t('documents:errors.fileType'));
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+
+    const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        void handleFileChange(e); // reads the file before its first await
+        e.target.value = ''; // lets the same photo be picked again
         if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
@@ -471,6 +477,31 @@ const Documents: React.FC = () => {
                             <label className="mb-1.5 block text-caption font-medium text-foreground" htmlFor="document-file">
                                 {t('documents:form.file')}
                             </label>
+                            {window.matchMedia('(pointer: coarse)').matches ? (
+                                <div className="mb-3 flex flex-wrap gap-2">
+                                    <label className="btn-nexus btn-secondary h-11 cursor-pointer px-5 text-caption">
+                                        <Camera className="h-4 w-4" aria-hidden="true" />
+                                        {t('documents:form.takePhoto')}
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            capture="environment"
+                                            onChange={handlePhotoChange}
+                                            className="sr-only"
+                                        />
+                                    </label>
+                                    <label className="btn-nexus btn-secondary h-11 cursor-pointer px-5 text-caption">
+                                        <ImageIcon className="h-4 w-4" aria-hidden="true" />
+                                        {t('documents:form.choosePhoto')}
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handlePhotoChange}
+                                            className="sr-only"
+                                        />
+                                    </label>
+                                </div>
+                            ) : null}
                             <input
                                 id="document-file"
                                 ref={fileInputRef}

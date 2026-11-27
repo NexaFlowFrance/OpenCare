@@ -35,6 +35,8 @@
     "category": "Catégorie",
     "notes": "Notes",
     "file": "Fichier (image ou PDF)",
+    "takePhoto": "Prendre une photo",
+    "choosePhoto": "Choisir une photo",
     "processing": "Préparation du fichier…",
     "ready": "Fichier prêt : {{name}}"
   },
