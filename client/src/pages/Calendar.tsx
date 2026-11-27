@@ -18,7 +18,7 @@ import { useCircle } from '../contexts/CircleContext';
 import { circleWeekStart, weekStartsOn, orderedIsoDays, inWeekOrder } from '../lib/weekStart';
 import { useAuth } from '../contexts/AuthContext';
 import { useWebSocketUpdates } from '../hooks/useWebSocketUpdates';
-import { dateLocale, formatClock } from '../i18n/format';
+import { dateLocale, formatClock, formatDayRange } from '../i18n/format';
 import { shiftEndTime } from '../lib/clock';
 
 // ─── Domain types ─────────────────────────────────────────────────────────────
@@ -625,7 +625,7 @@ const Calendar: React.FC = () => {
                     <div className="mb-4 flex items-center justify-between gap-2">
                         <h2 className={cn('text-h2 font-semibold', !isWeek && 'capitalize')}>
                             {isWeek
-                                ? `${format(weekViewDays[0], 'd MMM', { locale: dateLocale() })} – ${format(weekViewDays[6], 'd MMM yyyy', { locale: dateLocale() })}`
+                                ? formatDayRange(weekViewDays[0], weekViewDays[6])
                                 : format(currentDate, 'MMMM yyyy', { locale: dateLocale() })}
                         </h2>
                         <div className="flex gap-2">
