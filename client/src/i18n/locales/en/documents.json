@@ -35,6 +35,8 @@
     "category": "Category",
     "notes": "Notes",
     "file": "File (image or PDF)",
+    "takePhoto": "Take a photo",
+    "choosePhoto": "Choose from photos",
     "processing": "Preparing the file…",
     "ready": "File ready: {{name}}"
   },
