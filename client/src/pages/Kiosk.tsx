@@ -89,6 +89,7 @@ interface KioskContact { id: string; name: string; category: string; phone: stri
 interface KioskToday {
     recipient: { first_name: string; last_name?: string | null; photo_url: string | null; address?: string | null; phone?: string | null } | null;
     events_today: KioskEvent[];
+    events_tomorrow?: KioskEvent[];
     intakes_today: KioskIntake[];
     medications?: PatientMedications;
     contacts_key?: KioskContact[];
@@ -219,6 +220,8 @@ const Kiosk: React.FC<KioskProps> = ({ device }) => {
     // Rappel de prise pousse par l escalade (niveau 1) : ecran calme, lu a voix haute.
     const [reminderOpen, setReminderOpen] = useState(false);
     const [infoOpen, setInfoOpen] = useState(false);
+    // Visites et rendez-vous : aujourd'hui par defaut, demain a la demande.
+    const [showTomorrow, setShowTomorrow] = useState(false);
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [leaveOpen, setLeaveOpen] = useState(false);
     const [pinPrompt, setPinPrompt] = useState<{ action: () => void } | null>(null);
@@ -455,6 +458,13 @@ const Kiosk: React.FC<KioskProps> = ({ device }) => {
         return () => clearTimeout(id);
     }, [medsState]);
 
+    // Un ecran oublie sur "Demain" ferait lire les rendez-vous de demain comme ceux du jour.
+    useEffect(() => {
+        if (!showTomorrow) return;
+        const id = setTimeout(() => setShowTomorrow(false), 2 * 60_000);
+        return () => clearTimeout(id);
+    }, [showTomorrow]);
+
     // ── Canicule ──
 
     const sendHydration = async () => {
@@ -490,7 +500,8 @@ const Kiosk: React.FC<KioskProps> = ({ device }) => {
     };
 
     const recipient = today?.recipient ?? null;
-    const events = today?.events_today ?? [];
+    const events = (showTomorrow ? today?.events_tomorrow : today?.events_today) ?? [];
+    const dayKey = showTomorrow ? 'tomorrow' : 'today';
     const visitors = events.filter((e) => e.category !== 'medical');
     const appointments = events.filter((e) => e.category === 'medical');
     const contacts = today?.contacts_key ?? [];
@@ -715,15 +726,32 @@ const Kiosk: React.FC<KioskProps> = ({ device }) => {
                     </section>
                 )}
 
-                {/* B + C. Qui vient, rendez-vous */}
+                {/* B + C. Qui vient, rendez-vous : aujourd'hui ou demain */}
+                <div role="group" aria-label={t('kiosk:day.label')} className="grid grid-cols-2 gap-2 rounded-2xl p-1.5" style={tile}>
+                    {(['today', 'tomorrow'] as const).map((key) => {
+                        const active = dayKey === key;
+                        return (
+                            <button
+                                key={key}
+                                type="button"
+                                aria-pressed={active}
+                                onClick={() => setShowTomorrow(key === 'tomorrow')}
+                                className="min-h-[56px] rounded-xl font-bold"
+                                style={{ ...fs(22), backgroundColor: active ? C.blue : 'transparent', color: active ? '#fff' : C.blueDark }}
+                            >
+                                {t(`kiosk:day.${key}`)}
+                            </button>
+                        );
+                    })}
+                </div>
                 <div className={cn('grid gap-4 sm:gap-5', isPhone ? 'grid-cols-1' : 'lg:grid-cols-2')}>
                     <section className="rounded-3xl p-5 sm:p-6" style={{ backgroundColor: C.blueSoft, border: `1px solid ${C.border}` }}>
                         <h2 className="mb-4 flex items-center gap-3" style={sectionTitle(C.blueDark)}>
                             <Users className="h-8 w-8 shrink-0" aria-hidden="true" />
-                            {t('kiosk:visitors.title')}
+                            {t(`kiosk:visitors.title.${dayKey}`)}
                         </h2>
                         {visitors.length === 0 ? (
-                            <p style={{ ...fs(20), color: C.muted }}>{t('kiosk:visitors.empty')}</p>
+                            <p style={{ ...fs(20), color: C.muted }}>{t(`kiosk:visitors.empty.${dayKey}`)}</p>
                         ) : (
                             <ul className="space-y-3">
                                 {visitors.map((ev) => {
@@ -757,10 +785,10 @@ const Kiosk: React.FC<KioskProps> = ({ device }) => {
                     <section className="rounded-3xl p-5 sm:p-6" style={{ backgroundColor: C.purpleSoft, border: `1px solid ${C.border}` }}>
                         <h2 className="mb-4 flex items-center gap-3" style={sectionTitle(C.purple)}>
                             <CalendarDays className="h-8 w-8 shrink-0" aria-hidden="true" />
-                            {t('kiosk:appointments.title')}
+                            {t(`kiosk:appointments.title.${dayKey}`)}
                         </h2>
                         {appointments.length === 0 ? (
-                            <p style={{ ...fs(20), color: C.muted }}>{t('kiosk:appointments.empty')}</p>
+                            <p style={{ ...fs(20), color: C.muted }}>{t(`kiosk:appointments.empty.${dayKey}`)}</p>
                         ) : (
                             <ul className="space-y-3">
                                 {appointments.map((ev) => (

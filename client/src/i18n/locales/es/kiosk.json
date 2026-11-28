@@ -22,9 +22,20 @@
     "medical": "Cita a las {{time}}: {{title}}",
     "other": "{{title}} a las {{time}}"
   },
+  "day": {
+    "label": "Día mostrado",
+    "today": "Hoy",
+    "tomorrow": "Mañana"
+  },
   "visitors": {
-    "title": "Quién viene hoy",
-    "empty": "Hoy no viene nadie.",
+    "title": {
+      "today": "Quién viene hoy",
+      "tomorrow": "Quién viene mañana"
+    },
+    "empty": {
+      "today": "Hoy no viene nadie.",
+      "tomorrow": "Mañana no viene nadie."
+    },
     "nurse": "Enfermero/a",
     "aide": "Auxiliar a domicilio",
     "someone": "Viene alguien",
@@ -37,8 +48,14 @@
     }
   },
   "appointments": {
-    "title": "Citas de hoy",
-    "empty": "Hoy no hay ninguna cita."
+    "title": {
+      "today": "Citas de hoy",
+      "tomorrow": "Citas de mañana"
+    },
+    "empty": {
+      "today": "Hoy no hay ninguna cita.",
+      "tomorrow": "Mañana no hay ninguna cita."
+    }
   },
   "meds": {
     "title": "Tus medicamentos",

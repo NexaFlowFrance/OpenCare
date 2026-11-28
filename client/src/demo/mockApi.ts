@@ -715,18 +715,22 @@ function kioskToday(c: CircleData): Json {
     const now = new Date();
     const dayStart = startOfDay(now);
     const dayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+    const tomorrowStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    const tomorrowEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 23, 59, 59);
     const membersById = new Map(c.members.map((m) => [m.id as string, m]));
+    const eventsOn = (from: Date, to: Date) => expandEvents(c, from, to).map((occ) => ({
+        id: occ.id, title: occ.title, category: occ.category, location: occ.location,
+        start_time: occ.start_time, end_time: occ.end_time,
+        members: ((occ.member_ids as string[]) || [])
+            .map((id) => membersById.get(id))
+            .filter(Boolean)
+            .map((m) => ({ id: m!.id, name: m!.name, avatar_url: m!.avatar_url })),
+    }));
 
     return {
         recipient: c.recipient ? { first_name: c.recipient.first_name, photo_url: c.recipient.photo_url } : null,
-        events_today: expandEvents(c, dayStart, dayEnd).map((occ) => ({
-            id: occ.id, title: occ.title, category: occ.category, location: occ.location,
-            start_time: occ.start_time, end_time: occ.end_time,
-            members: ((occ.member_ids as string[]) || [])
-                .map((id) => membersById.get(id))
-                .filter(Boolean)
-                .map((m) => ({ id: m!.id, name: m!.name, avatar_url: m!.avatar_url })),
-        })),
+        events_today: eventsOn(dayStart, dayEnd),
+        events_tomorrow: eventsOn(tomorrowStart, tomorrowEnd),
         intakes_today: intakesForRange(c, isoDate(now), isoDate(now)),
         medications: splitForPatient(intakesForRange(c, isoDate(now), isoDate(now)), now),
         contacts_key: c.contacts

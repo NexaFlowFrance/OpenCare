@@ -22,9 +22,20 @@
     "medical": "Appointment at {{time}}: {{title}}",
     "other": "{{title}} at {{time}}"
   },
+  "day": {
+    "label": "Day shown",
+    "today": "Today",
+    "tomorrow": "Tomorrow"
+  },
   "visitors": {
-    "title": "Who's coming today",
-    "empty": "Nobody planned today.",
+    "title": {
+      "today": "Who's coming today",
+      "tomorrow": "Who's coming tomorrow"
+    },
+    "empty": {
+      "today": "Nobody planned today.",
+      "tomorrow": "Nobody planned tomorrow."
+    },
     "nurse": "Nurse",
     "aide": "Home aide",
     "someone": "Someone is coming",
@@ -37,8 +48,14 @@
     }
   },
   "appointments": {
-    "title": "Today's appointments",
-    "empty": "No appointment today."
+    "title": {
+      "today": "Today's appointments",
+      "tomorrow": "Tomorrow's appointments"
+    },
+    "empty": {
+      "today": "No appointment today.",
+      "tomorrow": "No appointment tomorrow."
+    }
   },
   "meds": {
     "title": "Your medicines",
