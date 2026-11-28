@@ -22,9 +22,20 @@
     "medical": "Rendez-vous à {{time}} : {{title}}",
     "other": "{{title}} à {{time}}"
   },
+  "day": {
+    "label": "Jour affiché",
+    "today": "Aujourd'hui",
+    "tomorrow": "Demain"
+  },
   "visitors": {
-    "title": "Qui vient aujourd'hui",
-    "empty": "Personne de prévu aujourd'hui.",
+    "title": {
+      "today": "Qui vient aujourd'hui",
+      "tomorrow": "Qui vient demain"
+    },
+    "empty": {
+      "today": "Personne de prévu aujourd'hui.",
+      "tomorrow": "Personne de prévu demain."
+    },
     "nurse": "Infirmier(ère)",
     "aide": "Aide à domicile",
     "someone": "Quelqu'un passe",
@@ -37,8 +48,14 @@
     }
   },
   "appointments": {
-    "title": "Rendez-vous du jour",
-    "empty": "Pas de rendez-vous aujourd'hui."
+    "title": {
+      "today": "Rendez-vous du jour",
+      "tomorrow": "Rendez-vous de demain"
+    },
+    "empty": {
+      "today": "Pas de rendez-vous aujourd'hui.",
+      "tomorrow": "Pas de rendez-vous demain."
+    }
   },
   "meds": {
     "title": "Tes médicaments",

@@ -199,7 +199,7 @@ Toutes les routes (sauf mention contraire) exigent un JWT (`Authorization: Beare
 ### Kiosk (`/api/kiosk`)
 
 - `POST /api/kiosk/status` : les deux gros boutons (« ok » et « help »).
-- `GET /api/kiosk/today` : qui vient aujourd'hui, prises du jour (avec photo, quantité et consignes), et la vue patient `medications` : uniquement ce qui est **à prendre maintenant** (`due_now`), le reste résumé (`upcoming_count`, `next_due_at`, `taken_count`). Les prises du jour sont générées à l'appel, même si personne n'a ouvert l'application aidant.
+- `GET /api/kiosk/today` : qui vient aujourd'hui (`events_today`) et demain (`events_tomorrow`), prises du jour (avec photo, quantité et consignes), et la vue patient `medications` : uniquement ce qui est **à prendre maintenant** (`due_now`), le reste résumé (`upcoming_count`, `next_due_at`, `taken_count`). Les prises du jour sont générées à l'appel, même si personne n'a ouvert l'application aidant.
 - `POST /api/kiosk/intakes/confirm` : « J'ai tout pris » depuis le kiosk ou le téléphone du patient (`intake_ids`, `source`), attribué au proche dans le journal avec la source conservée.
 
 ### Plan de soins (`/api/care-plan`)
@@ -362,6 +362,7 @@ La page `/kiosk` (alias `/myday`) est l'**mode Kiosk** : un mode plein écran sa
 - **Qu'est-ce que je dois faire maintenant ?** Uniquement les médicaments dus maintenant, avec photo, nom, dosage et « Prends 2 comprimés », puis un seul bouton « J'ai tout pris ». Les prises futures ne sont pas montrées (« Prochaine prise à 20 h »), les prises manquées restent côté aidant.
 - **Qui vient aujourd'hui ?** Les visites du jour avec la photo et le rôle des membres, ou l'infirmière et l'aide à domicile.
 - **Est-ce que j'ai un rendez-vous ?** Les rendez-vous médicaux du jour, avec l'heure et le lieu.
+- **Et demain ?** Un sélecteur « Aujourd'hui / Demain » au-dessus de ces deux cartes montre les visites et rendez-vous du lendemain. L'écran s'ouvre toujours sur aujourd'hui et y revient seul après 2 minutes, pour qu'une tablette oubliée sur « Demain » ne fasse pas lire demain comme aujourd'hui.
 - **Urgences** : un bouton rouge dans la barre du haut ouvre la **fiche urgence** en grand, à montrer aux secours qui arrivent chez le proche : identité, âge, groupe sanguin, allergies en rouge, traitements en cours, antécédents, directives anticipées et qui appeler. Un QR code à côté permet au secouriste de l'emporter dans son téléphone. Ce QR contient la fiche dans le fragment de son URL, il s'ouvre donc hors ligne, dans l'ambulance, sans exposer OpenCare. `GET /api/kiosk/emergency`, accessible à un appareil appairé comme à un membre : c'est la même fiche que le QR du frigo.
 - **Comment demander ?** « Demandez-moi » (réponses sur la journée, puis compagnon de conversation), « Mes informations » (nom, adresse, téléphone, médecin, pharmacie, infirmière, aide à domicile), et les deux gros boutons « Tout va bien » (entrée de journal de type humeur) et « J'ai besoin d'aide » (entrée incident + notification urgente, y compris Web Push, à tout le cercle).
 

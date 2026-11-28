@@ -35,6 +35,8 @@ export interface TodayIntake extends PatientIntakeRow {
 export interface TodaySnapshot {
     recipient: { first_name: string; last_name: string | null; photo_url: string | null; address: string | null; phone: string | null } | null;
     events_today: TodayEvent[];
+    /** Le lendemain, pour le bouton "Demain" du Kiosk (visites et rendez-vous seulement). */
+    events_tomorrow: TodayEvent[];
     intakes_today: TodayIntake[];
     /** La vue patient : seulement ce qui est du maintenant, le reste resume. */
     medications: PatientMedicationView<TodayIntake>;
@@ -53,6 +55,8 @@ export interface TodaySnapshot {
 export async function loadTodaySnapshot(circleId: string, now: Date = new Date()): Promise<TodaySnapshot> {
     const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
     const dayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+    const tomorrowStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
+    const tomorrowEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 23, 59, 59);
 
     // Today's intakes must exist even when no caregiver opened the app today
     // (they used to be generated only by the Medications page).
@@ -60,15 +64,15 @@ export async function loadTodaySnapshot(circleId: string, now: Date = new Date()
 
     const [recipientResult, eventsResult, membersResult, intakesResult, immichResult, heatwaveResult, companionResult, contactsResult, visitsResult] = await Promise.all([
         query('SELECT first_name, last_name, photo_url, address, phone FROM care_recipients WHERE circle_id = $1', [circleId]),
-        // Candidate events: anything overlapping today, plus every recurring
-        // event started before tonight (expanded below).
+        // Candidate events: anything overlapping today or tomorrow, plus every
+        // recurring event started before tomorrow night (expanded below).
         query(
             `SELECT * FROM events
              WHERE circle_id = $1
                AND start_time <= $3
                AND (rrule IS NOT NULL OR COALESCE(end_time, start_time) >= $2)
              ORDER BY start_time`,
-            [circleId, toLocalISO(dayStart), toLocalISO(dayEnd)]
+            [circleId, toLocalISO(dayStart), toLocalISO(tomorrowEnd)]
         ),
         query(
             `SELECT m.id, m.role, u.name, u.avatar_url
@@ -111,26 +115,28 @@ export async function loadTodaySnapshot(circleId: string, now: Date = new Date()
         (membersResult.rows as TodayMember[]).map((m) => [m.id, { id: m.id, name: m.name, avatar_url: m.avatar_url, role: m.role }])
     );
 
-    // Expand each candidate into today's occurrences (the shared RRULE helper
+    // Expand each candidate into the day's occurrences (the shared RRULE helper
     // from the events routes) and join the participating members: their
     // photos are what the care recipient looks for first.
-    const eventsToday: TodayEvent[] = [];
-    for (const event of eventsResult.rows as any[]) {
-        for (const occ of expandEventOccurrences(event, dayStart, dayEnd)) {
-            const memberIds: string[] = Array.isArray(event.member_ids) ? event.member_ids : [];
-            eventsToday.push({
-                id: event.id,
-                title: event.title,
-                category: event.category,
-                location: event.location ?? null,
-                description: event.description ?? null,
-                start_time: toLocalISO(occ.start),
-                end_time: occ.end ? toLocalISO(occ.end) : null,
-                members: memberIds.map((id) => membersById.get(id)).filter((m): m is TodayMember => Boolean(m)),
-            });
+    const eventsOn = (from: Date, to: Date): TodayEvent[] => {
+        const out: TodayEvent[] = [];
+        for (const event of eventsResult.rows as any[]) {
+            for (const occ of expandEventOccurrences(event, from, to)) {
+                const memberIds: string[] = Array.isArray(event.member_ids) ? event.member_ids : [];
+                out.push({
+                    id: event.id,
+                    title: event.title,
+                    category: event.category,
+                    location: event.location ?? null,
+                    description: event.description ?? null,
+                    start_time: toLocalISO(occ.start),
+                    end_time: occ.end ? toLocalISO(occ.end) : null,
+                    members: memberIds.map((id) => membersById.get(id)).filter((m): m is TodayMember => Boolean(m)),
+                });
+            }
         }
-    }
-    eventsToday.sort((a, b) => a.start_time.localeCompare(b.start_time));
+        return out.sort((a, b) => a.start_time.localeCompare(b.start_time));
+    };
 
     const recipient = recipientResult.rows[0] ?? null;
     const intakes = intakesResult.rows as TodayIntake[];
@@ -146,7 +152,8 @@ export async function loadTodaySnapshot(circleId: string, now: Date = new Date()
                 phone: recipient.phone ?? null,
             }
             : null,
-        events_today: eventsToday,
+        events_today: eventsOn(dayStart, dayEnd),
+        events_tomorrow: eventsOn(tomorrowStart, tomorrowEnd),
         intakes_today: intakes,
         medications: splitForPatient(intakes, now),
         contacts_key: contactsResult.rows as TodayContact[],
